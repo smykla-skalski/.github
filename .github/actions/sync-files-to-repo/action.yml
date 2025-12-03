@@ -400,8 +400,7 @@ runs:
             new_blob=$(echo "$entry_json" | jq -r '.sha')
 
             # Get existing file's blob SHA from PR branch
-            existing_blob=$(gh api "repos/$ORG/$REPO/contents/$file_path" \
-              -f ref="$branch_name" \
+            existing_blob=$(gh api "repos/$ORG/$REPO/contents/$file_path?ref=$branch_name" \
               --jq '.sha' 2>/dev/null) || existing_blob=""
 
             # Compare blobs (null for deletions means file shouldn't exist)
