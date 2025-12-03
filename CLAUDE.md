@@ -7,8 +7,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Organization-wide defaults and synchronization for smykla-labs repositories. This is a special `.github` repository that:
 
 1. **Community Health Files** - Provides default templates for all smykla-labs repos (CODE_OF_CONDUCT, CONTRIBUTING, SECURITY, issue/PR templates)
-2. **Label Sync** - Automated synchronization of GitHub labels across all repositories using crazy-max/ghaction-github-labeler
-3. **File Sync** - Automated synchronization of specified files across repositories using BetaHuhn/repo-file-sync-action
+2. **Label Sync** - Automated synchronization of GitHub labels across all repositories using custom composite action
+3. **File Sync** - Automated synchronization of specified files across repositories using custom composite action
+4. **Reusable Workflows** - Shared CI/CD workflows for Go projects (lint, test, build, release)
 
 ## Repository Structure
 
@@ -19,12 +20,23 @@ Organization-wide defaults and synchronization for smykla-labs repositories. Thi
 │   ├── sync.yml                # File sync configuration
 │   ├── workflows/
 │   │   ├── sync-labels.yml     # Label sync workflow
-│   │   └── sync-files.yml      # File sync workflow
+│   │   ├── sync-files.yml      # File sync workflow
+│   │   ├── lib-lint.yml        # Reusable lint workflow
+│   │   ├── lib-test.yml        # Reusable test workflow
+│   │   ├── lib-build.yml       # Reusable build workflow
+│   │   └── lib-release.yml     # Reusable release workflow
 │   ├── actions/                # Reusable composite actions
 │   │   ├── generate-token/     # GitHub App token generation
-│   │   └── get-org-repos/      # Fetch org repositories
+│   │   ├── get-org-repos/      # Fetch org repositories
+│   │   ├── get-sync-config/    # Fetch per-repo sync configuration
+│   │   ├── sync-labels-to-repo/ # Label sync with config support
+│   │   └── sync-files-to-repo/ # File sync with config support
 │   ├── ISSUE_TEMPLATE/         # Default issue templates
 │   └── PULL_REQUEST_TEMPLATE.md
+├── examples/
+│   └── sync-config.yml         # Unified sync config example
+├── docs/
+│   └── MIGRATION.md            # Reusable workflows migration guide
 ├── templates/                  # Source files for file sync
 │   ├── CODE_OF_CONDUCT.md
 │   ├── CONTRIBUTING.md
@@ -45,25 +57,37 @@ Files in the root automatically apply to all smykla-labs repositories that don't
 
 ### Synchronization System
 
-The synchronization system uses a hybrid approach:
+The synchronization system uses custom composite actions with unified per-repo configuration:
 
 **Label Sync:**
+
 - **Action**: Custom composite action (`.github/actions/sync-labels-to-repo`)
 - **Workflow**: `.github/workflows/sync-labels.yml`
-- **Config**: `.github/labels.yml`
+- **Config**: `.github/labels.yml` (central) + per-repo `.github/sync-config.yml`
 - **Method**: Direct API updates via GitHub CLI
+- **Features**: Label removal, exclusions, skip flags
 
 **File Sync:**
-- **Action**: [BetaHuhn/repo-file-sync-action](https://github.com/BetaHuhn/repo-file-sync-action) v1.23.3 (346 ⭐)
+
+- **Action**: Custom composite action (`.github/actions/sync-files-to-repo`)
 - **Workflow**: `.github/workflows/sync-files.yml`
-- **Config**: `.github/sync.yml` (expanded from templates)
-- **Method**: Creates PRs with file changes
+- **Config**: `.github/sync.yml` (central) + per-repo `.github/sync-config.yml`
+- **Method**: Creates PRs with file changes via GitHub API
+- **Features**: File exclusions, skip flags, PR management
+
+**Unified Config:**
+
+- Repos can create `.github/sync-config.yml` to customize behavior
+- Control both label and file sync from single config file
+- Supports skip flags, exclusions, and removal options
+- See `examples/sync-config.yml` for full schema
 
 **Flow:**
+
 - Each workflow triggers independently on relevant file changes
-- Label sync runs for all repos in parallel
-- File sync creates PRs with `org-sync` label
-- Uses `chore/org-sync` branch for file changes
+- Both workflows run for all repos in parallel
+- Label sync updates directly; file sync creates PRs with `org-sync` label
+- File sync uses `chore/org-sync` branch for changes
 
 ### Label Synchronization
 
@@ -76,10 +100,40 @@ The synchronization system uses a hybrid approach:
 ### File Synchronization
 
 - **Source**: `templates/` directory
-- **Config**: `.github/sync.yml` (uses `%ALL_REPOS%` placeholder)
+- **Config**: `.github/sync.yml` (central) + per-repo `.github/sync-config.yml`
 - **Target**: All repositories in smykla-labs organization (except `.github` itself)
-- **Method**: BetaHuhn/repo-file-sync-action creates PRs
-- **Features**: Auto PR creation, template support, per-file commits
+- **Method**: Custom composite action using GitHub API
+- **Features**: PR creation, per-file commits, exclusions, skip flags
+
+### Reusable Workflows
+
+Shared CI/CD workflows for Go projects that can be called from any repository:
+
+**Available Workflows:**
+
+- **lib-lint.yml** - Multi-linter workflow (golangci-lint, yamllint, shellcheck, markdownlint)
+- **lib-test.yml** - Go test runner with coverage reporting
+- **lib-build.yml** - Cross-platform Go binary builder
+- **lib-release.yml** - Semantic versioning and GitHub release creation
+
+**Usage Example:**
+
+```yaml
+jobs:
+  lint:
+    uses: smykla-labs/.github/.github/workflows/lib-lint.yml@<commit-sha> # v1.0.0
+    with:
+      go-version: "1.23.x"
+      enable-golangci-lint: true
+```
+
+**Version Pinning:**
+
+- Always pin to commit SHA with semver comment
+- Get SHA: `git rev-parse v1.0.0`
+- Security best practice for reusable workflows
+
+See `.github/workflows/lib-*.yml` files for full documentation of inputs/outputs.
 
 ### Authentication
 
@@ -135,9 +189,9 @@ Trigger workflows manually via GitHub Actions:
 - **Trigger**: Push to `main` when `templates/**` or `sync.yml` changes, or manual dispatch
 - **Flow**:
   1. Get list of all org repositories
-  2. Expand `sync.yml` replacing `%ALL_REPOS%` placeholder
-  3. Run BetaHuhn/repo-file-sync-action with expanded config
-- **Action**: BetaHuhn/repo-file-sync-action handles PR creation and file sync
+  2. For each repo: Fetch sync config, generate token, sync files
+- **Matrix**: Processes all repos in parallel (fail-fast: false)
+- **Action**: Custom composite action handles PR creation and file sync
 - **Branch**: Uses `chore/org-sync` prefix
 - **Commits**: One commit per file with `chore(sync):` prefix
 - **PR**: Labeled with `org-sync`, title: "chore(sync): sync organization files"
@@ -176,19 +230,38 @@ Labels are organized by prefix:
 
 ## Architecture Decisions
 
-This repository uses a hybrid approach for synchronization:
+### Custom Composite Actions for Sync
 
-### Label Sync: Custom Composite Action
+Both label and file sync use custom composite actions instead of third-party actions:
+
+**Label Sync:**
+
 - **Location**: `.github/actions/sync-labels-to-repo`
-- **Why**: Most label sync actions don't support multi-repo targeting
-- **Implementation**: Simple bash script using GitHub CLI and jq
-- **Benefits**: Full control, no external dependencies, easy to maintain
+- **Why**: Most label sync actions don't support multi-repo targeting with per-repo config
+- **Implementation**: Bash script using GitHub CLI and jq for efficient map-based diff
+- **Benefits**: Full control, no external dependencies, easy to maintain, label removal support
 
-### File Sync: BetaHuhn/repo-file-sync-action
-- **Stars**: 346
-- **Version**: v1.23.3
-- **Why**: Most popular file sync action, auto PR creation, template support
-- **Repository**: https://github.com/BetaHuhn/repo-file-sync-action
+**File Sync:**
+
+- **Location**: `.github/actions/sync-files-to-repo`
+- **Why**: Need per-repo exclusions and unified config support (not available in BetaHuhn)
+- **Implementation**: Bash script using GitHub API for PR creation and file management
+- **Benefits**: Full control, per-file exclusions, unified config, no external dependencies
+
+### Unified Config Design
+
+- Single `.github/sync-config.yml` controls both label and file sync
+- Repos opt-in to features (skip flags, exclusions, removal)
+- Label/file removal defaults to false (safer)
+- Config fetched per-repo at sync time
+
+### Reusable Workflows Over File Sync
+
+For CI/CD workflows, use reusable workflows instead of file sync:
+
+- **Why**: Industry best practice 2025 (instant updates, no PRs, version pinning)
+- **Anti-pattern**: Syncing workflow files requires PRs in every repo, version management nightmare
+- **Approach**: Create shared workflows in `.github/workflows/lib-*.yml`, repos call via `uses:`
 
 ## Important Notes
 
@@ -200,6 +273,8 @@ This repository uses a hybrid approach for synchronization:
 - File sync creates PRs for review
 - Dry run mode available to preview changes without making them
 - Community actions pinned to commit SHAs for security
-- Custom label sync action is simple and maintainable (~100 lines)
-- File sync handled by trusted community action (346 ⭐)
-- ~50% code reduction from original orchestrator approach
+- Both sync actions are custom, simple, and maintainable (~100-200 lines each)
+- Unified config system supports per-repo customization
+- Reusable workflows provide instant updates without PRs
+- See `examples/sync-config.yml` for complete configuration schema
+- See `docs/MIGRATION.md` for reusable workflow migration guide
