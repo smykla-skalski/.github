@@ -361,7 +361,8 @@ runs:
         pr_body="${pr_body}"$'\n\n'"## Files Created"$'\n\n'"${created_list}"
         pr_body="${pr_body}"$'\n'"## Files Updated"$'\n\n'"${updated_list}"
         pr_body="${pr_body}"$'\n'"---"$'\n\n'
-        pr_body="${pr_body}[Sync Files (#${GITHUB_RUN_ID})](${run_url})"
+        pr_body="${pr_body}*This PR was automatically created by the org file sync workflow "
+        pr_body="${pr_body}(run [#${GITHUB_RUN_ID}](${run_url}))*"
 
         # Check for existing PR
         existing_pr=$(gh pr list --repo "$ORG/$REPO" \
