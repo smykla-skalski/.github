@@ -1,39 +1,121 @@
-# Example .github/sync-config.yml
-# Place this file in your repository's .github/ directory to customize sync behavior
+---
+# Unified Sync Configuration Schema
+# ==================================
+# Place this file at: .github/sync-config.yml in your repository
 #
-# Copy this file to: .github/sync-config.yml in your repository
+# This configuration controls how the organization's sync system
+# synchronizes labels and files to your repository.
+#
+# All fields are optional - omit any field to use its default value.
+# An empty or missing config file enables all syncs with default behavior.
 
-# Label sync configuration
-labels:
-  # Skip this repo entirely for label sync (default: false)
-  skip: false
+# ---------------------------------------------------------------------------
+# SCHEMA REFERENCE
+# ---------------------------------------------------------------------------
+#
+# sync:                          # Top-level sync configuration
+#   skip: bool                   # Skip ALL syncs (default: false)
+#
+#   labels:                      # Label sync configuration
+#     skip: bool                 # Skip label sync (default: false)
+#     exclude: [string]          # Label names to exclude from sync
+#     allow_removal: bool        # Delete non-central labels (default: false)
+#
+#   files:                       # File sync configuration
+#     skip: bool                 # Skip file sync (default: false)
+#     exclude: [string]          # File paths to exclude from sync
+#     allow_removal: bool        # Delete non-central files (default: false)
+#
+# ---------------------------------------------------------------------------
+# FIELD DETAILS
+# ---------------------------------------------------------------------------
+#
+# sync.skip (boolean, default: false)
+#   When true, completely skips ALL synchronization for this repository.
+#   Use for repositories that should be entirely excluded from org sync.
+#   Equivalent to setting both labels.skip and files.skip to true.
+#
+# sync.labels.skip (boolean, default: false)
+#   When true, skips label synchronization only.
+#   File sync still runs unless sync.skip or sync.files.skip is true.
+#
+# sync.labels.exclude (array of strings, default: [])
+#   List of label names to exclude from synchronization.
+#   These labels will NOT be created/updated in this repository.
+#   Existing labels with these names are preserved but not managed.
+#   Example: ["ci/skip-tests", "ci/force-full"]
+#
+# sync.labels.allow_removal (boolean, default: false)
+#   When true, labels in this repo that are NOT in the central config
+#   will be DELETED. Use with caution - this removes custom labels.
+#   When false (default), extra labels in the repo are preserved.
+#
+# sync.files.skip (boolean, default: false)
+#   When true, skips file synchronization only.
+#   Label sync still runs unless sync.skip or sync.labels.skip is true.
+#
+# sync.files.exclude (array of strings, default: [])
+#   List of file paths (relative to repo root) to exclude from sync.
+#   These files will NOT be created/updated in this repository.
+#   Existing files at these paths are preserved but not managed.
+#   Example: ["CONTRIBUTING.md", ".github/PULL_REQUEST_TEMPLATE.md"]
+#
+# sync.files.allow_removal (boolean, default: false)
+#   DANGEROUS: When true, files in this repo that are NOT in the central
+#   sync config will be DELETED. This can cause data loss.
+#   Strongly recommend keeping this false (default).
+#
+# ---------------------------------------------------------------------------
+# EXAMPLES
+# ---------------------------------------------------------------------------
 
-  # List of label names to NOT sync to this repo
-  # These labels will be skipped during sync
-  disabled:
-    # Example: disable CI-related labels for a documentation-only repo
-    # - "ci/skip-tests"
-    # - "ci/skip-lint"
-    # - "ci/skip-build"
-    # - "ci/force-full"
+# Example 1: Default configuration (all syncs enabled)
+# Just create an empty file or omit entirely - defaults apply
+sync: {}
 
-  # Allow repo to keep labels not in the central config (default: true)
-  # If false, labels not in .github/labels.yml will be removed
-  allow_additional: true
+# Example 2: Skip all synchronization for this repo
+# sync:
+#   skip: true
 
-# File sync configuration
-files:
-  # Skip this repo entirely for file sync (default: false)
-  skip: false
+# Example 3: Documentation-only repo (skip CI labels, keep custom docs)
+# sync:
+#   labels:
+#     exclude:
+#       - "ci/skip-tests"
+#       - "ci/skip-lint"
+#       - "ci/skip-build"
+#       - "ci/force-full"
+#   files:
+#     exclude:
+#       - "CONTRIBUTING.md"      # Keep custom contributing guide
+#       - "CODE_OF_CONDUCT.md"   # Keep custom code of conduct
 
-  # List of files to NOT sync to this repo
-  # Use paths relative to repo root
-  disabled:
-    # Example: keep a custom CONTRIBUTING.md
-    # - "CONTRIBUTING.md"
+# Example 4: Strict sync with label cleanup
+# sync:
+#   labels:
+#     allow_removal: true  # Remove labels not in central config
+#   files:
+#     exclude:
+#       - ".github/ISSUE_TEMPLATE/custom-template.yml"
 
-    # Example: keep custom issue templates
-    # - ".github/ISSUE_TEMPLATE/bug_report.yml"
+# Example 5: Skip file sync only (labels still sync)
+# sync:
+#   files:
+#     skip: true
 
-    # Example: keep a custom PR template
-    # - ".github/PULL_REQUEST_TEMPLATE.md"
+# Example 6: Full customization
+# sync:
+#   skip: false
+#   labels:
+#     skip: false
+#     exclude:
+#       - "release/major"
+#       - "release/minor"
+#       - "release/patch"
+#     allow_removal: false
+#   files:
+#     skip: false
+#     exclude:
+#       - "SECURITY.md"
+#       - ".github/PULL_REQUEST_TEMPLATE.md"
+#     allow_removal: false
