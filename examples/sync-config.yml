@@ -1,0 +1,39 @@
+# Example .github/sync-config.yml
+# Place this file in your repository's .github/ directory to customize sync behavior
+#
+# Copy this file to: .github/sync-config.yml in your repository
+
+# Label sync configuration
+labels:
+  # Skip this repo entirely for label sync (default: false)
+  skip: false
+
+  # List of label names to NOT sync to this repo
+  # These labels will be skipped during sync
+  disabled:
+    # Example: disable CI-related labels for a documentation-only repo
+    # - "ci/skip-tests"
+    # - "ci/skip-lint"
+    # - "ci/skip-build"
+    # - "ci/force-full"
+
+  # Allow repo to keep labels not in the central config (default: true)
+  # If false, labels not in .github/labels.yml will be removed
+  allow_additional: true
+
+# File sync configuration
+files:
+  # Skip this repo entirely for file sync (default: false)
+  skip: false
+
+  # List of files to NOT sync to this repo
+  # Use paths relative to repo root
+  disabled:
+    # Example: keep a custom CONTRIBUTING.md
+    # - "CONTRIBUTING.md"
+
+    # Example: keep custom issue templates
+    # - ".github/ISSUE_TEMPLATE/bug_report.yml"
+
+    # Example: keep a custom PR template
+    # - ".github/PULL_REQUEST_TEMPLATE.md"

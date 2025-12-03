@@ -1,0 +1,177 @@
+name: Sync Labels
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/labels.yml"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run (no changes)"
+        required: false
+        default: "false"
+        type: boolean
+
+permissions: {}
+
+jobs:
+  get-repos:
+    runs-on: ubuntu-latest
+    outputs:
+      repos: ${{ steps.repos.outputs.repos }}
+    steps:
+      - name: Generate App Token
+        id: app-token
+        uses: actions/create-github-app-token@7e473efe3cb98aa54f8d4bac15400b15fad77d94 # v2.2.0
+        with:
+          app-id: ${{ vars.SMYKLOT_APP_ID }}
+          private-key: ${{ secrets.SMYKLOT_PRIVATE_KEY }}
+          owner: smykla-labs
+
+      - name: Get organization repositories
+        id: repos
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          repos=$(gh repo list smykla-labs --json name --jq '[.[].name | select(. != ".github")]')
+          echo "repos=$repos" >> "$GITHUB_OUTPUT"
+
+  sync-labels:
+    needs: get-repos
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        repo: ${{ fromJson(needs.get-repos.outputs.repos) }}
+    env:
+      TARGET_REPO: ${{ matrix.repo }}
+      DRY_RUN: ${{ inputs.dry_run }}
+    steps:
+      - name: Generate App Token
+        id: app-token
+        uses: actions/create-github-app-token@7e473efe3cb98aa54f8d4bac15400b15fad77d94 # v2.2.0
+        with:
+          app-id: ${{ vars.SMYKLOT_APP_ID }}
+          private-key: ${{ secrets.SMYKLOT_PRIVATE_KEY }}
+          owner: smykla-labs
+          repositories: ${{ matrix.repo }}
+
+      - name: Checkout .github repo
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+
+      - name: Get repo sync config
+        id: config
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          # Try to fetch sync-config.yml from target repo
+          config=$(gh api "repos/smykla-labs/${TARGET_REPO}/contents/.github/sync-config.yml" \
+            --jq '.content' 2>/dev/null | base64 -d 2>/dev/null || echo "")
+
+          if [ -n "$config" ]; then
+            skip=$(echo "$config" | yq -r '.labels.skip // false')
+            disabled=$(echo "$config" | yq -r '.labels.disabled // []' -o json)
+            allow_additional=$(echo "$config" | yq -r '.labels.allow_additional // true')
+            {
+              echo "skip=$skip"
+              echo "disabled=$disabled"
+              echo "allow_additional=$allow_additional"
+            } >> "$GITHUB_OUTPUT"
+          else
+            {
+              echo "skip=false"
+              echo "disabled=[]"
+              echo "allow_additional=true"
+            } >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Sync labels to repository
+        if: steps.config.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          DISABLED_LABELS: ${{ steps.config.outputs.disabled }}
+          ALLOW_ADDITIONAL: ${{ steps.config.outputs.allow_additional }}
+        run: |
+          # Read desired labels from config
+          desired_labels=$(yq eval -o json '.[] | {name: .name, color: .color, description: (.description // "")}' .github/labels.yml | jq -s '.')
+
+          # Filter out disabled labels
+          desired_labels=$(echo "$desired_labels" | jq --argjson disabled "$DISABLED_LABELS" \
+            '[.[] | select(.name as $n | $disabled | index($n) | not)]')
+
+          # Get current labels from target repo
+          current_labels=$(gh api "repos/smykla-labs/${TARGET_REPO}/labels" --paginate \
+            --jq '.[] | {name: .name, color: .color, description: (.description // "")}' | jq -s '.')
+
+          echo "📋 Processing labels for ${TARGET_REPO}..."
+          echo "   Desired: $(echo "$desired_labels" | jq 'length') labels"
+          echo "   Current: $(echo "$current_labels" | jq 'length') labels"
+
+          # Process each desired label
+          echo "$desired_labels" | jq -c '.[]' | while read -r label; do
+            name=$(echo "$label" | jq -r '.name')
+            color=$(echo "$label" | jq -r '.color' | tr -d '#')
+            description=$(echo "$label" | jq -r '.description')
+
+            # Check if label exists
+            existing=$(echo "$current_labels" | jq --arg name "$name" '.[] | select(.name == $name)')
+
+            if [ -z "$existing" ]; then
+              # Create new label
+              if [ "$DRY_RUN" = "true" ]; then
+                echo "🆕 Would create: $name"
+              else
+                gh api "repos/smykla-labs/${TARGET_REPO}/labels" \
+                  -f name="$name" \
+                  -f color="$color" \
+                  -f description="$description" > /dev/null 2>&1 && \
+                  echo "✅ Created: $name" || \
+                  echo "❌ Failed to create: $name"
+              fi
+            else
+              # Check if update needed
+              existing_color=$(echo "$existing" | jq -r '.color' | tr -d '#')
+              existing_desc=$(echo "$existing" | jq -r '.description')
+
+              if [ "$existing_color" != "$color" ] || [ "$existing_desc" != "$description" ]; then
+                if [ "$DRY_RUN" = "true" ]; then
+                  echo "🔄 Would update: $name"
+                else
+                  gh api "repos/smykla-labs/${TARGET_REPO}/labels/${name}" \
+                    -X PATCH \
+                    -f color="$color" \
+                    -f description="$description" > /dev/null 2>&1 && \
+                    echo "🔄 Updated: $name" || \
+                    echo "❌ Failed to update: $name"
+                fi
+              else
+                echo "✓ Up to date: $name"
+              fi
+            fi
+          done
+
+          # Remove labels not in desired list (if allow_additional is false)
+          if [ "$ALLOW_ADDITIONAL" = "false" ]; then
+            echo ""
+            echo "🗑️  Checking for labels to remove..."
+            desired_names=$(echo "$desired_labels" | jq -r '.[].name')
+
+            echo "$current_labels" | jq -r '.[].name' | while read -r label_name; do
+              if ! echo "$desired_names" | grep -qxF "$label_name"; then
+                if [ "$DRY_RUN" = "true" ]; then
+                  echo "🗑️  Would delete: $label_name"
+                else
+                  # URL encode the label name for the API call
+                  encoded_name=$(printf '%s' "$label_name" | jq -sRr @uri)
+                  gh api "repos/smykla-labs/${TARGET_REPO}/labels/${encoded_name}" \
+                    -X DELETE > /dev/null 2>&1 && \
+                    echo "🗑️  Deleted: $label_name" || \
+                    echo "❌ Failed to delete: $label_name"
+                fi
+              fi
+            done
+          fi
+
+          echo ""
+          echo "✅ Label sync complete for ${TARGET_REPO}"
