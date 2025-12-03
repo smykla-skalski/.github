@@ -16,6 +16,7 @@ Files in this repository automatically apply to all smykla-labs repositories tha
 
 - `CODE_OF_CONDUCT.md`
 - `CONTRIBUTING.md`
+- `LICENSE`
 - `SECURITY.md`
 - `.github/ISSUE_TEMPLATE/*`
 - `.github/PULL_REQUEST_TEMPLATE.md`
