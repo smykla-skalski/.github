@@ -1,0 +1,31 @@
+# File Sync Configuration
+# Files listed here will be synced to all organization repositories
+#
+# Format:
+#   group:
+#     - files:
+#         - source: path/in/templates/
+#           dest: path/in/target/repo
+#
+# Target repos can override sync behavior by creating .github/sync-config.yml:
+#   sync:
+#     files:
+#       skip: true           # Skip all file syncs
+#       exclude: [LICENSE]   # Skip specific files
+
+group:
+  - files:
+      - source: templates/CODE_OF_CONDUCT.md
+        dest: CODE_OF_CONDUCT.md
+      - source: templates/LICENSE
+        dest: LICENSE
+      - source: templates/CONTRIBUTING.md
+        dest: CONTRIBUTING.md
+      - source: templates/SECURITY.md
+        dest: SECURITY.md
+      - source: templates/.github/PULL_REQUEST_TEMPLATE.md
+        dest: .github/PULL_REQUEST_TEMPLATE.md
+      - source: templates/.github/ISSUE_TEMPLATE/bug_report.yml
+        dest: .github/ISSUE_TEMPLATE/bug_report.yml
+      - source: templates/.github/ISSUE_TEMPLATE/config.yml
+        dest: .github/ISSUE_TEMPLATE/config.yml

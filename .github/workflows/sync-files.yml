@@ -3,13 +3,19 @@ name: Sync Files
 on:
   push:
     branches: [main]
-    paths: ["templates/**"]
+    paths:
+      - "templates/**"
+      - ".github/sync.yml"
+      - ".github/workflows/sync-files.yml"
+      - ".github/actions/sync-files-to-repo/**"
+      - ".github/actions/get-sync-config/**"
   workflow_dispatch:
     inputs:
       dry_run:
         description: "Dry run (no changes)"
         required: false
         type: boolean
+        default: false
 
 permissions: {}
 
@@ -19,228 +25,105 @@ jobs:
     outputs:
       repos: ${{ steps.repos.outputs.repos }}
     steps:
+      - name: Checkout
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+
       - name: Generate App Token
-        id: app-token
-        uses: actions/create-github-app-token@7e473efe3cb98aa54f8d4bac15400b15fad77d94 # v2.2.0
+        id: token
+        uses: ./.github/actions/generate-token
         with:
           app-id: ${{ vars.SMYKLOT_APP_ID }}
           private-key: ${{ secrets.SMYKLOT_PRIVATE_KEY }}
           owner: smykla-labs
 
-      - name: Get organization repositories
+      - name: Get repositories
         id: repos
-        env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        uses: ./.github/actions/get-org-repos
+        with:
+          token: ${{ steps.token.outputs.token }}
+          org: smykla-labs
+
+  prepare-files:
+    runs-on: ubuntu-24.04
+    outputs:
+      files-config: ${{ steps.files.outputs.config }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+
+      - name: Parse files config
+        id: files
         run: |
-          repos=$(gh repo list smykla-labs --json name --jq '[.[].name | select(. != ".github")]')
-          echo "repos=$repos" >> "$GITHUB_OUTPUT"
+          # Parse sync.yml and convert to JSON array
+          files=$(yq eval -o json '.group[0].files' .github/sync.yml)
+          echo "config=$(echo "$files" | jq -c '.')" >> "$GITHUB_OUTPUT"
+          echo "Files to sync:"
+          echo "$files" | jq -r '.[] | "   - \(.source) -> \(.dest)"'
 
   sync-files:
-    needs: get-repos
+    needs: [get-repos, prepare-files]
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
-        repo: ${{ fromJSON(needs.get-repos.outputs.repos) }}
-    env:
-      TARGET_REPO: ${{ matrix.repo }}
-      DRY_RUN: ${{ inputs.dry_run }}
+        repo: ${{ fromJson(needs.get-repos.outputs.repos) }}
+    concurrency:
+      group: sync-files-${{ matrix.repo }}
+      cancel-in-progress: false
     steps:
+      - name: Checkout
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+
       - name: Generate App Token
-        id: app-token
-        uses: actions/create-github-app-token@7e473efe3cb98aa54f8d4bac15400b15fad77d94 # v2.2.0
+        id: token
+        uses: ./.github/actions/generate-token
         with:
           app-id: ${{ vars.SMYKLOT_APP_ID }}
           private-key: ${{ secrets.SMYKLOT_PRIVATE_KEY }}
           owner: smykla-labs
           repositories: ${{ matrix.repo }}
 
-      - name: Checkout .github repo
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-
-      - name: Get repo sync config
+      - name: Get sync config
         id: config
+        uses: ./.github/actions/get-sync-config
+        with:
+          token: ${{ steps.token.outputs.token }}
+          org: smykla-labs
+          repo: ${{ matrix.repo }}
+
+      - name: Sync files
+        id: sync
+        uses: ./.github/actions/sync-files-to-repo
+        with:
+          token: ${{ steps.token.outputs.token }}
+          org: smykla-labs
+          repo: ${{ matrix.repo }}
+          files-config: ${{ needs.prepare-files.outputs.files-config }}
+          sync-config: ${{ steps.config.outputs.config }}
+          dry-run: ${{ inputs.dry_run || 'false' }}
+
+      - name: Summary
         env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          REPO: ${{ matrix.repo }}
+          CREATED: ${{ steps.sync.outputs.created }}
+          UPDATED: ${{ steps.sync.outputs.updated }}
+          SKIPPED: ${{ steps.sync.outputs.skipped }}
+          EXCLUDED: ${{ steps.sync.outputs.excluded }}
+          PR_URL: ${{ steps.sync.outputs.pr-url }}
         run: |
-          # Try to fetch sync-config.yml from target repo
-          config=$(gh api "repos/smykla-labs/${TARGET_REPO}/contents/.github/sync-config.yml" \
-            --jq '.content' 2>/dev/null | base64 -d 2>/dev/null || echo "")
-
-          if [ -n "$config" ]; then
-            skip=$(echo "$config" | yq -r '.files.skip // false')
-            disabled=$(echo "$config" | yq -r '.files.disabled // []' -o json)
-            {
-              echo "skip=$skip"
-              echo "disabled=$disabled"
-            } >> "$GITHUB_OUTPUT"
-          else
-            {
-              echo "skip=false"
-              echo "disabled=[]"
-            } >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Discover template files
-        if: steps.config.outputs.skip != 'true'
-        id: discover
-        env:
-          DISABLED_FILES: ${{ steps.config.outputs.disabled }}
-        run: |
-          files_to_check=""
-
-          while IFS= read -r -d '' src; do
-            dest="${src#templates/}"
-
-            # Check if file is disabled for this repo
-            if echo "$DISABLED_FILES" | jq -e --arg f "$dest" 'index($f) != null' > /dev/null 2>&1; then
-              echo "⏭️  Skipping $dest (disabled in sync-config.yml)"
-              continue
-            fi
-
-            files_to_check="${files_to_check}${src}:${dest}"$'\n'
-          done < <(find templates -type f -print0)
-
-          files_to_check="${files_to_check%$'\n'}"
-
-          if [ -z "$files_to_check" ]; then
-            echo "has_files=false" >> "$GITHUB_OUTPUT"
-            echo "No files to sync"
-          else
-            echo "has_files=true" >> "$GITHUB_OUTPUT"
-            {
-              echo "files<<EOF"
-              echo "$files_to_check"
-              echo "EOF"
-            } >> "$GITHUB_OUTPUT"
-            echo "Found $(echo "$files_to_check" | wc -l) files to check"
-          fi
-
-      - name: Detect changed files
-        if: steps.config.outputs.skip != 'true' && steps.discover.outputs.has_files == 'true'
-        id: changes
-        env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
-          FILES_TO_CHECK: ${{ steps.discover.outputs.files }}
-        run: |
-          files_to_sync=""
-
-          while IFS=':' read -r src dest; do
-            [ -z "$src" ] && continue
-
-            current_content=$(gh api "repos/smykla-labs/${TARGET_REPO}/contents/${dest}" \
-              --jq '.content' 2>/dev/null | base64 -d 2>/dev/null || echo "")
-            new_content=$(cat "$src")
-
-            if [ "$current_content" = "$new_content" ]; then
-              echo "✅ $dest is up to date"
+          {
+            echo "## File Sync: $REPO"
+            echo ""
+            echo "| Metric | Count |"
+            echo "|:-------|------:|"
+            echo "| Created | $CREATED |"
+            echo "| Updated | $UPDATED |"
+            echo "| Skipped | $SKIPPED |"
+            echo "| Excluded | $EXCLUDED |"
+            echo ""
+            if [ -n "$PR_URL" ]; then
+              echo "**PR:** $PR_URL"
             else
-              echo "📝 $dest needs sync"
-              files_to_sync="${files_to_sync}${src}:${dest}"$'\n'
+              echo "_No changes needed_"
             fi
-          done <<< "$FILES_TO_CHECK"
-
-          files_to_sync="${files_to_sync%$'\n'}"
-
-          if [ -z "$files_to_sync" ]; then
-            echo "has_changes=false" >> "$GITHUB_OUTPUT"
-            echo "No changes needed for ${TARGET_REPO}"
-          else
-            echo "has_changes=true" >> "$GITHUB_OUTPUT"
-            {
-              echo "files<<EOF"
-              echo "$files_to_sync"
-              echo "EOF"
-            } >> "$GITHUB_OUTPUT"
-            echo "Found $(echo "$files_to_sync" | wc -l) files needing sync"
-          fi
-
-      - name: Show dry run summary
-        if: steps.changes.outputs.has_changes == 'true' && inputs.dry_run == true
-        env:
-          FILES_TO_SYNC: ${{ steps.changes.outputs.files }}
-        run: |
-          file_count=$(echo "$FILES_TO_SYNC" | wc -l)
-          echo "🔍 Dry run - would sync ${file_count} files to ${TARGET_REPO}:"
-          echo "$FILES_TO_SYNC" | cut -d: -f2 | sed 's/^/  - /'
-
-      - name: Create sync branch
-        if: steps.changes.outputs.has_changes == 'true' && inputs.dry_run != true
-        id: branch
-        env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
-        run: |
-          branch_name="chore/file-sync-$(date +%Y%m%d%H%M%S)"
-          default_branch=$(gh api "repos/smykla-labs/${TARGET_REPO}" --jq '.default_branch')
-          base_sha=$(gh api "repos/smykla-labs/${TARGET_REPO}/git/refs/heads/${default_branch}" --jq '.object.sha')
-
-          gh api "repos/smykla-labs/${TARGET_REPO}/git/refs" \
-            -f ref="refs/heads/${branch_name}" \
-            -f sha="$base_sha" > /dev/null
-
-          echo "branch_name=$branch_name" >> "$GITHUB_OUTPUT"
-          echo "default_branch=$default_branch" >> "$GITHUB_OUTPUT"
-          echo "✅ Created branch: $branch_name"
-
-      - name: Commit file changes
-        if: steps.changes.outputs.has_changes == 'true' && inputs.dry_run != true
-        env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
-          BRANCH_NAME: ${{ steps.branch.outputs.branch_name }}
-          FILES_TO_SYNC: ${{ steps.changes.outputs.files }}
-        run: |
-          while IFS=':' read -r src dest; do
-            [ -z "$src" ] && continue
-
-            content=$(base64 -w0 "$src")
-            file_sha=$(gh api "repos/smykla-labs/${TARGET_REPO}/contents/${dest}" \
-              --jq '.sha' 2>/dev/null || echo "")
-
-            if [ -n "$file_sha" ]; then
-              action="update"
-              gh api "repos/smykla-labs/${TARGET_REPO}/contents/${dest}" \
-                -X PUT \
-                -f message="chore(sync): update ${dest}" \
-                -f content="$content" \
-                -f branch="$BRANCH_NAME" \
-                -f sha="$file_sha" > /dev/null
-            else
-              action="add"
-              gh api "repos/smykla-labs/${TARGET_REPO}/contents/${dest}" \
-                -X PUT \
-                -f message="chore(sync): add ${dest}" \
-                -f content="$content" \
-                -f branch="$BRANCH_NAME" > /dev/null
-            fi
-
-            echo "✅ ${action^}d: $dest"
-          done <<< "$FILES_TO_SYNC"
-
-      - name: Create pull request
-        if: steps.changes.outputs.has_changes == 'true' && inputs.dry_run != true
-        env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
-          BRANCH_NAME: ${{ steps.branch.outputs.branch_name }}
-          DEFAULT_BRANCH: ${{ steps.branch.outputs.default_branch }}
-          FILES_TO_SYNC: ${{ steps.changes.outputs.files }}
-        run: |
-          file_list=$(echo "$FILES_TO_SYNC" | cut -d: -f2 | sed 's/^/- /')
-
-          pr_url=$(gh pr create \
-            --repo "smykla-labs/${TARGET_REPO}" \
-            --head "$BRANCH_NAME" \
-            --base "$DEFAULT_BRANCH" \
-            --title "chore(sync): sync organization files" \
-            --body "Automated file sync from [smykla-labs/.github](https://github.com/smykla-labs/.github).
-
-          This PR was created automatically to keep organization-wide files in sync.
-
-          ### Files synced:
-          ${file_list}" \
-            --label "file-sync" 2>/dev/null || true)
-
-          if [ -n "$pr_url" ]; then
-            echo "✅ Created PR: $pr_url"
-          else
-            echo "ℹ️  PR may already exist or was auto-merged"
-          fi
+          } >> "$GITHUB_STEP_SUMMARY"

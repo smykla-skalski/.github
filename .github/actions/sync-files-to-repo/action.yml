@@ -1,0 +1,361 @@
+---
+name: Sync Files to Repository
+description: >-
+  Sync files from central repo to target repository, respecting per-repo config
+
+inputs:
+  token:
+    description: GitHub token for API access
+    required: true
+  org:
+    description: Organization name
+    required: true
+  repo:
+    description: Target repository name
+    required: true
+  source-repo:
+    description: Source repository name (where templates live)
+    required: false
+    default: .github
+  files-config:
+    description: JSON array of files to sync [{source, dest}, ...]
+    required: true
+  sync-config:
+    description: Parsed sync-config JSON from get-sync-config action
+    required: false
+    default: "{}"
+  dry-run:
+    description: Dry run (no changes)
+    required: false
+    default: "false"
+  branch-prefix:
+    description: Prefix for sync branches
+    required: false
+    default: chore/org-sync
+  commit-prefix:
+    description: Prefix for commit messages
+    required: false
+    default: "chore(sync):"
+  pr-labels:
+    description: Comma-separated labels for PR
+    required: false
+    default: org-sync
+
+outputs:
+  pr-url:
+    description: URL of created/updated PR (empty if no changes)
+    value: ${{ steps.sync.outputs.pr_url }}
+  created:
+    description: Number of files created
+    value: ${{ steps.sync.outputs.created }}
+  updated:
+    description: Number of files updated
+    value: ${{ steps.sync.outputs.updated }}
+  skipped:
+    description: Number of files skipped
+    value: ${{ steps.sync.outputs.skipped }}
+  excluded:
+    description: Number of files excluded by config
+    value: ${{ steps.sync.outputs.excluded }}
+
+runs:
+  using: composite
+  steps:
+    - name: Sync files
+      id: sync
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+        ORG: ${{ inputs.org }}
+        REPO: ${{ inputs.repo }}
+        SOURCE_REPO: ${{ inputs.source-repo }}
+        FILES_CONFIG: ${{ inputs.files-config }}
+        SYNC_CONFIG: ${{ inputs.sync-config }}
+        DRY_RUN: ${{ inputs.dry-run }}
+        BRANCH_PREFIX: ${{ inputs.branch-prefix }}
+        COMMIT_PREFIX: ${{ inputs.commit-prefix }}
+        PR_LABELS: ${{ inputs.pr-labels }}
+      run: |
+        set -euo pipefail
+
+        echo "📁 Syncing files to $ORG/$REPO..."
+
+        # Parse sync config
+        if [ -n "$SYNC_CONFIG" ] && [ "$SYNC_CONFIG" != "{}" ]; then
+          sync_skip=$(echo "$SYNC_CONFIG" | jq -r '.sync.skip // false')
+          files_skip=$(echo "$SYNC_CONFIG" | jq -r '.sync.files.skip // false')
+          files_exclude=$(echo "$SYNC_CONFIG" | \
+            jq -c '.sync.files.exclude // []')
+        else
+          sync_skip="false"
+          files_skip="false"
+          files_exclude="[]"
+        fi
+
+        # Check skip flags
+        if [ "$sync_skip" = "true" ]; then
+          echo "   ⏭️  Skipping: sync.skip=true in repo config"
+          echo "pr_url=" >> "$GITHUB_OUTPUT"
+          echo "created=0" >> "$GITHUB_OUTPUT"
+          echo "updated=0" >> "$GITHUB_OUTPUT"
+          echo "skipped=0" >> "$GITHUB_OUTPUT"
+          echo "excluded=0" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+
+        if [ "$files_skip" = "true" ]; then
+          echo "   ⏭️  Skipping: files.skip=true in repo config"
+          echo "pr_url=" >> "$GITHUB_OUTPUT"
+          echo "created=0" >> "$GITHUB_OUTPUT"
+          echo "updated=0" >> "$GITHUB_OUTPUT"
+          echo "skipped=0" >> "$GITHUB_OUTPUT"
+          echo "excluded=0" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+
+        echo "   Excluded files: $files_exclude"
+
+        # Parse files config
+        files=$(echo "$FILES_CONFIG" | jq -c '.[]')
+
+        # Track changes
+        created=0
+        updated=0
+        skipped=0
+        excluded=0
+        changes=()
+
+        # Get default branch for target repo
+        default_branch=$(gh api "repos/$ORG/$REPO" --jq '.default_branch')
+        echo "   Default branch: $default_branch"
+
+        # Get current HEAD SHA for the default branch
+        base_sha=$(gh api "repos/$ORG/$REPO/git/ref/heads/$default_branch" \
+          --jq '.object.sha')
+        echo "   Base SHA: ${base_sha:0:7}"
+
+        # Process each file
+        while IFS= read -r file_entry; do
+          [ -z "$file_entry" ] && continue
+
+          source_path=$(echo "$file_entry" | jq -r '.source')
+          dest_path=$(echo "$file_entry" | jq -r '.dest')
+
+          echo ""
+          echo "   📄 Processing: $dest_path"
+
+          # Check if file is excluded
+          if echo "$files_exclude" | jq -e --arg f "$dest_path" \
+              'map(. == $f) | any' > /dev/null 2>&1; then
+            echo "      ⏭️  Excluded by config"
+            excluded=$((excluded + 1))
+            continue
+          fi
+
+          # Fetch source file from central repo
+          api_path="repos/$ORG/$SOURCE_REPO/contents/$source_path"
+          source_response=$(gh api "$api_path" 2>&1) || true
+
+          if ! echo "$source_response" | jq -e '.content' > /dev/null 2>&1; then
+            echo "      ❌ Source not found: $source_path"
+            continue
+          fi
+
+          source_content=$(echo "$source_response" | \
+            jq -r '.content' | base64 -d)
+          source_sha=$(echo "$source_response" | jq -r '.sha')
+
+          # Fetch target file from target repo
+          target_response=$(gh api "repos/$ORG/$REPO/contents/$dest_path" \
+            2>&1) || true
+
+          if echo "$target_response" | jq -e '.content' > /dev/null 2>&1; then
+            # File exists - check if update needed
+            target_content=$(echo "$target_response" | \
+              jq -r '.content' | base64 -d)
+            target_sha=$(echo "$target_response" | jq -r '.sha')
+
+            if [ "$source_content" = "$target_content" ]; then
+              echo "      ✓ Already up to date"
+              skipped=$((skipped + 1))
+              continue
+            fi
+
+            echo "      🔄 Needs update"
+            action="update"
+            updated=$((updated + 1))
+          else
+            # File doesn't exist - create
+            echo "      🆕 Will create"
+            action="create"
+            target_sha=""
+            created=$((created + 1))
+          fi
+
+          # Stage change for batch commit
+          # Encode content as base64 for later use
+          encoded_content=$(echo -n "$source_content" | base64 | tr -d '\n')
+          changes+=("$(jq -n \
+            --arg path "$dest_path" \
+            --arg content "$encoded_content" \
+            --arg action "$action" \
+            --arg sha "$target_sha" \
+            '{path: $path, content: $content, action: $action, sha: $sha}')")
+        done <<< "$files"
+
+        echo ""
+        echo "📊 Summary:"
+        echo "   Created: $created"
+        echo "   Updated: $updated"
+        echo "   Skipped: $skipped (already up to date)"
+        echo "   Excluded: $excluded (by repo config)"
+
+        # Output counts
+        echo "created=$created" >> "$GITHUB_OUTPUT"
+        echo "updated=$updated" >> "$GITHUB_OUTPUT"
+        echo "skipped=$skipped" >> "$GITHUB_OUTPUT"
+        echo "excluded=$excluded" >> "$GITHUB_OUTPUT"
+
+        # If no changes, exit
+        if [ ${#changes[@]} -eq 0 ]; then
+          echo ""
+          echo "✅ No changes needed"
+          echo "pr_url=" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+
+        if [ "$DRY_RUN" = "true" ]; then
+          echo ""
+          echo "🔍 Dry run - no changes made"
+          echo "pr_url=" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+
+        echo ""
+        echo "🔧 Creating PR with changes..."
+
+        # Branch name
+        branch_name="${BRANCH_PREFIX}/${REPO}"
+
+        # Check if branch exists
+        existing_branch=$(gh api "repos/$ORG/$REPO/git/ref/heads/$branch_name" \
+          2>&1) || true
+
+        if echo "$existing_branch" | jq -e '.object.sha' > /dev/null 2>&1; then
+          echo "   Branch exists, updating..."
+          branch_sha=$(echo "$existing_branch" | jq -r '.object.sha')
+        else
+          echo "   Creating branch: $branch_name"
+          # Create branch from default branch HEAD
+          gh api "repos/$ORG/$REPO/git/refs" \
+            -f ref="refs/heads/$branch_name" \
+            -f sha="$base_sha" > /dev/null
+          branch_sha="$base_sha"
+        fi
+
+        # Create commits for each file
+        current_sha="$branch_sha"
+
+        for change_json in "${changes[@]}"; do
+          file_path=$(echo "$change_json" | jq -r '.path')
+          encoded=$(echo "$change_json" | jq -r '.content')
+          action=$(echo "$change_json" | jq -r '.action')
+
+          echo "   Committing: $file_path"
+
+          # Create blob
+          blob_sha=$(gh api "repos/$ORG/$REPO/git/blobs" \
+            -f content="$encoded" \
+            -f encoding="base64" \
+            --jq '.sha')
+
+          # Get current tree
+          current_tree=$(gh api "repos/$ORG/$REPO/git/commits/$current_sha" \
+            --jq '.tree.sha')
+
+          # Create new tree with file
+          tree_json=$(jq -n \
+            --arg base "$current_tree" \
+            --arg path "$file_path" \
+            --arg blob "$blob_sha" \
+            '{
+              base_tree: $base,
+              tree: [{
+                path: $path,
+                mode: "100644",
+                type: "blob",
+                sha: $blob
+              }]
+            }')
+          new_tree=$(echo "$tree_json" | \
+            gh api "repos/$ORG/$REPO/git/trees" --input - --jq '.sha')
+
+          # Create commit
+          commit_msg="$COMMIT_PREFIX $action $file_path"
+          new_commit=$(gh api "repos/$ORG/$REPO/git/commits" \
+            --input <(jq -n \
+              --arg msg "$commit_msg" \
+              --arg tree "$new_tree" \
+              --arg parent "$current_sha" \
+              '{message: $msg, tree: $tree, parents: [$parent]}') \
+            --jq '.sha')
+
+          current_sha="$new_commit"
+        done
+
+        # Update branch ref
+        gh api "repos/$ORG/$REPO/git/refs/heads/$branch_name" \
+          -X PATCH \
+          -f sha="$current_sha" \
+          -F force=true > /dev/null
+
+        echo "   Branch updated to: ${current_sha:0:7}"
+
+        # Check for existing PR
+        existing_pr=$(gh pr list --repo "$ORG/$REPO" \
+          --head "$branch_name" \
+          --state open \
+          --json number,url \
+          --jq '.[0]') || existing_pr=""
+
+        if [ -n "$existing_pr" ] && [ "$existing_pr" != "null" ]; then
+          pr_url=$(echo "$existing_pr" | jq -r '.url')
+          echo "   Updated existing PR: $pr_url"
+        else
+          # Create PR
+          pr_title="chore(sync): sync organization files"
+          pr_body="Syncs org files from central .github repository.
+
+        ## Changes
+        - Created: $created file(s)
+        - Updated: $updated file(s)
+
+        ---
+        *This PR was automatically created by the org file sync workflow.*"
+
+          # Parse labels
+          IFS=',' read -ra label_array <<< "$PR_LABELS"
+          label_args=()
+          for label in "${label_array[@]}"; do
+            label_args+=(--label "$label")
+          done
+
+          pr_url=$(gh pr create \
+            --repo "$ORG/$REPO" \
+            --head "$branch_name" \
+            --base "$default_branch" \
+            --title "$pr_title" \
+            --body "$pr_body" \
+            "${label_args[@]}" \
+            2>&1) || pr_url=""
+
+          if [ -n "$pr_url" ]; then
+            echo "   Created PR: $pr_url"
+          else
+            echo "   ❌ Failed to create PR"
+          fi
+        fi
+
+        echo "pr_url=$pr_url" >> "$GITHUB_OUTPUT"
+        echo ""
+        echo "✅ File sync complete"
