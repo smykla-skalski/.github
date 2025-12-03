@@ -1,0 +1,144 @@
+---
+name: Get Sync Config
+description: Fetch and parse unified sync configuration from target repository
+
+inputs:
+  token:
+    description: GitHub token for API access
+    required: true
+  org:
+    description: Organization name
+    required: true
+  repo:
+    description: Repository name
+    required: true
+  config-file:
+    description: Path to sync config file in target repo
+    required: false
+    default: .github/sync-config.yml
+
+outputs:
+  config:
+    description: Parsed sync configuration as JSON
+    value: ${{ steps.config.outputs.config }}
+  skip:
+    description: Whether to skip all syncs for this repo
+    value: ${{ steps.config.outputs.skip }}
+  labels-skip:
+    description: Whether to skip label sync
+    value: ${{ steps.config.outputs.labels_skip }}
+  labels-exclude:
+    description: JSON array of labels to exclude
+    value: ${{ steps.config.outputs.labels_exclude }}
+  labels-allow-removal:
+    description: Whether label removal is allowed
+    value: ${{ steps.config.outputs.labels_allow_removal }}
+  files-skip:
+    description: Whether to skip file sync
+    value: ${{ steps.config.outputs.files_skip }}
+  files-exclude:
+    description: JSON array of files to exclude
+    value: ${{ steps.config.outputs.files_exclude }}
+  files-allow-removal:
+    description: Whether file removal is allowed
+    value: ${{ steps.config.outputs.files_allow_removal }}
+
+runs:
+  using: composite
+  steps:
+    - name: Fetch and parse sync config
+      id: config
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+        ORG: ${{ inputs.org }}
+        REPO: ${{ inputs.repo }}
+        CONFIG_FILE: ${{ inputs.config-file }}
+      run: |
+        echo "📋 Fetching sync config from $ORG/$REPO..."
+
+        # Default config (used when file missing or parse fails)
+        default_config='{
+          "sync": {
+            "skip": false,
+            "labels": {
+              "skip": false,
+              "exclude": [],
+              "allow_removal": false
+            },
+            "files": {
+              "skip": false,
+              "exclude": [],
+              "allow_removal": false
+            }
+          }
+        }'
+
+        # Attempt to fetch config file
+        response=$(gh api "repos/$ORG/$REPO/contents/$CONFIG_FILE" 2>&1) || true
+
+        if echo "$response" | grep -q '"content"'; then
+          # File exists - decode and parse
+          echo "   Found config file"
+
+          # Decode base64 content and parse YAML to JSON
+          content=$(echo "$response" | jq -r '.content' | base64 -d)
+          config=$(echo "$content" | yq eval -o json '.') || config=""
+
+          if [ -z "$config" ] || [ "$config" = "null" ]; then
+            echo "   ⚠️  Failed to parse config, using defaults"
+            config="$default_config"
+          else
+            echo "   ✅ Config parsed successfully"
+
+            # Merge with defaults to ensure all fields exist
+            config=$(echo "$config" | jq --argjson defaults "$default_config" '
+              $defaults * . |
+              .sync.skip = (.sync.skip // false) |
+              .sync.labels.skip = (.sync.labels.skip // false) |
+              .sync.labels.exclude = (.sync.labels.exclude // []) |
+              .sync.labels.allow_removal =
+                (.sync.labels.allow_removal // false) |
+              .sync.files.skip = (.sync.files.skip // false) |
+              .sync.files.exclude = (.sync.files.exclude // []) |
+              .sync.files.allow_removal =
+                (.sync.files.allow_removal // false)
+            ')
+          fi
+        else
+          # File not found or error - use defaults
+          echo "   ℹ️  No config file found, using defaults"
+          config="$default_config"
+        fi
+
+        # Extract individual fields for convenience outputs
+        cfg=$config
+        skip=$(echo "$cfg" | jq -r '.sync.skip')
+        labels_skip=$(echo "$cfg" | jq -r '.sync.labels.skip')
+        labels_exclude=$(echo "$cfg" | jq -c '.sync.labels.exclude')
+        labels_allow_removal=$(echo "$cfg" | jq -r '.sync.labels.allow_removal')
+        files_skip=$(echo "$cfg" | jq -r '.sync.files.skip')
+        files_exclude=$(echo "$cfg" | jq -c '.sync.files.exclude')
+        files_allow_removal=$(echo "$cfg" | jq -r '.sync.files.allow_removal')
+
+        # Output as single-line JSON for GITHUB_OUTPUT
+        config_json=$(echo "$config" | jq -c '.')
+
+        echo "config=$config_json" >> "$GITHUB_OUTPUT"
+        echo "skip=$skip" >> "$GITHUB_OUTPUT"
+        echo "labels_skip=$labels_skip" >> "$GITHUB_OUTPUT"
+        echo "labels_exclude=$labels_exclude" >> "$GITHUB_OUTPUT"
+        echo "labels_allow_removal=$labels_allow_removal" >> "$GITHUB_OUTPUT"
+        echo "files_skip=$files_skip" >> "$GITHUB_OUTPUT"
+        echo "files_exclude=$files_exclude" >> "$GITHUB_OUTPUT"
+        echo "files_allow_removal=$files_allow_removal" >> "$GITHUB_OUTPUT"
+
+        echo ""
+        echo "📊 Config summary for $REPO:"
+        echo "   skip: $skip"
+        echo "   labels.skip: $labels_skip"
+        echo "   labels.exclude: $labels_exclude"
+        echo "   labels.allow_removal: $labels_allow_removal"
+        echo "   files.skip: $files_skip"
+        echo "   files.exclude: $files_exclude"
+        echo "   files.allow_removal: $files_allow_removal"

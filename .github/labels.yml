@@ -3,158 +3,162 @@
 #
 # Format:
 #   - name: "label-name"          # Required, max 50 characters
-#     color: "hex-color"          # Required, 6-char hex without #
+#     color: "#hex-color"         # Required, 6-char hex with #
 #     description: "description"  # Optional, max 100 characters
 #
 # Constraints:
 #   - Label name: max 50 characters
 #   - Description: max 100 characters
-#   - Color: 6-character hex code (without #)
+#   - Color: 6-character hex code (with #)
 
 # =============================================================================
 # Kind labels - categorize the type of issue/PR
 # =============================================================================
 - name: "kind/bug"
-  color: "d73a4a"
+  color: "#d73a4a"
   description: "Something isn't working"
 
 - name: "kind/enhancement"
-  color: "a2eeef"
+  color: "#a2eeef"
   description: "New feature or request"
 
 - name: "kind/documentation"
-  color: "0075ca"
+  color: "#0075ca"
   description: "Improvements or additions to documentation"
 
 - name: "kind/question"
-  color: "d876e3"
+  color: "#d876e3"
   description: "Further information is requested"
 
 - name: "kind/security"
-  color: "d73a4a"
+  color: "#d73a4a"
   description: "Security-related issues and improvements"
 
 # =============================================================================
 # Area labels - identify which part of the project is affected
 # =============================================================================
 - name: "area/ci"
-  color: "fbca04"
+  color: "#fbca04"
   description: "CI/CD and automation"
 
 - name: "area/docs"
-  color: "0075ca"
+  color: "#0075ca"
   description: "Documentation"
 
 - name: "area/api"
-  color: "1d76db"
+  color: "#1d76db"
   description: "API and interfaces"
 
 - name: "area/testing"
-  color: "bfd4f2"
+  color: "#bfd4f2"
   description: "Testing and test infrastructure"
 
 - name: "area/deps"
-  color: "ededed"
+  color: "#ededed"
   description: "Dependencies and dependency management"
 
 # =============================================================================
 # CI labels - control CI behavior
 # =============================================================================
 - name: "ci/skip-tests"
-  color: "fef2c0"
+  color: "#fef2c0"
   description: "Skip running tests in CI"
 
 - name: "ci/skip-lint"
-  color: "fef2c0"
+  color: "#fef2c0"
   description: "Skip linting in CI"
 
 - name: "ci/skip-build"
-  color: "fef2c0"
+  color: "#fef2c0"
   description: "Skip build step in CI"
 
 - name: "ci/force-full"
-  color: "c2e0c6"
+  color: "#c2e0c6"
   description: "Force full CI run (ignore optimizations)"
 
 # =============================================================================
 # Release labels - trigger release after PR merge
 # =============================================================================
 - name: "release"
-  color: "6f42c1"
+  color: "#6f42c1"
   description: "Trigger release (version determined by commits)"
 
 - name: "release/major"
-  color: "d73a4a"
+  color: "#d73a4a"
   description: "Trigger major version release (breaking changes)"
 
 - name: "release/minor"
-  color: "a2eeef"
+  color: "#a2eeef"
   description: "Trigger minor version release (new features)"
 
 - name: "release/patch"
-  color: "c2e0c6"
+  color: "#c2e0c6"
   description: "Trigger patch version release (bug fixes)"
 
 # =============================================================================
-# Smyklot automation labels
+# Automation labels
 # =============================================================================
+- name: "org-sync"
+  color: "#0e8a16"
+  description: "Organization-wide file and label synchronization"
+
 - name: "smyklot:pending-ci"
-  color: "fef2c0"
+  color: "#fef2c0"
   description: "Pending CI - merge commit"
 
 - name: "smyklot:pending-ci:squash"
-  color: "fef2c0"
+  color: "#fef2c0"
   description: "Pending CI - squash merge"
 
 - name: "smyklot:pending-ci:rebase"
-  color: "fef2c0"
+  color: "#fef2c0"
   description: "Pending CI - rebase merge"
 
 # =============================================================================
 # Triage/status labels
 # =============================================================================
 - name: "triage/duplicate"
-  color: "cfd3d7"
+  color: "#cfd3d7"
   description: "This issue or pull request already exists"
 
 - name: "triage/wontfix"
-  color: "ffffff"
+  color: "#ffffff"
   description: "This will not be worked on"
 
 - name: "triage/invalid"
-  color: "e4e669"
+  color: "#e4e669"
   description: "This doesn't seem right"
 
 - name: "triage/needs-info"
-  color: "d876e3"
+  color: "#d876e3"
   description: "Additional information needed"
 
 # =============================================================================
 # Priority labels
 # =============================================================================
 - name: "priority/low"
-  color: "c5def5"
+  color: "#c5def5"
   description: "Low priority"
 
 - name: "priority/medium"
-  color: "fbca04"
+  color: "#fbca04"
   description: "Medium priority"
 
 - name: "priority/high"
-  color: "ff9f1c"
+  color: "#ff9f1c"
   description: "High priority"
 
 - name: "priority/critical"
-  color: "d73a4a"
+  color: "#d73a4a"
   description: "Critical priority - needs immediate attention"
 
 # =============================================================================
 # Community labels
 # =============================================================================
 - name: "good first issue"
-  color: "7057ff"
+  color: "#7057ff"
   description: "Good for newcomers"
 
 - name: "help wanted"
-  color: "008672"
+  color: "#008672"
   description: "Extra attention is needed"

@@ -1,0 +1,15 @@
+---
+extends: default
+
+rules:
+  # Allow inline comments with 1 space (for action version comments)
+  comments:
+    min-spaces-from-content: 1
+
+  # GitHub Actions uses `on:` which is a truthy value
+  truthy:
+    allowed-values: ["true", "false", "on"]
+
+  # Allow longer lines in workflow files (bash scripts)
+  line-length:
+    max: 120

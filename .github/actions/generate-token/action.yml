@@ -1,0 +1,33 @@
+name: Generate GitHub App Token
+description: Generate a GitHub App token for authentication
+
+inputs:
+  app-id:
+    description: GitHub App ID
+    required: true
+  private-key:
+    description: GitHub App private key
+    required: true
+  owner:
+    description: GitHub organization or user
+    required: true
+  repositories:
+    description: Comma-separated list of repositories (optional)
+    required: false
+
+outputs:
+  token:
+    description: Generated GitHub App token
+    value: ${{ steps.app-token.outputs.token }}
+
+runs:
+  using: composite
+  steps:
+    - name: Generate App Token
+      id: app-token
+      uses: actions/create-github-app-token@7e473efe3cb98aa54f8d4bac15400b15fad77d94 # v2.2.0
+      with:
+        app-id: ${{ inputs.app-id }}
+        private-key: ${{ inputs.private-key }}
+        owner: ${{ inputs.owner }}
+        repositories: ${{ inputs.repositories }}

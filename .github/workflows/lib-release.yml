@@ -1,0 +1,147 @@
+---
+# Reusable release workflow for semantic versioning
+# Usage:
+#   jobs:
+#     release:
+#       uses: smykla-labs/.github/.github/workflows/lib-release.yml@<commit-sha> # v1.0.0
+#       with:
+#         version-type: "auto"
+# Note: Pin to commit SHA with semver comment. Get SHA: git rev-parse v1.0.0
+
+name: Release
+
+on:
+  workflow_call:
+    inputs:
+      version-type:
+        description: "Version bump type (major, minor, patch, auto)"
+        required: false
+        type: string
+        default: "auto"
+      prerelease:
+        description: "Mark as prerelease"
+        required: false
+        type: boolean
+        default: false
+      draft:
+        description: "Create as draft release"
+        required: false
+        type: boolean
+        default: false
+      generate-notes:
+        description: "Auto-generate release notes"
+        required: false
+        type: boolean
+        default: true
+    outputs:
+      version:
+        description: "Released version tag"
+        value: ${{ jobs.release.outputs.version }}
+      release-url:
+        description: "GitHub release URL"
+        value: ${{ jobs.release.outputs.url }}
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.version.outputs.new_tag }}
+      url: ${{ steps.release.outputs.url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Get latest tag
+        id: latest
+        run: |
+          tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "Latest tag: $tag"
+
+      - name: Determine version bump
+        id: bump
+        env:
+          VERSION_TYPE: ${{ inputs.version-type }}
+          LATEST_TAG: ${{ steps.latest.outputs.tag }}
+        run: |
+          if [ "$VERSION_TYPE" = "auto" ]; then
+            # Analyze commits since last tag for conventional commit types
+            commits=$(git log "$LATEST_TAG"..HEAD --pretty=format:"%s" 2>/dev/null || git log --pretty=format:"%s")
+
+            if echo "$commits" | grep -qE "^(feat|feature)(\(.+\))?!:|^BREAKING CHANGE:"; then
+              bump="major"
+            elif echo "$commits" | grep -qE "^feat(\(.+\))?:"; then
+              bump="minor"
+            else
+              bump="patch"
+            fi
+          else
+            bump="$VERSION_TYPE"
+          fi
+
+          echo "type=$bump" >> "$GITHUB_OUTPUT"
+          echo "Version bump: $bump"
+
+      - name: Calculate new version
+        id: version
+        env:
+          LATEST_TAG: ${{ steps.latest.outputs.tag }}
+          BUMP_TYPE: ${{ steps.bump.outputs.type }}
+        run: |
+          # Strip 'v' prefix and split version
+          version=${LATEST_TAG#v}
+          major=$(echo "$version" | cut -d. -f1)
+          minor=$(echo "$version" | cut -d. -f2)
+          patch=$(echo "$version" | cut -d. -f3)
+
+          case "$BUMP_TYPE" in
+            major)
+              major=$((major + 1))
+              minor=0
+              patch=0
+              ;;
+            minor)
+              minor=$((minor + 1))
+              patch=0
+              ;;
+            patch)
+              patch=$((patch + 1))
+              ;;
+          esac
+
+          new_tag="v${major}.${minor}.${patch}"
+          echo "new_tag=$new_tag" >> "$GITHUB_OUTPUT"
+          echo "New version: $new_tag"
+
+      - name: Create tag
+        env:
+          NEW_TAG: ${{ steps.version.outputs.new_tag }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "$NEW_TAG" -m "Release $NEW_TAG"
+          git push origin "$NEW_TAG"
+
+      - name: Create release
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NEW_TAG: ${{ steps.version.outputs.new_tag }}
+          PRERELEASE: ${{ inputs.prerelease }}
+          DRAFT: ${{ inputs.draft }}
+          GENERATE_NOTES: ${{ inputs.generate-notes }}
+        run: |
+          flags=""
+          [ "$PRERELEASE" = "true" ] && flags="$flags --prerelease"
+          [ "$DRAFT" = "true" ] && flags="$flags --draft"
+          [ "$GENERATE_NOTES" = "true" ] && flags="$flags --generate-notes"
+
+          # shellcheck disable=SC2086
+          url=$(gh release create "$NEW_TAG" $flags --title "$NEW_TAG")
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "Release URL: $url"
