@@ -76,6 +76,10 @@
   color: "#c2e0c6"
   description: "Force full CI run (ignore optimizations)"
 
+- name: "ci/skip-all"
+  color: "#fef2c0"
+  description: "Skip all CI validations (lint, test, build)"
+
 # =============================================================================
 # Release labels - trigger release after PR merge
 # =============================================================================

@@ -39,7 +39,7 @@ inputs:
   pr-labels:
     description: Comma-separated labels for PR
     required: false
-    default: org-sync
+    default: ci/skip-all
 
 outputs:
   pr-url:
@@ -75,6 +75,7 @@ runs:
         BRANCH_PREFIX: ${{ inputs.branch-prefix }}
         COMMIT_PREFIX: ${{ inputs.commit-prefix }}
         PR_LABELS: ${{ inputs.pr-labels }}
+        GITHUB_RUN_ID: ${{ github.run_id }}
       run: |
         set -euo pipefail
 
@@ -124,6 +125,8 @@ runs:
         skipped=0
         excluded=0
         changes=()
+        created_files=()
+        updated_files=()
 
         # Get default branch for target repo
         default_branch=$(gh api "repos/$ORG/$REPO" --jq '.default_branch')
@@ -184,17 +187,19 @@ runs:
             echo "      🔄 Needs update"
             action="update"
             updated=$((updated + 1))
+            updated_files+=("$dest_path")
           else
             # File doesn't exist - create
             echo "      🆕 Will create"
             action="create"
             target_sha=""
             created=$((created + 1))
+            created_files+=("$dest_path")
           fi
 
           # Stage change for batch commit
-          # Encode content as base64 for later use
-          encoded_content=$(echo -n "$source_content" | base64 | tr -d '\n')
+          # Encode content as base64 for later use (preserve trailing newline)
+          encoded_content=$(echo "$source_content" | base64 | tr -d '\n')
           changes+=("$(jq -n \
             --arg path "$dest_path" \
             --arg content "$encoded_content" \
@@ -325,14 +330,42 @@ runs:
         else
           # Create PR
           pr_title="chore(sync): sync organization files"
-          pr_body="Syncs org files from central .github repository.
 
-        ## Changes
-        - Created: $created file(s)
-        - Updated: $updated file(s)
+          # Build file lists for PR body
+          created_list=""
+          if [ ${#created_files[@]} -gt 0 ]; then
+            for file in "${created_files[@]}"; do
+              created_list="${created_list}- \`${file}\`"$'\n'
+            done
+          else
+            created_list="- None"$'\n'
+          fi
 
-        ---
-        *This PR was automatically created by the org file sync workflow.*"
+          updated_list=""
+          if [ ${#updated_files[@]} -gt 0 ]; then
+            for file in "${updated_files[@]}"; do
+              updated_list="${updated_list}- \`${file}\`"$'\n'
+            done
+          else
+            updated_list="- None"$'\n'
+          fi
+
+          # Workflow run URL
+          workflow_url="https://github.com/$ORG/$SOURCE_REPO/actions/runs/${GITHUB_RUN_ID}"
+
+          pr_body="Syncs organization files from [\`$ORG/$SOURCE_REPO\`](https://github.com/$ORG/$SOURCE_REPO).
+
+## Files Created
+
+${created_list}
+## Files Updated
+
+${updated_list}
+---
+
+**Workflow Run:** ${workflow_url}
+
+*This PR was automatically created by the org file sync workflow.*"
 
           # Parse labels
           IFS=',' read -ra label_array <<< "$PR_LABELS"
