@@ -541,6 +541,10 @@ runs:
 
           # Parse labels for update
           IFS=',' read -ra label_array <<< "$PR_LABELS"
+          # Add review/destructive label if deletions present
+          if [ ${#deleted_files[@]} -gt 0 ]; then
+            label_array+=("review/destructive")
+          fi
           label_args=()
           for label in "${label_array[@]}"; do
             label_args+=(--add-label "$label")
@@ -557,6 +561,10 @@ runs:
 
           # Parse labels
           IFS=',' read -ra label_array <<< "$PR_LABELS"
+          # Add review/destructive label if deletions present
+          if [ ${#deleted_files[@]} -gt 0 ]; then
+            label_array+=("review/destructive")
+          fi
           label_args=()
           for label in "${label_array[@]}"; do
             label_args+=(--label "$label")

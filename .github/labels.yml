@@ -119,6 +119,13 @@
   description: "Pending CI - rebase merge"
 
 # =============================================================================
+# Review labels - indicate review requirements
+# =============================================================================
+- name: "review/destructive"
+  color: "#d73a4a"
+  description: "Contains deletions - requires careful manual review"
+
+# =============================================================================
 # Triage/status labels
 # =============================================================================
 - name: "triage/duplicate"
