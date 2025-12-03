@@ -33,7 +33,7 @@ jobs:
         uses: ./.github/actions/generate-token
         with:
           app-id: ${{ vars.SMYKLOT_APP_ID }}
-          private-key: ${{ secrets.SMYKLOT_PRIVATE_KEY }}
+          private-key: ${{ secrets.SMYKLOT_APP_PRIVATE_KEY }}
           owner: smykla-labs
 
       - name: Get repositories
@@ -62,7 +62,7 @@ jobs:
         uses: ./.github/actions/generate-token
         with:
           app-id: ${{ vars.SMYKLOT_APP_ID }}
-          private-key: ${{ secrets.SMYKLOT_PRIVATE_KEY }}
+          private-key: ${{ secrets.SMYKLOT_APP_PRIVATE_KEY }}
           owner: smykla-labs
           repositories: ${{ matrix.repo }}
 
