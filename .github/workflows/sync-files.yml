@@ -6,7 +6,6 @@ on:
     branches: [main]
     paths:
       - "templates/**"
-      - ".github/sync.yml"
       - ".github/workflows/sync-files.yml"
       - ".github/actions/sync-files-to-repo/**"
       - ".github/actions/get-sync-config/**"
@@ -52,14 +51,34 @@ jobs:
       - name: Checkout
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
-      - name: Parse files config
+      - name: Discover files from templates directory
         id: files
         run: |
-          # Parse sync.yml and convert to JSON array
-          files=$(yq eval -o json '.group[0].files' .github/sync.yml)
-          echo "config=$(echo "$files" | jq -c '.')" >> "$GITHUB_OUTPUT"
-          echo "Files to sync:"
-          echo "$files" | jq -r '.[] | "   - \(.source) -> \(.dest)"'
+          # Automatically discover all files in templates/ directory
+          files_json="[]"
+
+          echo "Discovering files in templates/ directory..."
+
+          # Find all files (not directories) in templates/
+          while IFS= read -r file; do
+            # Get relative path from templates/
+            rel_path="${file#templates/}"
+
+            # Create JSON object for this file
+            file_obj=$(jq -n \
+              --arg source "$file" \
+              --arg dest "$rel_path" \
+              '{source: $source, dest: $dest}')
+
+            # Append to array
+            files_json=$(echo "$files_json" | jq --argjson obj "$file_obj" '. += [$obj]')
+
+            echo "   - $file -> $rel_path"
+          done < <(find templates -type f | sort)
+
+          echo "config=$(echo "$files_json" | jq -c '.')" >> "$GITHUB_OUTPUT"
+          echo ""
+          echo "Total files: $(echo "$files_json" | jq 'length')"
 
   sync-files:
     needs: [get-repos, prepare-files]
@@ -110,6 +129,7 @@ jobs:
           UPDATED: ${{ steps.sync.outputs.updated }}
           SKIPPED: ${{ steps.sync.outputs.skipped }}
           EXCLUDED: ${{ steps.sync.outputs.excluded }}
+          MODIFIED_EXCLUDED: ${{ steps.sync.outputs.modified-excluded }}
           PR_URL: ${{ steps.sync.outputs.pr-url }}
         run: |
           {
@@ -121,6 +141,7 @@ jobs:
             echo "| Updated | $UPDATED |"
             echo "| Skipped | $SKIPPED |"
             echo "| Excluded | $EXCLUDED |"
+            echo "| Modified & Excluded | $MODIFIED_EXCLUDED |"
             echo ""
             if [ -n "$PR_URL" ]; then
               echo "**PR:** $PR_URL"

@@ -57,6 +57,9 @@ outputs:
   excluded:
     description: Number of files excluded by config
     value: ${{ steps.sync.outputs.excluded }}
+  modified-excluded:
+    description: Number of files excluded due to manual modifications
+    value: ${{ steps.sync.outputs.modified_excluded }}
 
 runs:
   using: composite
@@ -138,9 +141,11 @@ runs:
         updated=0
         skipped=0
         excluded=0
+        modified_excluded=0
         changes=()
         created_files=()
         updated_files=()
+        modified_excluded_files=()
 
         # Get default branch for target repo
         default_branch=$(gh api "repos/$ORG/$REPO" --jq '.default_branch')
@@ -198,6 +203,34 @@ runs:
               continue
             fi
 
+            # SPECIAL CASE: renovate.json only
+            # This file is allowed to be customized per-repo, so we detect manual
+            # modifications and exclude it from sync if found. This prevents
+            # overwriting repo-specific Renovate configurations.
+            # DO NOT add other files here without explicit approval.
+            if [ "$dest_path" = "renovate.json" ] || \
+               [ "$dest_path" = ".github/renovate.json" ]; then
+              echo "      🔍 Checking for manual modifications (renovate.json only)..."
+
+              # Get commit history for this file (last 20 commits)
+              commits=$(gh api "repos/$ORG/$REPO/commits" \
+                -f path="$dest_path" \
+                -f per_page=20 \
+                --jq '.[] | .commit.message' 2>&1) || commits=""
+
+              # Check if there are any commits that are NOT from sync workflow
+              manual_commits=$(echo "$commits" | \
+                grep -v "^chore(sync):" || true)
+
+              if [ -n "$manual_commits" ]; then
+                echo "      ⚠️  Manual modifications detected, excluding from sync"
+                echo "      💡 Add to .github/sync-config.yml to silence this warning"
+                modified_excluded=$((modified_excluded + 1))
+                modified_excluded_files+=("$dest_path")
+                continue
+              fi
+            fi
+
             echo "      🔄 Needs update"
             action="update"
             updated=$((updated + 1))
@@ -228,12 +261,14 @@ runs:
         echo "   Updated: $updated"
         echo "   Skipped: $skipped (already up to date)"
         echo "   Excluded: $excluded (by repo config)"
+        echo "   Modified & Excluded: $modified_excluded (manual changes detected)"
 
         # Output counts
         echo "created=$created" >> "$GITHUB_OUTPUT"
         echo "updated=$updated" >> "$GITHUB_OUTPUT"
         echo "skipped=$skipped" >> "$GITHUB_OUTPUT"
         echo "excluded=$excluded" >> "$GITHUB_OUTPUT"
+        echo "modified_excluded=$modified_excluded" >> "$GITHUB_OUTPUT"
 
         # If no changes, check for existing PR and close it
         if [ ${#changes[@]} -eq 0 ]; then
@@ -366,12 +401,34 @@ runs:
           updated_list="- None"$'\n'
         fi
 
+        # Build modified/excluded files alert
+        modified_alert=""
+        if [ ${#modified_excluded_files[@]} -gt 0 ]; then
+          modified_alert=$'\n\n'"> [!IMPORTANT]"$'\n'
+          modified_alert="${modified_alert}"> The following files have been manually modified and were excluded from this sync:"$'\n'
+          modified_alert="${modified_alert}""> "$'\n'
+          for file in "${modified_excluded_files[@]}"; do
+            modified_alert="${modified_alert}""> - \`${file}\`"$'\n'
+          done
+          modified_alert="${modified_alert}""> "$'\n'
+          modified_alert="${modified_alert}""> To permanently exclude these files from sync, add them to \`.github/sync-config.yml\`:"$'\n'
+          modified_alert="${modified_alert}""> \`\`\`yaml"$'\n'
+          modified_alert="${modified_alert}""> sync:"$'\n'
+          modified_alert="${modified_alert}">   files:"$'\n'
+          modified_alert="${modified_alert}">     exclude:"$'\n'
+          for file in "${modified_excluded_files[@]}"; do
+            modified_alert="${modified_alert}">       - ${file}"$'\n'
+          done
+          modified_alert="${modified_alert}""> \`\`\`"
+        fi
+
         # Build PR body
         run_url="https://github.com/$ORG/$SOURCE_REPO/actions/runs/${GITHUB_RUN_ID}"
         pr_body="Syncs organization files from [\`$ORG/$SOURCE_REPO\`](https://github.com/$ORG/$SOURCE_REPO)."
         pr_body="${pr_body}"$'\n\n'"## Files Created"$'\n\n'"${created_list}"
         pr_body="${pr_body}"$'\n'"## Files Updated"$'\n\n'"${updated_list}"
-        pr_body="${pr_body}"$'\n'"---"$'\n\n'
+        pr_body="${pr_body}${modified_alert}"
+        pr_body="${pr_body}"$'\n\n'"---"$'\n\n'
         pr_body="${pr_body}*This PR was automatically created by the org file sync workflow "
         pr_body="${pr_body}(run [#${GITHUB_RUN_ID}](${run_url}))*"
 

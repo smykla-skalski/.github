@@ -17,7 +17,6 @@ Organization-wide defaults and synchronization for smykla-labs repositories. Thi
 .
 ├── .github/
 │   ├── labels.yml              # Label definitions synced to all repos
-│   ├── sync.yml                # File sync configuration
 │   ├── workflows/
 │   │   ├── sync-labels.yml     # Label sync workflow
 │   │   ├── sync-files.yml      # File sync workflow
@@ -37,10 +36,12 @@ Organization-wide defaults and synchronization for smykla-labs repositories. Thi
 │   └── sync-config.yml         # Unified sync config example
 ├── docs/
 │   └── MIGRATION.md            # Reusable workflows migration guide
-├── templates/                  # Source files for file sync
+├── templates/                  # Source files for file sync (auto-discovered)
 │   ├── CODE_OF_CONDUCT.md
 │   ├── CONTRIBUTING.md
 │   ├── SECURITY.md
+│   ├── LICENSE
+│   ├── renovate.json
 │   └── .github/
 │       ├── ISSUE_TEMPLATE/
 │       └── PULL_REQUEST_TEMPLATE.md
@@ -71,9 +72,10 @@ The synchronization system uses custom composite actions with unified per-repo c
 
 - **Action**: Custom composite action (`.github/actions/sync-files-to-repo`)
 - **Workflow**: `.github/workflows/sync-files.yml`
-- **Config**: `.github/sync.yml` (central) + per-repo `.github/sync-config.yml`
+- **Source**: All files in `templates/` directory (auto-discovered)
+- **Config**: Per-repo `.github/sync-config.yml` (optional)
 - **Method**: Creates PRs with file changes via GitHub API
-- **Features**: File exclusions, skip flags, PR management
+- **Features**: File exclusions, skip flags, PR management, smart renovate.json handling
 
 **Unified Config:**
 
@@ -99,11 +101,17 @@ The synchronization system uses custom composite actions with unified per-repo c
 
 ### File Synchronization
 
-- **Source**: `templates/` directory
-- **Config**: `.github/sync.yml` (central) + per-repo `.github/sync-config.yml`
+- **Source**: `templates/` directory (all files auto-discovered)
+- **Config**: Per-repo `.github/sync-config.yml` (optional)
 - **Target**: All repositories in smykla-labs organization (except `.github` itself)
 - **Method**: Custom composite action using GitHub API
-- **Features**: PR creation, per-file commits, exclusions, skip flags
+- **Features**: PR creation, single commit, exclusions, skip flags, smart renovate.json handling
+
+**Smart renovate.json Handling:**
+- Detects manual modifications to `renovate.json` by checking commit history
+- If manual commits found (not from sync workflow), excludes file from sync
+- Shows alert in PR with instructions to add to `.github/sync-config.yml`
+- This is the ONLY file with this special behavior
 
 ### Reusable Workflows
 
@@ -157,12 +165,9 @@ All workflows use the **smyklot** GitHub App for authentication:
 ### Adding New Sync Files
 
 1. Add file to `templates/` directory (preserving the desired path structure)
-2. Add file to `.github/sync.yml` in the `files` list:
-   ```yaml
-   - source: templates/YOUR_FILE.md
-     dest: YOUR_FILE.md
-   ```
-3. Commit and push to `main` - syncs automatically to all repos
+2. Commit and push to `main` - file is auto-discovered and syncs automatically to all repos
+
+**Note:** No configuration needed! All files in `templates/` are automatically synced to target repos.
 
 ### Manual Sync
 
@@ -186,16 +191,18 @@ Trigger workflows manually via GitHub Actions:
 
 #### File Sync Workflow
 
-- **Trigger**: Push to `main` when `templates/**` or `sync.yml` changes, or manual dispatch
+- **Trigger**: Push to `main` when `templates/**` changes, or manual dispatch
 - **Flow**:
-  1. Get list of all org repositories
-  2. For each repo: Fetch sync config, generate token, sync files
+  1. Auto-discover all files in `templates/` directory
+  2. Get list of all org repositories
+  3. For each repo: Fetch sync config, generate token, sync files
 - **Matrix**: Processes all repos in parallel (fail-fast: false)
 - **Action**: Custom composite action handles PR creation and file sync
 - **Branch**: Uses `chore/org-sync` prefix
-- **Commits**: One commit per file with `chore(sync):` prefix
-- **PR**: Labeled with `org-sync`, title: "chore(sync): sync organization files"
+- **Commits**: Single commit with all changes using `chore(sync):` prefix
+- **PR**: Labeled with `ci/skip-all`, title: "chore(sync): sync organization files"
 - **Dry run**: Available via workflow dispatch
+- **Special**: Detects manual `renovate.json` modifications and excludes from sync
 
 ## Files to Edit
 
@@ -206,8 +213,7 @@ Trigger workflows manually via GitHub Actions:
 
 ### Files
 
-- **Source**: `templates/` directory
-- **Config**: `.github/sync.yml`
+- **Source**: `templates/` directory (auto-discovered)
 - **Workflow**: `.github/workflows/sync-files.yml`
 
 ### Community Health Files
