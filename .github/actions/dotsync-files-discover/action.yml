@@ -9,6 +9,10 @@ inputs:
     required: false
     default: templates
 
+outputs:
+  config:
+    description: JSON array of file mappings (source/dest pairs)
+
 runs:
   using: docker
   image: docker://ghcr.io/smykla-labs/dotsync:latest
@@ -16,3 +20,4 @@ runs:
     - files
     - discover
     - --templates-dir=${{ inputs.templates-dir }}
+    - --github-output

@@ -23,6 +23,7 @@ tasks:
     desc: Lint Go code
     cmds:
       - echo "▶ Linting Go code"
+      - golangci-lint cache clean
       - |
         if [ -n "$CI" ]; then
           echo "⊘ Skipping golangci-lint in CI (using golangci-lint-action instead)"

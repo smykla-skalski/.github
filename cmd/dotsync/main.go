@@ -20,16 +20,17 @@ var version = "dev"
 
 // CLI defines the command-line interface structure.
 type CLI struct {
-	LogLevel  string     `help:"Log level (trace|debug|info|warn|error)" default:"info" enum:"trace,debug,info,warn,error"`
-	UseGHAuth bool       `help:"Use 'gh auth token' for authentication"`
-	DryRun    bool       `help:"Preview changes without applying them"`
-	Org       string     `help:"GitHub organization" default:"smykla-labs"`
-	Version   VersionCmd `cmd:"" help:"Show version information"`
-	Labels    LabelsCmd  `cmd:"" help:"Label synchronization commands"`
-	Files     FilesCmd   `cmd:"" help:"File synchronization commands"`
-	Smyklot   SmyklotCmd `cmd:"" help:"Smyklot version synchronization commands"`
-	Repos     ReposCmd   `cmd:"" help:"Repository listing commands"`
-	Config    ConfigCmd  `cmd:"" help:"Configuration schema commands"`
+	LogLevel     string     `help:"Log level (trace|debug|info|warn|error)" default:"info" enum:"trace,debug,info,warn,error"`
+	UseGHAuth    bool       `help:"Use 'gh auth token' for authentication"`
+	DryRun       bool       `help:"Preview changes without applying them"`
+	GitHubOutput bool       `name:"github-output" help:"Write outputs to GITHUB_OUTPUT for GitHub Actions"`
+	Org          string     `help:"GitHub organization" default:"smykla-labs"`
+	Version      VersionCmd `cmd:"" help:"Show version information"`
+	Labels       LabelsCmd  `cmd:"" help:"Label synchronization commands"`
+	Files        FilesCmd   `cmd:"" help:"File synchronization commands"`
+	Smyklot      SmyklotCmd `cmd:"" help:"Smyklot version synchronization commands"`
+	Repos        ReposCmd   `cmd:"" help:"Repository listing commands"`
+	Config       ConfigCmd  `cmd:"" help:"Configuration schema commands"`
 }
 
 // VersionCmd shows version information.
@@ -37,7 +38,7 @@ type VersionCmd struct{}
 
 // Run executes the version command.
 func (*VersionCmd) Run(_ context.Context) error {
-	fmt.Printf("orgsync version %s\n", version)
+	fmt.Printf("dotsync version %s\n", version)
 
 	return nil
 }
@@ -186,7 +187,7 @@ type FileMapping struct {
 }
 
 // Run executes the files discover command.
-func (c *FilesDiscoverCmd) Run(ctx context.Context, _ *CLI) error {
+func (c *FilesDiscoverCmd) Run(ctx context.Context, cli *CLI) error {
 	log := logger.FromContext(ctx)
 
 	log.Debug("discovering files", "templates_dir", c.TemplatesDir)
@@ -225,6 +226,11 @@ func (c *FilesDiscoverCmd) Run(ctx context.Context, _ *CLI) error {
 	}
 
 	fmt.Println(string(output))
+
+	// Write to GITHUB_OUTPUT if enabled
+	if err := github.WriteGitHubOutput(cli.GitHubOutput, "config", string(output)); err != nil {
+		log.Warn("failed to write to GITHUB_OUTPUT", "error", err)
+	}
 
 	log.Debug("file discovery completed", "count", len(mappings))
 
@@ -392,6 +398,11 @@ func (c *ReposListCmd) Run(ctx context.Context, cli *CLI) error {
 
 	fmt.Println(string(output))
 
+	// Write to GITHUB_OUTPUT if enabled
+	if err := github.WriteGitHubOutput(cli.GitHubOutput, "repos", string(output)); err != nil {
+		log.Warn("failed to write to GITHUB_OUTPUT", "error", err)
+	}
+
 	return nil
 }
 
@@ -540,7 +551,7 @@ func main() {
 	appCtx := context.Background()
 
 	kongCtx := kong.Parse(&cli,
-		kong.Name("orgsync"),
+		kong.Name("dotsync"),
 		kong.Description("Organization sync tool for labels, files, and smyklot versions"),
 		kong.UsageOnError(),
 		kong.ConfigureHelp(kong.HelpOptions{Compact: true}),

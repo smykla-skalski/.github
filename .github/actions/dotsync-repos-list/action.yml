@@ -16,6 +16,10 @@ inputs:
     required: false
     default: json
 
+outputs:
+  repos:
+    description: JSON array of repository names
+
 runs:
   using: docker
   image: docker://ghcr.io/smykla-labs/dotsync:latest
@@ -24,5 +28,6 @@ runs:
     - list
     - --org=${{ inputs.org }}
     - --format=${{ inputs.format }}
+    - --github-output
   env:
     GITHUB_TOKEN: ${{ inputs.token }}
