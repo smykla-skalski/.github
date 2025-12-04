@@ -90,6 +90,7 @@ func SyncFiles(
 
 	// Process files
 	stats := &FileSyncStats{}
+
 	var changes []FileChange
 
 	for _, mapping := range fileMappings {
@@ -513,8 +514,8 @@ func closeExistingPR(
 		State: github.Ptr("closed"),
 	}
 
-	if _, _, err := client.PullRequests.Edit(ctx, org, repo, prNumber, pr); err != nil {
-		return errors.Wrap(err, "closing PR")
+	if _, _, errEdit := client.PullRequests.Edit(ctx, org, repo, prNumber, pr); errEdit != nil {
+		return errors.Wrap(errEdit, "closing PR")
 	}
 
 	// Add comment

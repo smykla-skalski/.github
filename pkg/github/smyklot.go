@@ -72,7 +72,8 @@ func SyncSmyklot(
 
 	// Process workflow files
 	stats := &SmyklotSyncStats{}
-	changes := []FileChange{}
+
+	var changes []FileChange
 
 	for _, workflowPath := range workflowFiles {
 		change, processed := processWorkflowFile(
@@ -159,7 +160,7 @@ func listWorkflowFiles(
 		return nil, errors.Wrap(err, "listing workflows directory")
 	}
 
-	workflowFiles := []string{}
+	var workflowFiles []string
 
 	for _, content := range dirContent {
 		if content.GetType() != "file" {

@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/alecthomas/kong"
@@ -99,7 +101,8 @@ func (c *LabelsSyncCmd) Run(ctx context.Context, cli *CLI) error {
 
 // FilesCmd contains file sync subcommands.
 type FilesCmd struct {
-	Sync FilesSyncCmd `cmd:"" help:"Sync files to a repository"`
+	Sync     FilesSyncCmd     `cmd:"" help:"Sync files to a repository"`
+	Discover FilesDiscoverCmd `cmd:"" help:"Discover files in templates directory"`
 }
 
 // FilesSyncCmd syncs files to a repository.
@@ -168,14 +171,70 @@ func (c *FilesSyncCmd) Run(ctx context.Context, cli *CLI) error {
 	return nil
 }
 
+// FilesDiscoverCmd discovers files in templates directory.
+type FilesDiscoverCmd struct {
+	TemplatesDir string `help:"Path to templates directory" default:"templates"`
+}
+
+// FileMapping represents a source to destination file mapping.
+type FileMapping struct {
+	Source string `json:"source"`
+	Dest   string `json:"dest"`
+}
+
+// Run executes the files discover command.
+func (c *FilesDiscoverCmd) Run(ctx context.Context, _ *CLI) error {
+	log := logger.FromContext(ctx)
+
+	log.Debug("discovering files", "templates_dir", c.TemplatesDir)
+
+	mappings := make([]FileMapping, 0)
+
+	if err := filepath.Walk(c.TemplatesDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if info.IsDir() {
+			return nil
+		}
+
+		relPath, err := filepath.Rel(c.TemplatesDir, path)
+		if err != nil {
+			return err
+		}
+
+		mappings = append(mappings, FileMapping{
+			Source: path,
+			Dest:   relPath,
+		})
+
+		log.Debug("discovered file", "source", path, "dest", relPath)
+
+		return nil
+	}); err != nil {
+		return err
+	}
+
+	output, err := json.Marshal(mappings)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(string(output))
+
+	log.Debug("file discovery completed", "count", len(mappings))
+
+	return nil
+}
+
 // splitLabels splits comma-separated labels into a slice.
 func splitLabels(labels string) []string {
 	parts := strings.Split(labels, ",")
 	result := make([]string, 0, len(parts))
 
 	for _, part := range parts {
-		trimmed := strings.TrimSpace(part)
-		if trimmed != "" {
+		if trimmed := strings.TrimSpace(part); trimmed != "" {
 			result = append(result, trimmed)
 		}
 	}
