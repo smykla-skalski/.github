@@ -1,0 +1,123 @@
+---
+name: Verify Schema
+
+on:
+  pull_request:
+    paths:
+      - "pkg/config/**"
+      - "cmd/dotsync/main.go"
+      - "schemas/sync-config.schema.json"
+      - "go.mod"
+      - "go.sum"
+      - ".github/workflows/verify-schema.yml"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  verify-schema:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Generate token
+        id: generate-token
+        uses: actions/create-github-app-token@7e473efe3cb98aa54f8d4bac15400b15fad77d94 # v2.2.0
+        with:
+          app-id: ${{ vars.SMYKLOT_APP_ID }}
+          private-key: ${{ secrets.SMYKLOT_PRIVATE_KEY }}
+
+      - name: Checkout
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          ref: ${{ github.head_ref }}
+          token: ${{ steps.generate-token.outputs.token }}
+
+      - name: Set up Go
+        uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Build dotsync
+        run: go build -o bin/dotsync ./cmd/dotsync
+
+      - name: Generate schema
+        run: ./bin/dotsync config schema > schemas/sync-config.schema.json
+
+      - name: Check for schema changes
+        id: check
+        run: |
+          if git diff --quiet schemas/sync-config.schema.json; then
+            echo "Schema is up to date"
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Schema is out of date"
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Commit and push regenerated schema
+        if: steps.check.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+          BRANCH: ${{ github.head_ref }}
+        run: |
+          # Get current ref SHA
+          CURRENT_SHA=$(gh api "repos/smykla-labs/.github/git/ref/heads/${BRANCH}" --jq '.object.sha')
+
+          # Get current tree SHA
+          TREE_SHA=$(gh api "repos/smykla-labs/.github/git/commits/${CURRENT_SHA}" --jq '.tree.sha')
+
+          # Create blob for updated schema
+          BLOB_SHA=$(gh api repos/smykla-labs/.github/git/blobs \
+            -X POST \
+            -f content=@schemas/sync-config.schema.json \
+            -f encoding=utf-8 \
+            --jq '.sha')
+
+          # Create new tree with updated schema
+          NEW_TREE_SHA=$(gh api repos/smykla-labs/.github/git/trees \
+            -X POST \
+            -f base_tree="${TREE_SHA}" \
+            -f "tree[][path]=schemas/sync-config.schema.json" \
+            -f "tree[][mode]=100644" \
+            -f "tree[][type]=blob" \
+            -f "tree[][sha]=${BLOB_SHA}" \
+            --jq '.sha')
+
+          # Create commit
+          COMMIT_MESSAGE="chore(schema): regenerate sync-config schema
+
+          Schema was out of sync with Go types. Regenerated using:
+          ./bin/dotsync config schema > schemas/sync-config.schema.json"
+
+          COMMIT_SHA=$(gh api repos/smykla-labs/.github/git/commits \
+            -X POST \
+            -f message="${COMMIT_MESSAGE}" \
+            -f tree="${NEW_TREE_SHA}" \
+            -f "parents[]=${CURRENT_SHA}" \
+            --jq '.sha')
+
+          # Update branch ref
+          gh api "repos/smykla-labs/.github/git/refs/heads/${BRANCH}" \
+            -X PATCH \
+            -f sha="${COMMIT_SHA}"
+
+          echo "✓ Committed and pushed regenerated schema (${COMMIT_SHA:0:7})"
+
+      - name: Fail if schema was regenerated
+        if: steps.check.outputs.changed == 'true'
+        run: |
+          echo "::error::Schema was out of date and has been regenerated"
+          echo ""
+          echo "❌ The schema was out of sync with the Go types."
+          echo "✓ The schema has been regenerated and committed to this PR."
+          echo "⏳ This check will run again automatically - please wait for it to pass."
+          echo ""
+          echo "To prevent this in the future, regenerate the schema before committing:"
+          echo "  ./bin/dotsync config schema > schemas/sync-config.schema.json"
+          exit 1
+
+      - name: Schema verification passed
+        if: steps.check.outputs.changed == 'false'
+        run: |
+          echo "✅ Schema is up to date with Go types"
