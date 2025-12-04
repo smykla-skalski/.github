@@ -7,8 +7,7 @@ on:
     paths:
       - "templates/**"
       - ".github/workflows/sync-files.yml"
-      - ".github/actions/sync-files-to-repo/**"
-      - ".github/actions/get-sync-config/**"
+      - ".github/actions/dotsync-files/**"
   workflow_dispatch:
     inputs:
       dry_run:
@@ -104,7 +103,7 @@ jobs:
           repositories: ${{ matrix.repo }}
 
       - name: Sync files
-        uses: ./.github/actions/orgsync-files
+        uses: ./.github/actions/dotsync-files
         with:
           token: ${{ steps.token.outputs.token }}
           org: smykla-labs

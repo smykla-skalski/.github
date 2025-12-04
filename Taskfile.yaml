@@ -1,4 +1,4 @@
-# Taskfile - orgsync automation
+# Taskfile - dotsync automation
 version: '3'
 set: [pipefail]
 output: prefixed
@@ -66,16 +66,16 @@ tasks:
 
   # Building
   build:
-    desc: Build the orgsync binary
+    desc: Build the dotsync binary
     sources:
       - cmd/**/*.go
       - pkg/**/*.go
     generates:
-      - bin/orgsync
+      - bin/dotsync
     cmds:
-      - echo "▶ Building orgsync binary"
-      - go build -o bin/orgsync ./cmd/orgsync
-      - echo "✓ Built bin/orgsync"
+      - echo "▶ Building dotsync binary"
+      - go build -o bin/dotsync ./cmd/dotsync
+      - echo "✓ Built bin/dotsync"
 
   # Dependencies
   deps:

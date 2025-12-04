@@ -7,8 +7,7 @@ on:
     paths:
       - ".github/labels.yml"
       - ".github/workflows/sync-labels.yml"
-      - ".github/actions/sync-labels-to-repo/**"
-      - ".github/actions/get-sync-config/**"
+      - ".github/actions/dotsync-labels/**"
   workflow_dispatch:
     inputs:
       dry_run:
@@ -67,7 +66,7 @@ jobs:
           repositories: ${{ matrix.repo }}
 
       - name: Sync labels to repository
-        uses: ./.github/actions/orgsync-labels
+        uses: ./.github/actions/dotsync-labels
         with:
           token: ${{ steps.token.outputs.token }}
           org: smykla-labs

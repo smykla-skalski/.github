@@ -1,7 +1,7 @@
 ---
-name: Sync Files (orgsync)
+name: Sync smyklot Version (dotsync)
 description: >-
-  Sync files from central config to target repository using orgsync container
+  Update smyklot version references in workflow files using dotsync container
 
 inputs:
   token:
@@ -13,8 +13,11 @@ inputs:
   repo:
     description: Repository name
     required: true
-  files-config:
-    description: JSON array of files to sync [{source, dest}, ...]
+  version:
+    description: smyklot version (e.g., 1.9.2)
+    required: true
+  tag:
+    description: smyklot tag (e.g., v1.9.2)
     required: true
   sync-config:
     description: JSON sync config from get-sync-config action
@@ -24,27 +27,18 @@ inputs:
     description: Dry run (no changes)
     required: false
     default: false
-  branch-prefix:
-    description: Prefix for sync branches
-    required: false
-    default: chore/org-sync
-  pr-labels:
-    description: Comma-separated labels for PR
-    required: false
-    default: ci/skip-all
 
 runs:
   using: docker
-  image: docker://ghcr.io/smykla-labs/orgsync:latest
+  image: docker://ghcr.io/smykla-labs/dotsync:latest
   args:
-    - files
+    - smyklot
     - sync
     - --org="${{ inputs.org }}"
     - --repo="${{ inputs.repo }}"
-    - --files-config="${{ inputs.files-config }}"
+    - --version="${{ inputs.version }}"
+    - --tag="${{ inputs.tag }}"
     - --config="${{ inputs.sync-config }}"
-    - --branch-prefix="${{ inputs.branch-prefix }}"
-    - --pr-labels="${{ inputs.pr-labels }}"
     - --dry-run="${{ inputs.dry-run }}"
   env:
     GITHUB_TOKEN: ${{ inputs.token }}

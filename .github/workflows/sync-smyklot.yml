@@ -70,7 +70,7 @@ jobs:
           repositories: ${{ matrix.repo }}
 
       - name: Sync smyklot version
-        uses: ./.github/actions/orgsync-smyklot
+        uses: ./.github/actions/dotsync-smyklot
         with:
           token: ${{ steps.token.outputs.token }}
           org: smykla-labs

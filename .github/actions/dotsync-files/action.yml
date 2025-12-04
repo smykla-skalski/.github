@@ -1,7 +1,7 @@
 ---
-name: Sync Labels (orgsync)
+name: Sync Files (dotsync)
 description: >-
-  Sync labels from central config to target repository using orgsync container
+  Sync files from central config to target repository using dotsync container
 
 inputs:
   token:
@@ -13,10 +13,9 @@ inputs:
   repo:
     description: Repository name
     required: true
-  labels-file:
-    description: Path to labels YAML file
+  files-config:
+    description: JSON array of files to sync [{source, dest}, ...]
     required: true
-    default: .github/labels.yml
   sync-config:
     description: JSON sync config from get-sync-config action
     required: false
@@ -25,17 +24,27 @@ inputs:
     description: Dry run (no changes)
     required: false
     default: false
+  branch-prefix:
+    description: Prefix for sync branches
+    required: false
+    default: chore/org-sync
+  pr-labels:
+    description: Comma-separated labels for PR
+    required: false
+    default: ci/skip-all
 
 runs:
   using: docker
-  image: docker://ghcr.io/smykla-labs/orgsync:latest
+  image: docker://ghcr.io/smykla-labs/dotsync:latest
   args:
-    - labels
+    - files
     - sync
     - --org="${{ inputs.org }}"
     - --repo="${{ inputs.repo }}"
-    - --labels-file="${{ inputs.labels-file }}"
+    - --files-config="${{ inputs.files-config }}"
     - --config="${{ inputs.sync-config }}"
+    - --branch-prefix="${{ inputs.branch-prefix }}"
+    - --pr-labels="${{ inputs.pr-labels }}"
     - --dry-run="${{ inputs.dry-run }}"
   env:
     GITHUB_TOKEN: ${{ inputs.token }}
