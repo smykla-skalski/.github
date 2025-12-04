@@ -1,0 +1,81 @@
+---
+name: Sync Files (orgsync)
+description: >-
+  Sync files from central config to target repository using orgsync container
+
+inputs:
+  token:
+    description: GitHub token for API access
+    required: true
+  org:
+    description: Organization name
+    required: true
+  repo:
+    description: Repository name
+    required: true
+  files-config:
+    description: JSON array of files to sync [{source, dest}, ...]
+    required: true
+  sync-config:
+    description: JSON sync config from get-sync-config action
+    required: false
+    default: "{}"
+  dry-run:
+    description: Dry run (no changes)
+    required: false
+    default: "false"
+  branch-prefix:
+    description: Prefix for sync branches
+    required: false
+    default: chore/org-sync
+  pr-labels:
+    description: Comma-separated labels for PR
+    required: false
+    default: ci/skip-all
+  orgsync-version:
+    description: orgsync container image version
+    required: false
+    default: latest
+
+runs:
+  using: composite
+  steps:
+    - name: Sync files with orgsync
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.token }}
+        ORG: ${{ inputs.org }}
+        REPO: ${{ inputs.repo }}
+        FILES_CONFIG: ${{ inputs.files-config }}
+        SYNC_CONFIG: ${{ inputs.sync-config }}
+        DRY_RUN: ${{ inputs.dry-run }}
+        BRANCH_PREFIX: ${{ inputs.branch-prefix }}
+        PR_LABELS: ${{ inputs.pr-labels }}
+        ORGSYNC_VERSION: ${{ inputs.orgsync-version }}
+      run: |
+        # Build dry-run flag
+        DRY_RUN_FLAG=""
+        if [ "$DRY_RUN" = "true" ]; then
+          DRY_RUN_FLAG="--dry-run"
+        fi
+
+        # Build config flag
+        CONFIG_FLAG=""
+        if [ -n "$SYNC_CONFIG" ] && [ "$SYNC_CONFIG" != "{}" ]; then
+          CONFIG_FLAG="--config $SYNC_CONFIG"
+        fi
+
+        # Run orgsync in container
+        docker run --rm \
+          -e GITHUB_TOKEN \
+          -v "$PWD:/workspace" \
+          -w /workspace \
+          "ghcr.io/smykla-labs/orgsync:${ORGSYNC_VERSION}" \
+          files sync \
+            --org "$ORG" \
+            --repo "$REPO" \
+            --files-config "$FILES_CONFIG" \
+            $CONFIG_FLAG \
+            --branch-prefix "$BRANCH_PREFIX" \
+            --pr-labels "$PR_LABELS" \
+            $DRY_RUN_FLAG
