@@ -2,6 +2,9 @@ version: 2
 
 project_name: dotsync
 
+monorepo:
+  tag_prefix: dotsync/
+
 before:
   hooks:
     - go mod tidy
