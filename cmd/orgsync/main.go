@@ -2,9 +2,11 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/alecthomas/kong"
+	"github.com/smykla-labs/.github/pkg/github"
 	"github.com/smykla-labs/.github/pkg/logger"
 )
 
@@ -124,11 +126,53 @@ type ReposCmd struct {
 type ReposListCmd struct{}
 
 // Run executes the repos list command.
-//
-//nolint:unparam // placeholder implementation, will return errors in future
 func (*ReposListCmd) Run(ctx context.Context, cli *CLI) error {
 	log := logger.FromContext(ctx)
-	log.Info("repos list not yet implemented", "org", cli.Org)
+
+	token, err := github.GetToken(ctx, log, cli.UseGHAuth)
+	if err != nil {
+		return err
+	}
+
+	client, err := github.NewClient(ctx, log, token)
+	if err != nil {
+		return err
+	}
+
+	log.Debug("listing repositories", "org", cli.Org)
+
+	repos, _, err := client.Repositories.ListByOrg(ctx, cli.Org, nil)
+	if err != nil {
+		return err
+	}
+
+	type repoInfo struct {
+		Name          string `json:"name"`
+		FullName      string `json:"full_name"`
+		Private       bool   `json:"private"`
+		Archived      bool   `json:"archived"`
+		Disabled      bool   `json:"disabled"`
+		DefaultBranch string `json:"default_branch"`
+	}
+
+	repoList := make([]repoInfo, 0, len(repos))
+	for _, repo := range repos {
+		repoList = append(repoList, repoInfo{
+			Name:          repo.GetName(),
+			FullName:      repo.GetFullName(),
+			Private:       repo.GetPrivate(),
+			Archived:      repo.GetArchived(),
+			Disabled:      repo.GetDisabled(),
+			DefaultBranch: repo.GetDefaultBranch(),
+		})
+	}
+
+	output, err := json.MarshalIndent(repoList, "", "  ")
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(string(output))
 
 	return nil
 }
@@ -136,7 +180,9 @@ func (*ReposListCmd) Run(ctx context.Context, cli *CLI) error {
 func main() {
 	var cli CLI
 
-	ctx := kong.Parse(&cli,
+	appCtx := context.Background()
+
+	kongCtx := kong.Parse(&cli,
 		kong.Name("orgsync"),
 		kong.Description("Organization sync tool for labels, files, and smyklot versions"),
 		kong.UsageOnError(),
@@ -146,13 +192,14 @@ func main() {
 		kong.Vars{
 			"version": version,
 		},
+		kong.BindTo(appCtx, (*context.Context)(nil)),
 	)
 
 	log := logger.New(cli.LogLevel)
-	ctx.BindTo(log, (*logger.Logger)(nil))
 
-	appCtx := logger.WithContext(context.Background(), log)
+	appCtx = logger.WithContext(appCtx, log)
+	kongCtx.BindTo(appCtx, (*context.Context)(nil))
 
-	err := ctx.Run(appCtx, &cli)
-	ctx.FatalIfErrorf(err)
+	err := kongCtx.Run(&cli)
+	kongCtx.FatalIfErrorf(err)
 }
