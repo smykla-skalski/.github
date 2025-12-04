@@ -1,0 +1,273 @@
+version: "2"
+
+linters:
+  enable:
+    # Core (enabled by default, explicitly listed)
+    - errcheck       # Checks for unchecked errors
+    - govet          # Reports suspicious constructs (includes nilness check)
+    - staticcheck    # Static analysis checks (includes nil checks)
+    - ineffassign    # Detects ineffectual assignments
+    - unused         # Checks for unused constants, variables, functions and types
+
+    # Security & Correctness
+    - gosec          # Security issues
+    - errorlint      # Error wrapping with %w
+    - bodyclose      # HTTP response body is closed
+    - rowserrcheck   # SQL rows.Err is checked
+    - sqlclosecheck  # SQL Close methods are called
+
+    # Nil Safety & Pointer Issues
+    - nilnesserr     # Checks for returning wrong nil error
+
+    # Dependency Management
+    - depguard       # Enforce package import restrictions
+    - forbidigo      # Forbid specific function calls
+
+    # Code Quality
+    - gocyclo        # Cyclomatic complexity
+    - goconst        # Repeated strings -> constants
+    - unconvert      # Unnecessary conversions
+    - dupl           # Code clone detection
+    - gocognit       # Cognitive complexity
+    - nestif         # Deeply nested if statements
+    - cyclop         # Package cyclomatic complexity
+
+    # Best Practices
+    - gocritic       # Comprehensive set of checks
+    - revive         # Drop-in replacement for golint
+    - prealloc       # Finds slice declarations that could be preallocated
+    - predeclared    # Finds code that shadows predeclared identifiers
+    - thelper        # Detects test helpers without t.Helper()
+    - tparallel      # Detects inappropriate usage of t.Parallel()
+    - nolintlint     # Reports ill-formed nolint directives
+
+    # Completeness Checks
+    - exhaustive     # Check exhaustiveness of enum switch statements
+    - gochecksumtype # Run exhaustiveness checks on Go "sum types"
+
+    # Documentation
+    - misspell       # Misspelled English words
+    - godox          # Detects FIXME, TODO and other comment keywords
+
+    # Formatting & Style
+    - whitespace     # Leading/trailing whitespace
+
+    # Performance
+    - goprintffuncname # Printf-like function naming
+
+    # Bugs & Correctness
+    - nilerr         # Finds code returning nil with non-nil error
+    - nilnil         # Checks nil is not returned with non-nil
+    - noctx          # Finds HTTP requests without context
+    - contextcheck   # Check context is passed correctly
+    - errname        # Checks error type names match conventions
+    - forcetypeassert # Finds forced type assertions
+    - makezero       # Finds make slice with non-zero length and append
+    - nakedret       # Finds naked returns in functions > X lines
+    - promlinter     # Check Prometheus metrics naming
+    - asasalint      # Check for pass []any as any in variadic funcs
+    - bidichk        # Checks for dangerous unicode character sequences
+    - copyloopvar    # Detects places where loop variables are copied
+    - dupword        # Checks for duplicate words in source code
+    - durationcheck  # Check for two durations multiplied together
+    - ginkgolinter   # Enforces Ginkgo/Gomega best practices
+    - intrange       # Use integer range in for loops (Go 1.22+)
+    - loggercheck    # Checks key-value pairs for common loggers
+    - mirror         # Reports wrong mirror patterns of bytes/strings
+    - mnd            # Magic number detection
+    - musttag        # Enforce field tags in (un)marshaled structs
+    - nosprintfhostport # Checks for misuse of Sprintf for URLs
+    - perfsprint     # Replace fmt.Sprintf with faster alternatives
+    - reassign       # Checks that package variables are not reassigned
+    - sloglint       # Ensure consistent code style when using log/slog
+    - tagalign       # Check that struct tags are well aligned
+    - unparam        # Reports unused function parameters
+    - usestdlibvars  # Detect possibility to use stdlib variables/constants
+    - wastedassign   # Finds wasted assignment statements
+    - modernize      # Modernize Go code with 'any' and other features
+    - err113         # Enforce sentinel error pattern
+    - funlen         # Checks for long functions
+    - containedctx   # Detects struct contained context.Context field
+    - errchkjson     # Checks types passed to the json encoding functions
+    - gocheckcompilerdirectives # Checks that go compiler directive comments are valid
+    - ireturn        # Accept Interfaces, Return Concrete Types
+    - wsl_v5         # Whitespace Linter - Add or remove empty lines
+
+  exclusions:
+    rules:
+      # Exclude some linters from test files
+      - path: _test\.go
+        linters:
+          - gocyclo
+          - gocognit
+          - cyclop
+          - errcheck
+          - dupl
+          - gosec
+          - funlen
+          - goconst
+          - nestif
+          - bodyclose
+          - noctx
+          - thelper
+          - tparallel
+          - forcetypeassert
+          - wrapcheck
+          - mnd            # Magic numbers are fine in tests
+          - unparam        # Unused params are fine in test helpers
+          - wastedassign   # Test setup may have intentional waste
+          - ginkgolinter   # May conflict with test structure
+          - godox          # TODO/FIXME comments are fine in tests
+          - exhaustive     # Test cases don't need exhaustive switches
+
+      # Exclude dot-imports rule from test files (Ginkgo/Gomega convention)
+      - path: '_test\.go'
+        text: "should not use dot imports"
+
+      # Exclude linters for test helpers
+      - path: internal/testing\.go
+        linters:
+          - errcheck
+          - gosec
+          - forcetypeassert
+
+      # Exclude tag alignment and line length for CLI main files
+      - path: cmd/.*/main\.go
+        linters:
+          - tagalign       # Kong tags can be long and readable without alignment
+          - golines        # CLI struct tags often exceed line length limits
+          - gci            # Import grouping may conflict with formatters
+          - goimports      # Import formatting may conflict with other formatters
+
+  settings:
+    cyclop:
+      max-complexity: 30
+
+    funlen:
+      lines: 100
+      statements: 50
+
+    gocognit:
+      min-complexity: 20
+
+    gocyclo:
+      min-complexity: 30
+
+    goconst:
+      min-len: 2
+      min-occurrences: 3
+
+    dupl:
+      threshold: 100
+
+    godox:
+      keywords:
+        - FIXME
+        - HACK
+        - XXX
+
+    exhaustive:
+      default-signifies-exhaustive: true
+
+    govet:
+      enable-all: true
+      disable:
+        - fieldalignment  # Too strict - minor memory optimization
+
+    staticcheck:
+      checks: ["all"]
+
+    revive:
+      enable-all-rules: false
+      severity: warning
+      rules:
+        # Critical rules
+        - name: blank-imports        # forbid unused/blank imports
+        - name: context-keys-type    # require custom type for context keys
+        - name: time-equal           # use time.Time.Equal instead of ==
+        - name: time-naming          # time vars/functions follow time naming
+        - name: error-return         # error should be last return value
+        - name: error-strings        # error strings lowercased/no punctuation
+        - name: error-naming         # error vars/types follow Err*/*Error
+        - name: if-return            # avoid else after return; early exits
+        - name: increment-decrement  # prefer += 1 instead of ++/--
+        - name: var-declaration      # prefer short var declarations where apt
+        - name: unused-parameter     # unused params must be named _
+        - name: unreachable-code     # detect dead code after returns/panics
+        - name: unused-receiver      # remove receivers that aren't used
+        - name: early-return         # flatten nested conditionals
+        - name: modifies-parameter   # avoid mutating function parameters
+        - name: confusing-naming     # flag names differing only by case/number
+        - name: duplicated-imports   # prevent duplicate imports
+
+        # Disabled (too noisy or stylistic)
+        - name: package-comments
+          disabled: true
+        - name: exported
+          disabled: true
+        - name: var-naming
+          disabled: true
+        - name: indent-error-flow
+          disabled: true
+        - name: context-as-argument
+          disabled: true
+
+    nakedret:
+      max-func-lines: 30
+
+    nestif:
+      min-complexity: 5
+
+    nolintlint:
+      allow-unused: false
+      require-explanation: true
+      require-specific: true
+
+    errcheck:
+      check-type-assertions: true
+      check-blank: false
+
+    wsl_v5:
+      allow-first-in-block: true
+      allow-whole-block: false
+      branch-max-lines: 2
+
+    depguard:
+      rules:
+        errors:
+          list-mode: lax
+          files:
+            - $all
+          deny:
+            - pkg: "errors$"
+              desc: "use github.com/cockroachdb/errors instead"
+            - pkg: "github.com/pkg/errors"
+              desc: "use github.com/cockroachdb/errors instead"
+
+    forbidigo:
+      forbid:
+        - pattern: 'fmt\.Errorf'
+          msg: "use errors.New, errors.Wrap, or errors.Wrapf from github.com/cockroachdb/errors instead"
+      analyze-types: true
+
+formatters:
+  enable:
+    - gofmt          # Standard Go formatter
+    - gofumpt        # Stricter gofmt
+    - goimports      # Organizes imports
+    - gci            # Controls import order
+    - golines        # Checks if code is formatted, and fixes long line
+
+  settings:
+    goimports:
+      local-prefixes:
+        - github.com/smykla-labs/.github
+
+    gci:
+      sections:
+        - standard
+        - default
+        - prefix(github.com/smykla-labs/.github)
+
+issues:
+  max-same-issues: 50

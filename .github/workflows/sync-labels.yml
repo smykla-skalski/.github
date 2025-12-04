@@ -7,8 +7,7 @@ on:
     paths:
       - ".github/labels.yml"
       - ".github/workflows/sync-labels.yml"
-      - ".github/actions/sync-labels-to-repo/**"
-      - ".github/actions/get-sync-config/**"
+      - ".github/actions/dotsync-labels/**"
   workflow_dispatch:
     inputs:
       dry_run:
@@ -30,18 +29,18 @@ jobs:
 
       - name: Generate App Token
         id: token
-        uses: ./.github/actions/generate-token
+        uses: actions/create-github-app-token@7e473efe3cb98aa54f8d4bac15400b15fad77d94 # v2.2.0
         with:
           app-id: ${{ vars.SMYKLOT_APP_ID }}
           private-key: ${{ secrets.SMYKLOT_APP_PRIVATE_KEY }}
-          owner: smykla-labs
+          owner: ${{ github.repository_owner }}
 
       - name: Get repositories
         id: repos
-        uses: ./.github/actions/get-org-repos
+        uses: ./.github/actions/dotsync-repos-list
         with:
           token: ${{ steps.token.outputs.token }}
-          org: smykla-labs
+          org: ${{ github.repository_owner }}
 
   sync-labels:
     needs: get-repos
@@ -59,27 +58,18 @@ jobs:
 
       - name: Generate App Token
         id: token
-        uses: ./.github/actions/generate-token
+        uses: actions/create-github-app-token@7e473efe3cb98aa54f8d4bac15400b15fad77d94 # v2.2.0
         with:
           app-id: ${{ vars.SMYKLOT_APP_ID }}
           private-key: ${{ secrets.SMYKLOT_APP_PRIVATE_KEY }}
-          owner: smykla-labs
+          owner: ${{ github.repository_owner }}
           repositories: ${{ matrix.repo }}
 
-      - name: Get sync config
-        id: config
-        uses: ./.github/actions/get-sync-config
-        with:
-          token: ${{ steps.token.outputs.token }}
-          org: smykla-labs
-          repo: ${{ matrix.repo }}
-
       - name: Sync labels to repository
-        uses: ./.github/actions/sync-labels-to-repo
+        uses: ./.github/actions/dotsync-labels
         with:
           token: ${{ steps.token.outputs.token }}
-          org: smykla-labs
+          org: ${{ github.repository_owner }}
           repo: ${{ matrix.repo }}
           labels-file: .github/labels.yml
-          sync-config: ${{ steps.config.outputs.config }}
-          dry-run: ${{ inputs.dry_run || false }}
+          dry-run: ${{ inputs.dry_run || 'false' }}

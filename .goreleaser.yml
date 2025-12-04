@@ -1,0 +1,131 @@
+version: 2
+
+project_name: dotsync
+
+before:
+  hooks:
+    - go mod tidy
+    - go mod download
+
+builds:
+  - id: dotsync
+    main: ./cmd/dotsync
+    binary: dotsync
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s
+      - -w
+      - -X main.version={{.Version}}
+
+archives:
+  - id: dotsync
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- .Version }}_
+      {{- title .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+      {{- if .Arm }}v{{ .Arm }}{{ end }}
+    rlcp: true
+    files:
+      - LICENSE*
+      - README*
+      - CHANGELOG*
+
+checksum:
+  name_template: checksums.txt
+
+snapshot:
+  version_template: "{{ incpatch .Version }}-snapshot"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^chore:"
+      - "^ci:"
+
+dockers:
+  - ids:
+      - dotsync
+    image_templates:
+      - "ghcr.io/smykla-labs/dotsync:{{ .Version }}-amd64"
+      - "ghcr.io/smykla-labs/dotsync:{{ .Major }}-amd64"
+      - "ghcr.io/smykla-labs/dotsync:{{ .Major }}.{{ .Minor }}-amd64"
+      - "ghcr.io/smykla-labs/dotsync:latest-amd64"
+    use: buildx
+    dockerfile: Dockerfile
+    build_flag_templates:
+      - "--platform=linux/amd64"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+    extra_files:
+      - LICENSE
+
+  - ids:
+      - dotsync
+    image_templates:
+      - "ghcr.io/smykla-labs/dotsync:{{ .Version }}-arm64"
+      - "ghcr.io/smykla-labs/dotsync:{{ .Major }}-arm64"
+      - "ghcr.io/smykla-labs/dotsync:{{ .Major }}.{{ .Minor }}-arm64"
+      - "ghcr.io/smykla-labs/dotsync:latest-arm64"
+    use: buildx
+    goarch: arm64
+    dockerfile: Dockerfile
+    build_flag_templates:
+      - "--platform=linux/arm64"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+    extra_files:
+      - LICENSE
+
+docker_manifests:
+  - name_template: "ghcr.io/smykla-labs/dotsync:{{ .Version }}"
+    image_templates:
+      - "ghcr.io/smykla-labs/dotsync:{{ .Version }}-amd64"
+      - "ghcr.io/smykla-labs/dotsync:{{ .Version }}-arm64"
+
+  - name_template: "ghcr.io/smykla-labs/dotsync:{{ .Major }}"
+    image_templates:
+      - "ghcr.io/smykla-labs/dotsync:{{ .Major }}-amd64"
+      - "ghcr.io/smykla-labs/dotsync:{{ .Major }}-arm64"
+
+  - name_template: "ghcr.io/smykla-labs/dotsync:{{ .Major }}.{{ .Minor }}"
+    image_templates:
+      - "ghcr.io/smykla-labs/dotsync:{{ .Major }}.{{ .Minor }}-amd64"
+      - "ghcr.io/smykla-labs/dotsync:{{ .Major }}.{{ .Minor }}-arm64"
+
+  - name_template: "ghcr.io/smykla-labs/dotsync:latest"
+    image_templates:
+      - "ghcr.io/smykla-labs/dotsync:latest-amd64"
+      - "ghcr.io/smykla-labs/dotsync:latest-arm64"
+
+release:
+  github:
+    owner: smykla-labs
+    name: .github
+  draft: false
+  prerelease: auto
+  mode: replace
+  header: |
+    ## dotsync {{ .Version }}
+
+    Container images available at:
+    - `ghcr.io/smykla-labs/dotsync:{{ .Version }}`
+    - `ghcr.io/smykla-labs/dotsync:{{ .Major }}`
+    - `ghcr.io/smykla-labs/dotsync:{{ .Major }}.{{ .Minor }}`
+    - `ghcr.io/smykla-labs/dotsync:latest`

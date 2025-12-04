@@ -1,109 +1,125 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://raw.githubusercontent.com/smykla-labs/.github/main/schemas/sync-config.schema.json",
-  "title": "Sync Configuration",
-  "description": "Configuration for organization-wide label, file, and smyklot version synchronization. Place at .github/sync-config.yml in your repository.",
-  "type": "object",
-  "unevaluatedProperties": false,
-  "properties": {
-    "sync": {
-      "$ref": "#/$defs/syncConfig"
-    }
-  },
   "$defs": {
-    "syncConfig": {
-      "type": "object",
-      "description": "Top-level sync configuration controlling label, file, and smyklot version synchronization behavior.",
-      "unevaluatedProperties": false,
+    "FilesConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "allow_removal": {
+          "default": false,
+          "description": "DANGEROUS: When true files in this repo that are NOT in the central sync config will be DELETED. This can cause data loss. Strongly recommend keeping this false",
+          "type": "boolean"
+        },
+        "exclude": {
+          "description": "File paths (relative to repo root) to exclude from sync. These files will NOT be created/updated in this repository. Existing files at these paths are preserved but not managed",
+          "examples": [
+            [
+              "CONTRIBUTING.md",
+              "CODE_OF_CONDUCT.md"
+            ],
+            [
+              ".github/PULL_REQUEST_TEMPLATE.md",
+              "SECURITY.md"
+            ]
+          ],
+          "items": {
+            "minLength": 1,
+            "pattern": "^[^/].*$",
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "skip": {
+          "default": false,
+          "description": "Skip file synchronization only. Label sync still runs unless sync.skip or sync.labels.skip is true",
+          "type": "boolean"
+        }
+      },
+      "type": "object"
+    },
+    "LabelsConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "allow_removal": {
+          "default": false,
+          "description": "When true labels in this repo that are NOT in the central config will be DELETED. Use with caution - this removes custom labels",
+          "type": "boolean"
+        },
+        "exclude": {
+          "description": "Label names to exclude from synchronization. These labels will NOT be created/updated in this repository. Existing labels with these names are preserved but not managed",
+          "examples": [
+            [
+              "ci/skip-tests",
+              "ci/force-full"
+            ],
+            [
+              "release/major",
+              "release/minor",
+              "release/patch"
+            ]
+          ],
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "skip": {
+          "default": false,
+          "description": "Skip label synchronization only. File sync still runs unless sync.skip or sync.files.skip is true",
+          "type": "boolean"
+        }
+      },
+      "type": "object"
+    },
+    "SmyklotConfig": {
+      "additionalProperties": false,
       "properties": {
         "skip": {
-          "type": "boolean",
           "default": false,
-          "description": "Skip ALL syncs for this repository. Equivalent to setting labels.skip, files.skip, and smyklot.skip to true."
+          "description": "Skip smyklot version synchronization only. Label and file sync still run unless their respective skip flags are set. Use this for repos that don't use smyklot or manage their own versions",
+          "type": "boolean"
+        }
+      },
+      "type": "object"
+    },
+    "SyncConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "sync": {
+          "$ref": "#/$defs/SyncSettings",
+          "description": "Top-level sync configuration controlling label file and smyklot version synchronization behavior"
+        }
+      },
+      "type": "object"
+    },
+    "SyncSettings": {
+      "additionalProperties": false,
+      "properties": {
+        "files": {
+          "$ref": "#/$defs/FilesConfig",
+          "description": "File synchronization configuration"
         },
         "labels": {
-          "$ref": "#/$defs/labelSyncConfig"
+          "$ref": "#/$defs/LabelsConfig",
+          "description": "Label synchronization configuration"
         },
-        "files": {
-          "$ref": "#/$defs/fileSyncConfig"
+        "skip": {
+          "default": false,
+          "description": "Skip ALL syncs for this repository. Equivalent to setting labels.skip files.skip and smyklot.skip to true",
+          "type": "boolean"
         },
         "smyklot": {
-          "$ref": "#/$defs/smyklotSyncConfig"
+          "$ref": "#/$defs/SmyklotConfig",
+          "description": "Smyklot version synchronization configuration"
         }
-      }
-    },
-    "labelSyncConfig": {
-      "type": "object",
-      "description": "Label synchronization configuration.",
-      "unevaluatedProperties": false,
-      "properties": {
-        "skip": {
-          "type": "boolean",
-          "default": false,
-          "description": "Skip label synchronization only. File sync still runs unless sync.skip or sync.files.skip is true."
-        },
-        "exclude": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "minLength": 1
-          },
-          "uniqueItems": true,
-          "description": "Label names to exclude from synchronization. These labels will NOT be created/updated in this repository. Existing labels with these names are preserved but not managed.",
-          "examples": [
-            ["ci/skip-tests", "ci/force-full"],
-            ["release/major", "release/minor", "release/patch"]
-          ]
-        },
-        "allow_removal": {
-          "type": "boolean",
-          "default": false,
-          "description": "When true, labels in this repo that are NOT in the central config will be DELETED. Use with caution - this removes custom labels."
-        }
-      }
-    },
-    "fileSyncConfig": {
-      "type": "object",
-      "description": "File synchronization configuration.",
-      "unevaluatedProperties": false,
-      "properties": {
-        "skip": {
-          "type": "boolean",
-          "default": false,
-          "description": "Skip file synchronization only. Label sync still runs unless sync.skip or sync.labels.skip is true."
-        },
-        "exclude": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "minLength": 1,
-            "pattern": "^[^/].*$"
-          },
-          "uniqueItems": true,
-          "description": "File paths (relative to repo root) to exclude from sync. These files will NOT be created/updated in this repository. Existing files at these paths are preserved but not managed.",
-          "examples": [
-            ["CONTRIBUTING.md", "CODE_OF_CONDUCT.md"],
-            [".github/PULL_REQUEST_TEMPLATE.md", "SECURITY.md"]
-          ]
-        },
-        "allow_removal": {
-          "type": "boolean",
-          "default": false,
-          "description": "DANGEROUS: When true, files in this repo that are NOT in the central sync config will be DELETED. This can cause data loss. Strongly recommend keeping this false."
-        }
-      }
-    },
-    "smyklotSyncConfig": {
-      "type": "object",
-      "description": "Smyklot version synchronization configuration.",
-      "unevaluatedProperties": false,
-      "properties": {
-        "skip": {
-          "type": "boolean",
-          "default": false,
-          "description": "Skip smyklot version synchronization only. Label and file sync still run unless their respective skip flags are set. Use this for repos that don't use smyklot or manage their own versions."
-        }
-      }
+      },
+      "type": "object"
     }
-  }
+  },
+  "$id": "https://raw.githubusercontent.com/smykla-labs/.github/main/schemas/sync-config.schema.json",
+  "$ref": "#/$defs/SyncConfig",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Configuration for organization-wide label, file, and smyklot version synchronization. Place at .github/sync-config.yml in your repository.",
+  "title": "Sync Configuration"
 }

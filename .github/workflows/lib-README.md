@@ -6,14 +6,14 @@ Shared CI/CD workflows for Go projects. Call via `workflow_call` trigger. Always
 
 Multi-linter: golangci-lint, yamllint, shellcheck, markdownlint.
 
-**Inputs:** `go-version` (default: `1.23.x`), `enable-golangci-lint` (default: `true`), `enable-yamllint`, `enable-shellcheck`, `enable-markdownlint`, `golangci-lint-args`
+**Inputs:** `go-version` (default: `1.25.x`), `enable-golangci-lint` (default: `true`), `enable-yamllint`, `enable-shellcheck`, `enable-markdownlint`, `golangci-lint-args`
 
 **Outputs:** `lint-passed` (boolean)
 
 ```yaml
 uses: smykla-labs/.github/.github/workflows/lib-lint.yml@abc1234 # v1.0.0
 with:
-  go-version: "1.23.x"
+  go-version: "1.25.x"
   enable-golangci-lint: true
 ```
 

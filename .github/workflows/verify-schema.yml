@@ -1,0 +1,41 @@
+---
+name: Verify Schema
+
+on:
+  pull_request:
+    paths:
+      - "pkg/config/**"
+      - "cmd/dotsync/main.go"
+      - "schemas/sync-config.schema.json"
+      - "go.mod"
+      - "go.sum"
+      - ".github/workflows/verify-schema.yml"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  verify-schema:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Generate token
+        id: generate-token
+        uses: actions/create-github-app-token@7e473efe3cb98aa54f8d4bac15400b15fad77d94 # v2.2.0
+        with:
+          app-id: ${{ vars.SMYKLOT_APP_ID }}
+          private-key: ${{ secrets.SMYKLOT_PRIVATE_KEY }}
+
+      - name: Checkout
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          ref: ${{ github.head_ref }}
+          token: ${{ steps.generate-token.outputs.token }}
+
+      - name: Verify and commit schema
+        uses: ./.github/actions/dotsync-config-verify
+        env:
+          GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+        with:
+          repo: smykla-labs/.github
+          branch: ${{ github.head_ref }}

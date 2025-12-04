@@ -1,0 +1,33 @@
+---
+name: List Repositories (dotsync)
+description: >-
+  List organization repositories using dotsync container
+
+inputs:
+  token:
+    description: GitHub token for API access
+    required: true
+  org:
+    description: Organization name
+    required: true
+    default: smykla-labs
+  format:
+    description: Output format (json|names)
+    required: false
+    default: json
+
+outputs:
+  repos:
+    description: JSON array of repository names
+
+runs:
+  using: docker
+  image: docker://ghcr.io/smykla-labs/dotsync:latest
+  args:
+    - repos
+    - list
+    - --org=${{ inputs.org }}
+    - --format=${{ inputs.format }}
+    - --github-output
+  env:
+    GITHUB_TOKEN: ${{ inputs.token }}

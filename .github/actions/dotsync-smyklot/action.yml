@@ -1,0 +1,44 @@
+---
+name: Sync smyklot Version (dotsync)
+description: >-
+  Update smyklot version references in workflow files using dotsync container
+
+inputs:
+  token:
+    description: GitHub token for API access
+    required: true
+  org:
+    description: Organization name
+    required: true
+  repo:
+    description: Repository name
+    required: true
+  version:
+    description: smyklot version (e.g., 1.9.2)
+    required: true
+  tag:
+    description: smyklot tag (e.g., v1.9.2)
+    required: true
+  sync-config:
+    description: JSON sync config from get-sync-config action
+    required: false
+    default: "{}"
+  dry-run:
+    description: Dry run (no changes)
+    required: false
+    default: "false"
+
+runs:
+  using: docker
+  image: docker://ghcr.io/smykla-labs/dotsync:latest
+  args:
+    - smyklot
+    - sync
+    - --org=${{ inputs.org }}
+    - --repo=${{ inputs.repo }}
+    - --version=${{ inputs.version }}
+    - --tag=${{ inputs.tag }}
+    - --config=${{ inputs.sync-config }}
+    - --dry-run=${{ inputs.dry-run }}
+  env:
+    GITHUB_TOKEN: ${{ inputs.token }}

@@ -1,6 +1,7 @@
 # IDE
 .idea/
 .vscode/
+.klaudiush/
 *.swp
 *.swo
 *~
@@ -11,3 +12,12 @@ Thumbs.db
 
 # Temporary files
 tmp/
+
+# Build artifacts
+bin/
+dist/
+.task/
+
+# Go coverage
+coverage.out
+coverage.html

@@ -33,18 +33,18 @@ jobs:
 
       - name: Generate App Token
         id: token
-        uses: ./.github/actions/generate-token
+        uses: actions/create-github-app-token@7e473efe3cb98aa54f8d4bac15400b15fad77d94 # v2.2.0
         with:
           app-id: ${{ vars.SMYKLOT_APP_ID }}
           private-key: ${{ secrets.SMYKLOT_APP_PRIVATE_KEY }}
-          owner: smykla-labs
+          owner: ${{ github.repository_owner }}
 
       - name: Get repositories
         id: repos
-        uses: ./.github/actions/get-org-repos
+        uses: ./.github/actions/dotsync-repos-list
         with:
           token: ${{ steps.token.outputs.token }}
-          org: smykla-labs
+          org: ${{ github.repository_owner }}
 
   sync-smyklot:
     needs: get-repos
@@ -52,7 +52,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        repo: ${{ fromJson(needs.get-repos.outputs.repos) }}
+        repo: ${{ fromJSON(needs.get-repos.outputs.repos) }}
     concurrency:
       group: sync-smyklot-${{ matrix.repo }}
       cancel-in-progress: false
@@ -62,59 +62,19 @@ jobs:
 
       - name: Generate App Token
         id: token
-        uses: ./.github/actions/generate-token
+        uses: actions/create-github-app-token@7e473efe3cb98aa54f8d4bac15400b15fad77d94 # v2.2.0
         with:
           app-id: ${{ vars.SMYKLOT_APP_ID }}
           private-key: ${{ secrets.SMYKLOT_APP_PRIVATE_KEY }}
-          owner: smykla-labs
+          owner: ${{ github.repository_owner }}
           repositories: ${{ matrix.repo }}
 
-      - name: Get sync config
-        id: config
-        uses: ./.github/actions/get-sync-config
-        with:
-          token: ${{ steps.token.outputs.token }}
-          org: smykla-labs
-          repo: ${{ matrix.repo }}
-
       - name: Sync smyklot version
-        id: sync
-        uses: ./.github/actions/sync-smyklot-to-repo
+        uses: ./.github/actions/dotsync-smyklot
         with:
           token: ${{ steps.token.outputs.token }}
-          org: smykla-labs
+          org: ${{ github.repository_owner }}
           repo: ${{ matrix.repo }}
           version: ${{ github.event.client_payload.version || inputs.version }}
           tag: ${{ github.event.client_payload.tag || inputs.tag }}
-          sync-config: ${{ steps.config.outputs.config }}
           dry-run: ${{ inputs.dry_run || 'false' }}
-
-      - name: Summary
-        env:
-          REPO: ${{ matrix.repo }}
-          UPDATED: ${{ steps.sync.outputs.updated }}
-          SKIPPED: ${{ steps.sync.outputs.skipped }}
-          PR_URL: ${{ steps.sync.outputs.pr-url }}
-          VERSION: ${{ github.event.client_payload.version || inputs.version }}
-          TAG: ${{ github.event.client_payload.tag || inputs.tag }}
-        run: |
-          {
-            echo "## smyklot Sync: $REPO"
-            echo ""
-            echo "**Version:** $TAG ($VERSION)"
-            echo ""
-            echo "| Metric | Value |"
-            echo "|:-------|------:|"
-            echo "| Files Updated | $UPDATED |"
-            echo "| Skipped | $SKIPPED |"
-            echo ""
-            if [ -n "$PR_URL" ]; then
-              echo "**PR:** $PR_URL"
-            else
-              if [ "$SKIPPED" = "true" ]; then
-                echo "_Sync disabled for this repository_"
-              else
-                echo "_No changes needed_"
-              fi
-            fi
-          } >> "$GITHUB_STEP_SUMMARY"

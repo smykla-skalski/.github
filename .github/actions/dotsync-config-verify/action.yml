@@ -1,0 +1,30 @@
+---
+name: Dotsync Config Verify
+description: Verify schema is in sync with Go types and commit if needed
+
+inputs:
+  repo:
+    description: Repository (owner/name format)
+    required: true
+  branch:
+    description: Branch name
+    required: true
+  schema-file:
+    description: Path to schema file
+    required: false
+    default: schemas/sync-config.schema.json
+  dry-run:
+    description: Preview changes without committing
+    required: false
+    default: "false"
+
+runs:
+  using: docker
+  image: docker://ghcr.io/smykla-labs/dotsync:latest
+  args:
+    - config
+    - verify
+    - --repo=${{ inputs.repo }}
+    - --branch=${{ inputs.branch }}
+    - --schema-file=${{ inputs.schema-file }}
+    - --dry-run=${{ inputs.dry-run }}

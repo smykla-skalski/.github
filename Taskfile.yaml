@@ -1,0 +1,116 @@
+# Taskfile - dotsync automation
+version: '3'
+set: [pipefail]
+output: prefixed
+silent: true
+
+vars:
+  COVERAGE_DIR: tmp/coverage
+
+tasks:
+  default:
+    desc: Show available tasks
+    aliases: [ls, list]
+    cmd: task --list
+
+  # Linting
+  lint:
+    desc: Run all linters
+    deps: [lint:go, lint:markdown, lint:mod]
+    cmd: echo "✅ All linters passed!"
+
+  lint:go:
+    desc: Lint Go code
+    cmds:
+      - echo "▶ Linting Go code"
+      - golangci-lint cache clean
+      - |
+        if [ -n "$CI" ]; then
+          echo "⊘ Skipping golangci-lint in CI (using golangci-lint-action instead)"
+        else
+          golangci-lint run ./...
+          echo "✓ Go code passes linting"
+        fi
+
+  lint:markdown:
+    desc: Lint Markdown files
+    cmds:
+      - echo "▶ Linting Markdown files"
+      - markdownlint '**/*.md' --ignore node_modules --ignore vendor --ignore tmp
+      - echo "✓ Markdown files pass linting"
+
+  lint:mod:
+    desc: Verify Go module dependencies
+    cmds:
+      - echo "▶ Verifying Go modules"
+      - go mod verify
+      - echo "✓ Go modules verified"
+
+  # Formatting
+  fmt:
+    desc: Format code
+    cmds:
+      - echo "▶ Formatting Go code"
+      - go fmt ./...
+      - gofmt -s -w .
+      - echo "✓ Code formatted"
+
+  # Testing
+  test:
+    desc: Run all tests
+    cmds:
+      - echo "▶ Running tests"
+      - mkdir -p {{.COVERAGE_DIR}}
+      - go test -race -coverprofile={{.COVERAGE_DIR}}/coverage.out ./...
+      - go tool cover -html={{.COVERAGE_DIR}}/coverage.out -o {{.COVERAGE_DIR}}/coverage.html
+      - echo "✓ Tests passed - Coverage report{{":"}} {{.COVERAGE_DIR}}/coverage.html"
+
+  # Building
+  build:
+    desc: Build the dotsync binary
+    sources:
+      - cmd/**/*.go
+      - pkg/**/*.go
+    generates:
+      - bin/dotsync
+    cmds:
+      - echo "▶ Building dotsync binary"
+      - go build -o bin/dotsync ./cmd/dotsync
+      - echo "✓ Built bin/dotsync"
+
+  # Dependencies
+  deps:
+    desc: Download and verify dependencies
+    cmds:
+      - echo "▶ Downloading dependencies"
+      - go mod download
+      - go mod verify
+      - echo "✓ Dependencies ready"
+
+  deps:tidy:
+    desc: Clean up go.mod and go.sum
+    cmd: go mod tidy
+
+  # Cleanup
+  clean:
+    desc: Remove build artifacts
+    cmds:
+      - rm -rf bin/ {{.COVERAGE_DIR}}/ dist/
+      - go clean -cache -testcache
+      - echo "✓ Cleaned"
+
+  # CI
+  ci:
+    desc: Run CI checks (lint + test)
+    cmds:
+      - task: lint
+      - task: test
+
+  # Development
+  dev:setup:
+    desc: Set up development environment
+    cmds:
+      - echo "▶ Setting up development environment"
+      - mise install
+      - task: deps
+      - echo "✓ Development environment ready"

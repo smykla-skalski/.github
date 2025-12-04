@@ -22,6 +22,7 @@ Organization-wide defaults and synchronization for smykla-labs repositories. Thi
 │   │   ├── sync-labels.yml     # Label sync workflow
 │   │   ├── sync-files.yml      # File sync workflow
 │   │   ├── sync-smyklot.yml    # Smyklot version sync workflow
+│   │   ├── release-dotsync.yml # Release workflow for dotsync CLI
 │   │   ├── lib-lint.yml        # Reusable lint workflow
 │   │   ├── lib-test.yml        # Reusable test workflow
 │   │   ├── lib-build.yml       # Reusable build workflow
@@ -29,12 +30,26 @@ Organization-wide defaults and synchronization for smykla-labs repositories. Thi
 │   ├── actions/                # Reusable composite actions
 │   │   ├── generate-token/     # GitHub App token generation
 │   │   ├── get-org-repos/      # Fetch org repositories
-│   │   ├── get-sync-config/    # Fetch per-repo sync configuration
-│   │   ├── sync-labels-to-repo/ # Label sync with config support
-│   │   ├── sync-files-to-repo/ # File sync with config support
-│   │   └── sync-smyklot-to-repo/ # Smyklot version sync with config support
+│   │   ├── dotsync-labels/     # Container-based label sync action
+│   │   ├── dotsync-files/      # Container-based file sync action
+│   │   └── dotsync-smyklot/    # Container-based smyklot sync action
 │   ├── ISSUE_TEMPLATE/         # Default issue templates
 │   └── PULL_REQUEST_TEMPLATE.md
+├── cmd/
+│   └── dotsync/
+│       └── main.go             # Go CLI entry point (Kong framework)
+├── pkg/
+│   ├── github/
+│   │   ├── client.go           # GitHub client with rate limiting
+│   │   ├── token.go            # Auth cascade implementation
+│   │   ├── errors.go           # Sentinel errors (cockroachdb/errors)
+│   │   ├── labels.go           # Label sync operations
+│   │   ├── files.go            # File sync operations
+│   │   └── smyklot.go          # Smyklot sync operations
+│   ├── config/
+│   │   └── sync.go             # Sync config types and parsing
+│   └── logger/
+│       └── logger.go           # Logging setup (slog)
 ├── examples/
 │   └── sync-config.yml         # Unified sync config example
 ├── docs/
@@ -50,7 +65,13 @@ Organization-wide defaults and synchronization for smykla-labs repositories. Thi
 │       └── PULL_REQUEST_TEMPLATE.md
 ├── CODE_OF_CONDUCT.md          # Org-wide defaults (native GitHub)
 ├── CONTRIBUTING.md
-└── SECURITY.md
+├── SECURITY.md
+├── go.mod                      # Go module definition
+├── Taskfile.yaml               # Build/lint/test automation
+├── Dockerfile                  # Container image build
+├── .goreleaser.yml             # Release automation with container builds
+├── .golangci.yml               # Go linter configuration
+└── .mise.toml                  # Tool version management
 ```
 
 ## Key Concepts
@@ -61,32 +82,43 @@ Files in the root automatically apply to all smykla-labs repositories that don't
 
 ### Synchronization System
 
-The synchronization system uses custom composite actions with unified per-repo configuration:
+The synchronization system uses a Go CLI (`dotsync`) packaged as a container, wrapped in composite actions for easy workflow integration:
+
+**Architecture:**
+
+- **CLI**: `dotsync` - Go-based CLI tool using Kong framework
+- **Container**: Published to `ghcr.io/smykla-labs/dotsync:latest`
+- **Actions**: Container-based composite actions wrap the CLI commands
+- **Implementation**: Type-safe Go code with proper error handling (cockroachdb/errors)
+- **Distribution**: Multi-arch container builds via GoReleaser
 
 **Label Sync:**
 
-- **Action**: Custom composite action (`.github/actions/sync-labels-to-repo`)
+- **Action**: Container-based composite action (`.github/actions/dotsync-labels`)
 - **Workflow**: `.github/workflows/sync-labels.yml`
+- **CLI Command**: `dotsync labels sync`
 - **Config**: `.github/labels.yml` (central) + per-repo `.github/sync-config.yml`
-- **Method**: Direct API updates via GitHub CLI
+- **Method**: Direct API updates via go-github SDK
 - **Features**: Label removal, exclusions, skip flags
 
 **File Sync:**
 
-- **Action**: Custom composite action (`.github/actions/sync-files-to-repo`)
+- **Action**: Container-based composite action (`.github/actions/dotsync-files`)
 - **Workflow**: `.github/workflows/sync-files.yml`
+- **CLI Command**: `dotsync files sync`
 - **Source**: All files in `templates/` directory (auto-discovered)
 - **Config**: Per-repo `.github/sync-config.yml` (optional)
-- **Method**: Creates PRs with file changes via GitHub API
+- **Method**: Creates PRs with file changes via go-github SDK
 - **Features**: File exclusions, skip flags, PR management, smart renovate.json handling
 
 **Smyklot Sync:**
 
-- **Action**: Custom composite action (`.github/actions/sync-smyklot-to-repo`)
+- **Action**: Container-based composite action (`.github/actions/dotsync-smyklot`)
 - **Workflow**: `.github/workflows/sync-smyklot.yml`
+- **CLI Command**: `dotsync smyklot sync`
 - **Trigger**: Repository dispatch from smyklot releases or manual dispatch
 - **Config**: Per-repo `.github/sync-config.yml` (optional)
-- **Method**: Creates PRs with version updates via GitHub API
+- **Method**: Creates PRs with version updates via go-github SDK
 - **Features**: Auto-merge, skip flags, updates `uses:` and `ghcr.io/` references
 
 **Unified Config:**
@@ -108,18 +140,19 @@ The synchronization system uses custom composite actions with unified per-repo c
 - **Source**: `.github/labels.yml` contains all label definitions
 - **Format**: YAML with `name`, `color` (with #), and optional `description`
 - **Target**: All repositories in smykla-labs organization (except `.github` itself)
-- **Method**: Custom composite action using GitHub CLI
-- **Features**: Efficient map-based diff, parallel processing, dry-run support
+- **Method**: Go-based CLI using go-github SDK with rate limiting
+- **Features**: Efficient map-based diff, parallel processing, dry-run support, type-safe operations
 
 ### File Synchronization
 
 - **Source**: `templates/` directory (all files auto-discovered)
 - **Config**: Per-repo `.github/sync-config.yml` (optional)
 - **Target**: All repositories in smykla-labs organization (except `.github` itself)
-- **Method**: Custom composite action using GitHub API
-- **Features**: PR creation, single commit, exclusions, skip flags, smart renovate.json handling
+- **Method**: Go-based CLI using go-github SDK with Git tree/blob API
+- **Features**: PR creation, single commit, exclusions, skip flags, smart renovate.json handling, type-safe operations
 
 **Smart renovate.json Handling:**
+
 - Detects manual modifications to `renovate.json` by checking commit history
 - If manual commits found (not from sync workflow), excludes file from sync
 - Shows alert in PR with instructions to add to `.github/sync-config.yml`
@@ -130,8 +163,8 @@ The synchronization system uses custom composite actions with unified per-repo c
 - **Trigger**: Automatically triggered by smyklot releases via `repository_dispatch`
 - **Purpose**: Updates smyklot version references in workflow files across all repos
 - **Target**: All repositories in smykla-labs organization (except `.github` and `smyklot` itself)
-- **Method**: Custom composite action using GitHub API
-- **Features**: PR creation with auto-merge, skip flags, intelligent change detection
+- **Method**: Go-based CLI using go-github SDK with regex-based replacement
+- **Features**: PR creation with auto-merge, skip flags, intelligent change detection, type-safe operations
 
 **Version References Updated:**
 
@@ -156,6 +189,7 @@ The synchronization system uses custom composite actions with unified per-repo c
 **Skip Configuration:**
 
 Repos can opt out via `.github/sync-config.yml`:
+
 ```yaml
 sync:
   smyklot:
@@ -186,7 +220,7 @@ jobs:
   lint:
     uses: smykla-labs/.github/.github/workflows/lib-lint.yml@<commit-sha> # v1.0.0
     with:
-      go-version: "1.23.x"
+      go-version: "1.25.x"
       enable-golangci-lint: true
 ```
 
@@ -201,6 +235,7 @@ See `.github/workflows/lib-*.yml` files for full documentation of inputs/outputs
 ### Authentication
 
 All workflows use the **smyklot** GitHub App for authentication:
+
 - `vars.SMYKLOT_APP_ID` - GitHub App ID (org-level variable)
 - `secrets.SMYKLOT_PRIVATE_KEY` - GitHub App private key (org-level secret)
 
@@ -210,11 +245,13 @@ All workflows use the **smyklot** GitHub App for authentication:
 
 1. Edit `.github/labels.yml`
 2. Follow format:
+
    ```yaml
    - name: "label-name"          # Max 50 chars
      color: "#hex-color"         # 6-char hex with #
      description: "description"  # Max 100 chars (optional)
    ```
+
 3. Commit and push to `main` - syncs automatically to all repos
 
 ### Adding New Sync Files
@@ -227,6 +264,7 @@ All workflows use the **smyklot** GitHub App for authentication:
 ### Manual Sync
 
 Trigger workflows manually via GitHub Actions:
+
 1. Go to Actions tab in this repository
 2. Select "Sync Labels", "Sync Files", or "Sync smyklot Version"
 3. Click "Run workflow"
@@ -303,6 +341,7 @@ Trigger workflows manually via GitHub Actions:
 ## Label Categories
 
 Labels are organized by prefix:
+
 - `kind/*` - Issue/PR type (bug, enhancement, documentation, question, security)
 - `area/*` - Affected component (ci, docs, api, testing, deps)
 - `ci/*` - CI behavior control (skip-tests, skip-lint, skip-build, force-full)
@@ -314,38 +353,50 @@ Labels are organized by prefix:
 
 ## Architecture Decisions
 
-### Custom Composite Actions for Sync
+### Go CLI with Container Packaging
 
-Both label and file sync use custom composite actions instead of third-party actions:
+The sync system is implemented as a Go CLI (`dotsync`) packaged in containers, replacing previous shell-based composite actions:
 
-**Label Sync:**
+**Why Go:**
 
-- **Location**: `.github/actions/sync-labels-to-repo`
-- **Why**: Most label sync actions don't support multi-repo targeting with per-repo config
-- **Implementation**: Bash script using GitHub CLI and jq for efficient map-based diff
-- **Benefits**: Full control, no external dependencies, easy to maintain, label removal support
+- **Type safety**: Strongly-typed config parsing and API interactions
+- **Error handling**: cockroachdb/errors provides stack traces and context propagation
+- **Maintainability**: ~2000 lines of idiomatic Go vs ~1600 lines of fragile shell scripts
+- **Testing**: Go's testing framework vs manual bash testing
+- **Performance**: Compiled binary with efficient rate limiting via go-github-ratelimit
+- **Reliability**: No JSON/YAML parsing with jq/yq, proper data structures instead
 
-**File Sync:**
+**Why Containers:**
 
-- **Location**: `.github/actions/sync-files-to-repo`
-- **Why**: Need per-repo exclusions and unified config support (not available in BetaHuhn)
-- **Implementation**: Bash script using GitHub API for PR creation and file management
-- **Benefits**: Full control, per-file exclusions, unified config, no external dependencies
+- **Distribution**: Single artifact (container image) deployed via GHCR
+- **Versioning**: Semantic versioning with multi-arch builds via GoReleaser
+- **Consistency**: Identical execution environment across all workflows
+- **Simplicity**: Native Docker action support (`runs.using: docker`)
+- **Updates**: Update CLI version by changing container tag in one place
 
-**Smyklot Sync:**
+**Implementation Stack:**
 
-- **Location**: `.github/actions/sync-smyklot-to-repo`
-- **Why**: Need automated version updates triggered by releases with per-repo config
-- **Implementation**: Bash script using GitHub API and sed for version replacement in workflow files
-- **Benefits**: Zero-touch updates on release, auto-merge, unified config, smart PR management
+- **CLI Framework**: Kong (struct-based, cleaner than Cobra)
+- **GitHub API**: google/go-github v79+ with rate limiting wrapper
+- **Error Handling**: cockroachdb/errors for stack traces and wrapping
+- **Logging**: Standard library slog with configurable levels
+- **Build/Release**: GoReleaser with multi-arch container builds to GHCR
+
+**Composite Action Wrappers:**
+
+- Container-based composite actions (`.github/actions/dotsync-*`) wrap CLI commands
+- Provide clean `with:` interface matching old shell-based actions
+- All use `docker://ghcr.io/smykla-labs/dotsync:latest` for direct container execution
+- Simpler than shell-based actions: just map inputs to CLI flags
 
 ### Unified Config Design
 
 - Single `.github/sync-config.yml` controls label, file, and smyklot sync
 - Repos opt-in to features (skip flags, exclusions, removal)
 - Label/file removal defaults to false (safer)
-- Config fetched per-repo at sync time
+- Config fetched per-repo at sync time by dotsync CLI
 - Smyklot sync respects both `sync.skip` and `sync.smyklot.skip` flags
+- Type-safe config parsing with proper validation and error messages
 
 ### Reusable Workflows Over File Sync
 
@@ -357,8 +408,11 @@ For CI/CD workflows, use reusable workflows instead of file sync:
 
 ## Important Notes
 
-- This repository does NOT use standard `make` targets or testing frameworks
-- All automation is via GitHub Actions workflows
+- This repository contains both GitHub Actions workflows AND a Go CLI (`dotsync`)
+- Build automation uses `task` (see `Taskfile.yaml` for targets: lint, test, build, fmt)
+- Tool versions managed via mise (`.mise.toml`)
+- Go code follows strict linting (golangci-lint with wrapcheck for error handling)
+- All automation is via GitHub Actions workflows calling dotsync container
 - Changes to `labels.yml` or `templates/**` trigger automatic syncs
 - Smyklot releases trigger automatic version sync across all repos
 - Workflows exclude `.github` and `smyklot` repositories from their respective sync targets
@@ -366,7 +420,8 @@ For CI/CD workflows, use reusable workflows instead of file sync:
 - File and smyklot sync create PRs for review (smyklot with auto-merge)
 - Dry run mode available to preview changes without making them
 - Community actions pinned to commit SHAs for security
-- All sync actions are custom, simple, and maintainable (~100-500 lines each)
+- dotsync CLI is type-safe, tested, and maintainable (~2000 lines of idiomatic Go)
+- Container images published to GHCR with multi-arch support (amd64, arm64)
 - Unified config system supports per-repo customization
 - Reusable workflows provide instant updates without PRs
 - See `examples/sync-config.yml` for complete configuration schema

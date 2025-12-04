@@ -85,13 +85,13 @@ jobs:
   lint:
     uses: smykla-labs/.github/.github/workflows/lib-lint.yml@abc1234 # v1.0.0
     with:
-      go-version: "1.23.x"
+      go-version: "1.25.x"
       enable-golangci-lint: true
 
   test:
     uses: smykla-labs/.github/.github/workflows/lib-test.yml@abc1234 # v1.0.0
     with:
-      go-version: "1.23.x"
+      go-version: "1.25.x"
       coverage-threshold: 80
 ```
 
@@ -151,6 +151,7 @@ See [examples/sync-config.yml](examples/sync-config.yml) for full schema documen
 Workflows use the **smyklot** GitHub App for authentication. The app must be installed on the organization with access to all repositories.
 
 Required org-level configuration:
+
 - `vars.SMYKLOT_APP_ID` - GitHub App ID
 - `secrets.SMYKLOT_PRIVATE_KEY` - GitHub App private key
 

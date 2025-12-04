@@ -1,0 +1,12 @@
+[tools]
+go = "1.25.5"
+task = "3.45.5"
+golangci-lint = "2.7.0"
+"npm:markdownlint-cli" = "0.46.0"
+actionlint = "1.7.9"
+goreleaser = "2.8.0"
+
+[env]
+GO111MODULE = "on"
+GOFLAGS = "-mod=readonly"
+CGO_ENABLED = "0"
