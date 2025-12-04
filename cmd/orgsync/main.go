@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/alecthomas/kong"
+	"github.com/smykla-labs/.github/pkg/config"
 	"github.com/smykla-labs/.github/pkg/github"
 	"github.com/smykla-labs/.github/pkg/logger"
 )
@@ -48,15 +49,49 @@ type LabelsSyncCmd struct {
 }
 
 // Run executes the label sync command.
-//
-//nolint:unparam // placeholder implementation, will return errors in future
 func (c *LabelsSyncCmd) Run(ctx context.Context, cli *CLI) error {
 	log := logger.FromContext(ctx)
-	log.Info("label sync not yet implemented",
+
+	log.Info("starting label sync",
+		"org", cli.Org,
 		"repo", c.Repo,
 		"labels_file", c.LabelsFile,
 		"dry_run", cli.DryRun,
 	)
+
+	// Get GitHub token
+	token, err := github.GetToken(ctx, log, cli.UseGHAuth)
+	if err != nil {
+		return err
+	}
+
+	// Create GitHub client
+	client, err := github.NewClient(ctx, log, token)
+	if err != nil {
+		return err
+	}
+
+	// Parse sync config
+	syncConfig, err := config.ParseSyncConfigJSON(c.Config)
+	if err != nil {
+		return err
+	}
+
+	// Sync labels
+	if err := github.SyncLabels(
+		ctx,
+		log,
+		client,
+		cli.Org,
+		c.Repo,
+		c.LabelsFile,
+		syncConfig,
+		cli.DryRun,
+	); err != nil {
+		return err
+	}
+
+	log.Info("label sync completed successfully")
 
 	return nil
 }
