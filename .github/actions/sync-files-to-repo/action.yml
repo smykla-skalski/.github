@@ -493,12 +493,15 @@ runs:
         # Build PR body
         run_url="https://github.com/$ORG/$SOURCE_REPO/actions/runs/${GITHUB_RUN_ID}"
         pr_body="Syncs organization files from [\`$ORG/$SOURCE_REPO\`](https://github.com/$ORG/$SOURCE_REPO)."
-        pr_body="${pr_body}"$'\n\n'"## Files Created"$'\n\n'"${created_list}"
-        pr_body="${pr_body}"$'\n'"## Files Updated"$'\n\n'"${updated_list}"
-        # Only show "Files Deleted" section if no alert (alert includes the list)
-        if [ ${#deleted_files[@]} -eq 0 ]; then
-          pr_body="${pr_body}"$'\n'"## Files Deleted"$'\n\n'"${deleted_list}"
+
+        # Only show sections when there are actual files
+        if [ ${#created_files[@]} -gt 0 ]; then
+          pr_body="${pr_body}"$'\n\n'"## Files Created"$'\n\n'"${created_list}"
         fi
+        if [ ${#updated_files[@]} -gt 0 ]; then
+          pr_body="${pr_body}"$'\n\n'"## Files Updated"$'\n\n'"${updated_list}"
+        fi
+
         pr_body="${pr_body}${deleted_alert}"
         pr_body="${pr_body}${modified_alert}"
         pr_body="${pr_body}"$'\n\n'"---"$'\n\n'
