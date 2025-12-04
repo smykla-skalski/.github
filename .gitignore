@@ -1,6 +1,7 @@
 # IDE
 .idea/
 .vscode/
+.klaudiush/
 *.swp
 *.swo
 *~
