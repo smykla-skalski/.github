@@ -1,9 +1,9 @@
 ---
-name: Release orgsync
+name: Release dotsync
 
 on:
   push:
-    tags: ["orgsync/v*"]
+    tags: ["dotsync/v*"]
 
 permissions:
   contents: write
@@ -15,28 +15,28 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           fetch-depth: 0
 
       - name: Set up Go
-        uses: actions/setup-go@3041bf56c941b39c61721a86cd11f3bb1338122a # v6.0.0
+        uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
         with:
           go-version-file: go.mod
           cache: true
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@b373c8fc6d7c8cc923a3e2b59c4c844e8aa9cc19 # v3.10.0
+        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
 
       - name: Log in to GitHub Container Registry
-        uses: docker/login-action@74b7057e56de0c61d23e8cacfdac07f0afe7f6f7 # v3.4.0
+        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@9c0c66a7a6c5bb5c1e23c39c1ec0562061b1c6e4 # v6.2.1
+        uses: goreleaser/goreleaser-action@e435ccd777264be153ace6237001ef4d979d3a7a # v6.4.0
         with:
           distribution: goreleaser
           version: "~> v2"
@@ -44,19 +44,19 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Dispatch orgsync sync event
-        if: startsWith(github.ref, 'refs/tags/orgsync/v')
+      - name: Dispatch dotsync sync event
+        if: startsWith(github.ref, 'refs/tags/dotsync/v')
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REF: ${{ github.ref }}
         run: |
-          tag="${GITHUB_REF#refs/tags/orgsync/}"
+          tag="${GITHUB_REF#refs/tags/dotsync/}"
           version="${tag#v}"
 
           gh api repos/smykla-labs/.github/dispatches \
             --method POST \
-            --field event_type="orgsync-release" \
+            --field event_type="dotsync-release" \
             --field client_payload[version]="$version" \
             --field client_payload[tag]="$tag"
 
-          echo "✓ Dispatched orgsync-release event (version=$version, tag=$tag)"
+          echo "✓ Dispatched dotsync-release event (version=$version, tag=$tag)"

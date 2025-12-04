@@ -85,13 +85,13 @@ jobs:
   lint:
     uses: smykla-labs/.github/.github/workflows/lib-lint.yml@abc1234 # v1.0.0
     with:
-      go-version: "1.23.x"
+      go-version: "1.25.x"
       enable-golangci-lint: true
 
   test:
     uses: smykla-labs/.github/.github/workflows/lib-test.yml@abc1234 # v1.0.0
     with:
-      go-version: "1.23.x"
+      go-version: "1.25.x"
       coverage-threshold: 80
 ```
 

@@ -188,7 +188,7 @@ jobs:
   lint:
     uses: smykla-labs/.github/.github/workflows/lib-lint.yml@<commit-sha> # v1.0.0
     with:
-      go-version: "1.23.x"
+      go-version: "1.25.x"
       enable-golangci-lint: true
 ```
 
