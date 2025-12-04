@@ -197,16 +197,51 @@ type SmyklotSyncCmd struct {
 }
 
 // Run executes the smyklot sync command.
-//
-//nolint:unparam // placeholder implementation, will return errors in future
 func (c *SmyklotSyncCmd) Run(ctx context.Context, cli *CLI) error {
 	log := logger.FromContext(ctx)
-	log.Info("smyklot sync not yet implemented",
+
+	log.Info("starting smyklot sync",
+		"org", cli.Org,
 		"repo", c.Repo,
 		"version", c.Version,
 		"tag", c.Tag,
 		"dry_run", cli.DryRun,
 	)
+
+	// Get GitHub token
+	token, err := github.GetToken(ctx, log, cli.UseGHAuth)
+	if err != nil {
+		return err
+	}
+
+	// Create GitHub client
+	client, err := github.NewClient(ctx, log, token)
+	if err != nil {
+		return err
+	}
+
+	// Parse sync config
+	syncConfig, err := config.ParseSyncConfigJSON(c.Config)
+	if err != nil {
+		return err
+	}
+
+	// Sync smyklot version
+	if err := github.SyncSmyklot(
+		ctx,
+		log,
+		client,
+		cli.Org,
+		c.Repo,
+		c.Version,
+		c.Tag,
+		syncConfig,
+		cli.DryRun,
+	); err != nil {
+		return err
+	}
+
+	log.Info("smyklot sync completed successfully")
 
 	return nil
 }

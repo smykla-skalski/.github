@@ -151,6 +151,7 @@ See [examples/sync-config.yml](examples/sync-config.yml) for full schema documen
 Workflows use the **smyklot** GitHub App for authentication. The app must be installed on the organization with access to all repositories.
 
 Required org-level configuration:
+
 - `vars.SMYKLOT_APP_ID` - GitHub App ID
 - `secrets.SMYKLOT_PRIVATE_KEY` - GitHub App private key
 

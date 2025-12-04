@@ -120,6 +120,7 @@ The synchronization system uses custom composite actions with unified per-repo c
 - **Features**: PR creation, single commit, exclusions, skip flags, smart renovate.json handling
 
 **Smart renovate.json Handling:**
+
 - Detects manual modifications to `renovate.json` by checking commit history
 - If manual commits found (not from sync workflow), excludes file from sync
 - Shows alert in PR with instructions to add to `.github/sync-config.yml`
@@ -156,6 +157,7 @@ The synchronization system uses custom composite actions with unified per-repo c
 **Skip Configuration:**
 
 Repos can opt out via `.github/sync-config.yml`:
+
 ```yaml
 sync:
   smyklot:
@@ -201,6 +203,7 @@ See `.github/workflows/lib-*.yml` files for full documentation of inputs/outputs
 ### Authentication
 
 All workflows use the **smyklot** GitHub App for authentication:
+
 - `vars.SMYKLOT_APP_ID` - GitHub App ID (org-level variable)
 - `secrets.SMYKLOT_PRIVATE_KEY` - GitHub App private key (org-level secret)
 
@@ -210,11 +213,13 @@ All workflows use the **smyklot** GitHub App for authentication:
 
 1. Edit `.github/labels.yml`
 2. Follow format:
+
    ```yaml
    - name: "label-name"          # Max 50 chars
      color: "#hex-color"         # 6-char hex with #
      description: "description"  # Max 100 chars (optional)
    ```
+
 3. Commit and push to `main` - syncs automatically to all repos
 
 ### Adding New Sync Files
@@ -227,6 +232,7 @@ All workflows use the **smyklot** GitHub App for authentication:
 ### Manual Sync
 
 Trigger workflows manually via GitHub Actions:
+
 1. Go to Actions tab in this repository
 2. Select "Sync Labels", "Sync Files", or "Sync smyklot Version"
 3. Click "Run workflow"
@@ -303,6 +309,7 @@ Trigger workflows manually via GitHub Actions:
 ## Label Categories
 
 Labels are organized by prefix:
+
 - `kind/*` - Issue/PR type (bug, enhancement, documentation, question, security)
 - `area/*` - Affected component (ci, docs, api, testing, deps)
 - `ci/*` - CI behavior control (skip-tests, skip-lint, skip-build, force-full)
