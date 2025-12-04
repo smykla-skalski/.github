@@ -1,0 +1,70 @@
+---
+name: Sync Labels (orgsync)
+description: >-
+  Sync labels from central config to target repository using orgsync container
+
+inputs:
+  token:
+    description: GitHub token for API access
+    required: true
+  org:
+    description: Organization name
+    required: true
+  repo:
+    description: Repository name
+    required: true
+  labels-file:
+    description: Path to labels YAML file
+    required: true
+    default: .github/labels.yml
+  sync-config:
+    description: JSON sync config from get-sync-config action
+    required: false
+    default: "{}"
+  dry-run:
+    description: Dry run (no changes)
+    required: false
+    default: "false"
+  orgsync-version:
+    description: orgsync container image version
+    required: false
+    default: latest
+
+runs:
+  using: composite
+  steps:
+    - name: Sync labels with orgsync
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.token }}
+        ORG: ${{ inputs.org }}
+        REPO: ${{ inputs.repo }}
+        LABELS_FILE: ${{ inputs.labels-file }}
+        SYNC_CONFIG: ${{ inputs.sync-config }}
+        DRY_RUN: ${{ inputs.dry-run }}
+        ORGSYNC_VERSION: ${{ inputs.orgsync-version }}
+      run: |
+        # Build dry-run flag
+        DRY_RUN_FLAG=""
+        if [ "$DRY_RUN" = "true" ]; then
+          DRY_RUN_FLAG="--dry-run"
+        fi
+
+        # Build config flag
+        CONFIG_FLAG=""
+        if [ -n "$SYNC_CONFIG" ] && [ "$SYNC_CONFIG" != "{}" ]; then
+          CONFIG_FLAG="--config $SYNC_CONFIG"
+        fi
+
+        # Run orgsync in container
+        docker run --rm \
+          -e GITHUB_TOKEN \
+          -v "$PWD:/workspace" \
+          -w /workspace \
+          "ghcr.io/smykla-labs/orgsync:${ORGSYNC_VERSION}" \
+          labels sync \
+            --org "$ORG" \
+            --repo "$REPO" \
+            --labels-file "$LABELS_FILE" \
+            $CONFIG_FLAG \
+            $DRY_RUN_FLAG
