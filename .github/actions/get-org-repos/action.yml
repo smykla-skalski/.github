@@ -1,5 +1,5 @@
 name: Get Organization Repositories
-description: Get list of repositories in the organization (excluding .github)
+description: Get list of repositories in the organization
 
 inputs:
   token:
@@ -25,5 +25,5 @@ runs:
         GH_TOKEN: ${{ inputs.token }}
         ORG: ${{ inputs.org }}
       run: |
-        repos=$(gh repo list "$ORG" --json name --jq '[.[].name | select(. != ".github")]')
+        repos=$(gh repo list "$ORG" --json name --jq '[.[].name]')
         echo "repos=$repos" >> "$GITHUB_OUTPUT"
