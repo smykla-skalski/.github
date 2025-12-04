@@ -605,21 +605,24 @@ runs:
             label_args+=(--label "$label")
           done
 
-          pr_url=$(gh pr create \
+          pr_result=$(gh pr create \
             --repo "$ORG/$REPO" \
             --head "$branch_name" \
             --base "$default_branch" \
             --title "$pr_title" \
             --body "$pr_body" \
             "${label_args[@]}" \
-            2>&1) || pr_url=""
+            2>&1) || true
 
-          if [ -n "$pr_url" ]; then
+          if echo "$pr_result" | grep -q "^https://"; then
+            pr_url="$pr_result"
             echo "   Created PR: $pr_url"
             # Extract PR number from URL
             pr_number=$(echo "$pr_url" | grep -oE '[0-9]+$')
           else
+            pr_url=""
             echo "   ❌ Failed to create PR"
+            echo "   Error: $pr_result"
           fi
         fi
 
