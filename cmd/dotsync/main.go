@@ -10,7 +10,7 @@ import (
 
 	"github.com/alecthomas/kong"
 	"github.com/cockroachdb/errors"
-	_ "github.com/spf13/cobra" // Temporary: keeping dependency during migration
+	"github.com/spf13/cobra"
 
 	"github.com/smykla-labs/.github/pkg/config"
 	"github.com/smykla-labs/.github/pkg/github"
@@ -545,6 +545,42 @@ func (c *ConfigVerifyCmd) Run(ctx context.Context, cli *CLI) error {
 	log.Info("schema is up to date")
 
 	return nil
+}
+
+// Cobra root command and initialization
+
+var rootCmd = &cobra.Command{
+	Use:   "dotsync",
+	Short: "Organization sync tool for labels, files, settings, and smyklot versions",
+	Long: `dotsync is a CLI tool for synchronizing organization-wide configurations
+across GitHub repositories. It supports syncing labels, files, repository
+settings, and smyklot version references.`,
+	Version: version,
+	PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
+		// Get log level from flag
+		logLevel, err := cmd.Flags().GetString("log-level")
+		if err != nil {
+			return errors.Wrap(err, "failed to get log-level flag")
+		}
+
+		// Initialize logger
+		log := logger.New(logLevel)
+
+		// Inject logger into context
+		ctx := logger.WithContext(cmd.Context(), log)
+		cmd.SetContext(ctx)
+
+		return nil
+	},
+}
+
+func init() {
+	// Add persistent flags (global flags available to all commands)
+	rootCmd.PersistentFlags().String("log-level", "info", "Log level (trace|debug|info|warn|error)")
+	rootCmd.PersistentFlags().Bool("use-gh-auth", false, "Use 'gh auth token' for authentication")
+	rootCmd.PersistentFlags().Bool("dry-run", false, "Preview changes without applying them")
+	rootCmd.PersistentFlags().Bool("github-output", false, "Write outputs to GITHUB_OUTPUT for GitHub Actions")
+	rootCmd.PersistentFlags().String("org", "smykla-labs", "GitHub organization")
 }
 
 func main() {
