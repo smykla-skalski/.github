@@ -5,7 +5,7 @@
 # Place this file at: .github/sync-config.yml in your repository
 #
 # This configuration controls how the organization's sync system
-# synchronizes labels and files to your repository.
+# synchronizes labels, files, settings, and smyklot to your repository.
 #
 # All fields are optional - omit any field to use its default value.
 # An empty or missing config file enables all syncs with default behavior.
@@ -29,6 +29,10 @@
 #
 #   smyklot:                     # Smyklot version sync configuration
 #     skip: bool                 # Skip smyklot version sync (default: false)
+#
+#   settings:                    # Settings sync configuration
+#     skip: bool                 # Skip settings sync (default: false)
+#     exclude: [string]          # Settings paths to exclude from sync
 #
 # ---------------------------------------------------------------------------
 # FIELD DETAILS
@@ -74,6 +78,16 @@
 #   Label and file sync still run unless their respective skip flags are set.
 #   Use this for repos that don't use smyklot or manage their own versions.
 #
+# sync.settings.skip (boolean, default: false)
+#   When true, skips settings synchronization only.
+#   Use this for repos that require custom settings management.
+#
+# sync.settings.exclude (array of strings, default: [])
+#   List of settings paths to exclude from synchronization.
+#   Paths use dot notation to reference nested fields.
+#   Examples: ["branch_protection", "security.secret_scanning", "features.has_wiki"]
+#   Entire sections or individual fields can be excluded.
+#
 # ---------------------------------------------------------------------------
 # EXAMPLES
 # ---------------------------------------------------------------------------
@@ -117,7 +131,20 @@ sync: {}
 #   smyklot:
 #     skip: true
 
-# Example 7: Full customization
+# Example 7: Skip settings sync only (for repos requiring custom settings)
+# sync:
+#   settings:
+#     skip: true
+
+# Example 8: Exclude specific settings (keep custom branch protection)
+# sync:
+#   settings:
+#     exclude:
+#       - "branch_protection"          # Keep all custom branch protection rules
+#       - "security.secret_scanning"   # Keep custom secret scanning config
+#       - "features.has_wiki"          # Keep wiki enabled
+
+# Example 9: Full customization
 # sync:
 #   skip: false
 #   labels:
@@ -135,3 +162,7 @@ sync: {}
 #     allow_removal: false
 #   smyklot:
 #     skip: false
+#   settings:
+#     skip: false
+#     exclude:
+#       - "features.has_discussions"

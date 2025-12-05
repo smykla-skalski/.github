@@ -1,0 +1,55 @@
+---
+# Organization-wide Repository Settings
+# ======================================
+# These settings are synced to all smykla-labs repositories via dotsync.
+# Individual repos can opt out or customize via .github/sync-config.yml
+#
+# See: https://github.com/smykla-labs/.github/blob/main/examples/sync-config.yml
+
+settings:
+  # Repository Settings
+  # -------------------
+  # Controls merge strategies and branch cleanup behavior
+  repository:
+    allow_squash_merge: true        # Enable squash merge (recommended for clean history)
+    allow_merge_commit: false       # Disable merge commits (keeps history linear)
+    allow_rebase_merge: true        # Enable rebase merge (alternative to squash)
+    delete_branch_on_merge: true    # Auto-delete head branches after merge
+    allow_auto_merge: true          # Enable auto-merge feature
+
+  # Repository Features
+  # -------------------
+  # Controls which GitHub features are enabled
+  features:
+    has_issues: true                # Enable GitHub Issues
+    has_wiki: false                 # Disable Wiki (use docs/ instead)
+    has_projects: false             # Disable Projects (use GitHub Projects v2 instead)
+    has_discussions: false          # Disable Discussions (enable per-repo if needed)
+
+  # Security Settings
+  # -----------------
+  # Requires GitHub Advanced Security (GHAS) for private repos
+  # Public repos get these features automatically
+  security:
+    secret_scanning: enabled                    # Scan for exposed secrets
+    secret_scanning_push_protection: enabled    # Block pushes with secrets
+    dependabot_security_updates: enabled        # Auto security updates
+
+  # Branch Protection Rules
+  # -----------------------
+  # Protect critical branches from force pushes and require reviews
+  branch_protection:
+    # Main branch protection
+    - pattern: "main"
+      required_status_checks:
+        strict: true              # Require branches to be up to date before merging
+        contexts: []              # Empty = inherit repo's existing required checks
+      required_reviews:
+        count: 1                  # Require 1 approval before merge
+        dismiss_stale: true       # Dismiss approvals when new commits pushed
+        require_code_owner_reviews: false
+      enforce_admins: false       # Allow admins to bypass (for emergency fixes)
+      require_linear_history: true              # Prevent merge commits
+      allow_force_pushes: false                 # Block force pushes
+      allow_deletions: false                    # Block branch deletion
+      required_conversation_resolution: true    # Require all review threads resolved

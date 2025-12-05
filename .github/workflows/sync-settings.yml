@@ -1,0 +1,75 @@
+---
+name: Sync Settings
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/settings.yml"
+      - ".github/workflows/sync-settings.yml"
+      - ".github/actions/dotsync-settings/**"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run (no changes)"
+        required: false
+        type: boolean
+        default: false
+
+permissions: {}
+
+jobs:
+  get-repos:
+    runs-on: ubuntu-24.04
+    outputs:
+      repos: ${{ steps.repos.outputs.repos }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+
+      - name: Generate App Token
+        id: token
+        uses: actions/create-github-app-token@7e473efe3cb98aa54f8d4bac15400b15fad77d94 # v2.2.0
+        with:
+          app-id: ${{ vars.SMYKLOT_APP_ID }}
+          private-key: ${{ secrets.SMYKLOT_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+
+      - name: Get repositories
+        id: repos
+        uses: ./.github/actions/dotsync-repos-list
+        with:
+          token: ${{ steps.token.outputs.token }}
+          org: ${{ github.repository_owner }}
+
+  sync-settings:
+    needs: get-repos
+    runs-on: ubuntu-24.04
+    concurrency:
+      group: sync-settings-${{ matrix.repo.name }}
+      cancel-in-progress: false
+    strategy:
+      fail-fast: false
+      matrix:
+        repo: ${{ fromJSON(needs.get-repos.outputs.repos) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+
+      - name: Generate App Token
+        id: token
+        uses: actions/create-github-app-token@7e473efe3cb98aa54f8d4bac15400b15fad77d94 # v2.2.0
+        with:
+          app-id: ${{ vars.SMYKLOT_APP_ID }}
+          private-key: ${{ secrets.SMYKLOT_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: ${{ matrix.repo.name }}
+
+      - name: Sync settings to repository
+        uses: ./.github/actions/dotsync-settings
+        with:
+          token: ${{ steps.token.outputs.token }}
+          org: ${{ github.repository_owner }}
+          repo: ${{ matrix.repo.name }}
+          settings-file: .github/settings.yml
+          dry-run: ${{ inputs.dry_run || 'false' }}
