@@ -422,6 +422,11 @@ func (*ConfigSchemaCmd) Run(_ context.Context) error {
 		RequiredFromJSONSchemaTags: true,
 	}
 
+	// Load Go comments as descriptions
+	if err := reflector.AddGoComments("github.com/smykla-labs/.github", "./pkg/config"); err != nil {
+		return errors.Wrap(err, "loading Go comments for schema descriptions")
+	}
+
 	schema := reflector.Reflect(&config.SyncConfig{})
 	schema.Version = "https://json-schema.org/draft/2020-12/schema"
 	schema.ID = "https://raw.githubusercontent.com/smykla-labs/.github/main/schemas/sync-config.schema.json"
