@@ -1,3 +1,4 @@
+<!-- markdownlint-disable MD024 -->
 # Changelog
 
 ## [1.2.0](https://github.com/smykla-labs/.github/compare/dotsync/v1.1.0...dotsync/v1.2.0) (2025-12-05)
