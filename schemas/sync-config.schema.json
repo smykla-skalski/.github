@@ -1,5 +1,35 @@
 {
   "$defs": {
+    "FileMergeConfig": {
+      "additionalProperties": false,
+      "description": "Configures merge behavior for specific files, allowing repo-specific customization of fields while inheriting org defaults",
+      "properties": {
+        "overrides": {
+          "description": "Key-value pairs to override in the merged result. Repo values take precedence over org defaults. Use null to explicitly remove a field",
+          "type": "object"
+        },
+        "path": {
+          "description": "File path (relative to repo root) to merge. Must be a JSON or YAML file",
+          "minLength": 1,
+          "pattern": "^[^/].*$",
+          "type": "string"
+        },
+        "strategy": {
+          "default": "deep-merge",
+          "description": "Merge strategy to use. deep-merge (default) recursively merges nested objects; shallow-merge only merges top-level keys",
+          "enum": [
+            "deep-merge",
+            "shallow-merge",
+            "overlay"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "path"
+      ],
+      "type": "object"
+    },
     "FilesConfig": {
       "additionalProperties": false,
       "description": "Controls which organization template files (CODE_OF_CONDUCT.md, CONTRIBUTING.md, etc.) are synced to this repository, with options to exclude specific files or remove unmanaged files",
@@ -28,6 +58,13 @@
           },
           "type": "array",
           "uniqueItems": true
+        },
+        "merge": {
+          "description": "Files to merge with repo-specific overrides instead of replacing. Allows customizing specific fields while inheriting org defaults",
+          "items": {
+            "$ref": "#/$defs/FileMergeConfig"
+          },
+          "type": "array"
         },
         "skip": {
           "default": false,
