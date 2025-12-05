@@ -528,6 +528,23 @@ var smyklotSyncCmd = &cobra.Command{
 		tag := getStringFlagWithEnvFallback(cmd, "tag", "")
 		configJSON := getStringFlagWithEnvFallback(cmd, "config", "")
 
+		// Validate required fields
+		if org == "" {
+			return errors.New("org is required (set via --org flag, INPUT_ORG, or GITHUB_REPOSITORY_OWNER)")
+		}
+
+		if repo == "" {
+			return errors.New("repo is required (set via --repo flag, INPUT_REPO, or GITHUB_REPOSITORY)")
+		}
+
+		if smyklotVersion == "" {
+			return errors.New("version is required (set via --version flag or INPUT_VERSION)")
+		}
+
+		if tag == "" {
+			return errors.New("tag is required (set via --tag flag or INPUT_TAG)")
+		}
+
 		log.Info("starting smyklot sync",
 			"org", org,
 			"repo", repo,
@@ -598,6 +615,10 @@ var reposListCmd = &cobra.Command{
 		useGHAuth, _ := cmd.Root().PersistentFlags().GetBool("use-gh-auth")
 		githubOutput, _ := cmd.Root().PersistentFlags().GetBool("github-output")
 		format := getStringFlagWithEnvFallback(cmd, "format", "")
+
+		if org == "" {
+			return errors.New("org is required (set via --org flag, INPUT_ORG, or GITHUB_REPOSITORY_OWNER)")
+		}
 
 		token, err := github.GetToken(ctx, log, useGHAuth)
 		if err != nil {
@@ -704,6 +725,15 @@ var configVerifyCmd = &cobra.Command{
 
 		branch := getStringFlagWithEnvFallback(cmd, "branch", "GITHUB_REF_NAME")
 		schemaFile := getStringFlagWithEnvFallback(cmd, "schema-file", "")
+
+		// Validate required fields
+		if repo == "" {
+			return errors.New("repo is required (set via --repo flag, INPUT_REPO, or GITHUB_REPOSITORY)")
+		}
+
+		if branch == "" {
+			return errors.New("branch is required (set via --branch flag, INPUT_BRANCH, or GITHUB_REF_NAME)")
+		}
 
 		log.Info("verifying schema sync status",
 			"repo", repo,
