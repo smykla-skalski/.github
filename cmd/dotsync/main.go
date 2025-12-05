@@ -50,6 +50,89 @@ func splitLabels(labels string) []string {
 	return result
 }
 
+// getStringFlagWithEnvFallback retrieves a string flag value with environment variable fallback.
+// Priority: 1) explicit flag value, 2) INPUT_* env var, 3) GitHub standard env var.
+func getStringFlagWithEnvFallback(cmd *cobra.Command, flagName, githubEnvFallback string) string {
+	// Check explicit flag value
+	val, _ := cmd.Flags().GetString(flagName)
+	if val != "" {
+		return val
+	}
+
+	// Check INPUT_* env var (from GitHub Actions input)
+	inputEnv := "INPUT_" + strings.ToUpper(strings.ReplaceAll(flagName, "-", "_"))
+
+	val = os.Getenv(inputEnv)
+	if val != "" {
+		return val
+	}
+
+	// Fall back to GitHub standard env var
+	if githubEnvFallback != "" {
+		return os.Getenv(githubEnvFallback)
+	}
+
+	return ""
+}
+
+// getPersistentStringFlagWithEnvFallback retrieves a persistent flag value with environment variable fallback.
+// Priority: 1) explicit flag value, 2) INPUT_* env var, 3) GitHub standard env var.
+//
+//nolint:unparam // flagName parameter kept generic for potential future use with other persistent flags
+func getPersistentStringFlagWithEnvFallback(cmd *cobra.Command, flagName, githubEnvFallback string) string {
+	// Check explicit flag value
+	val, _ := cmd.Root().PersistentFlags().GetString(flagName)
+	if val != "" {
+		return val
+	}
+
+	// Check INPUT_* env var (from GitHub Actions input)
+	inputEnv := "INPUT_" + strings.ToUpper(strings.ReplaceAll(flagName, "-", "_"))
+
+	val = os.Getenv(inputEnv)
+	if val != "" {
+		return val
+	}
+
+	// Fall back to GitHub standard env var
+	if githubEnvFallback != "" {
+		return os.Getenv(githubEnvFallback)
+	}
+
+	return ""
+}
+
+// getRepoFromEnv extracts repository name from GITHUB_REPOSITORY env var (format: owner/repo).
+func getRepoFromEnv() string {
+	fullRepo := os.Getenv("GITHUB_REPOSITORY")
+	parts := strings.Split(fullRepo, "/")
+
+	const expectedParts = 2
+	if len(parts) == expectedParts {
+		return parts[1]
+	}
+
+	return ""
+}
+
+// getPersistentBoolFlagWithEnvFallback retrieves a persistent bool flag value with environment variable fallback.
+// Priority: 1) explicit flag value (if changed), 2) INPUT_* env var.
+//
+//nolint:unparam // flagName parameter kept generic for potential future use with other persistent flags
+func getPersistentBoolFlagWithEnvFallback(cmd *cobra.Command, flagName string) bool {
+	// Check if flag was explicitly set
+	if cmd.Root().PersistentFlags().Changed(flagName) {
+		val, _ := cmd.Root().PersistentFlags().GetBool(flagName)
+		return val
+	}
+
+	// Check INPUT_* env var
+	inputEnv := "INPUT_" + strings.ToUpper(strings.ReplaceAll(flagName, "-", "_"))
+	envVal := os.Getenv(inputEnv)
+
+	return envVal == "true"
+}
+
 // Cobra root command and initialization
 
 var rootCmd = &cobra.Command{
@@ -146,12 +229,33 @@ type syncFunc func(
 	dryRun bool,
 ) error
 
-func getSyncParams(cmd *cobra.Command, configFlag string) syncParams {
-	org, _ := cmd.Root().PersistentFlags().GetString("org")
-	dryRun, _ := cmd.Root().PersistentFlags().GetBool("dry-run")
-	repo, _ := cmd.Flags().GetString("repo")
-	configFile, _ := cmd.Flags().GetString(configFlag)
-	configJSON, _ := cmd.Flags().GetString("config")
+func getSyncParams(cmd *cobra.Command, configFlag string) (syncParams, error) {
+	// Use env fallback for org (GITHUB_REPOSITORY_OWNER) and repo (GITHUB_REPOSITORY)
+	org := getPersistentStringFlagWithEnvFallback(cmd, "org", "GITHUB_REPOSITORY_OWNER")
+	dryRun := getPersistentBoolFlagWithEnvFallback(cmd, "dry-run")
+
+	// Repo has special handling: flag → INPUT_REPO → extract from GITHUB_REPOSITORY
+	repo := getStringFlagWithEnvFallback(cmd, "repo", "")
+	if repo == "" {
+		repo = getRepoFromEnv()
+	}
+
+	configFile := getStringFlagWithEnvFallback(cmd, configFlag, "")
+	configJSON := getStringFlagWithEnvFallback(cmd, "config", "")
+
+	// Validate required fields
+	if org == "" {
+		return syncParams{}, errors.New("org is required (set via --org flag, INPUT_ORG, or GITHUB_REPOSITORY_OWNER)")
+	}
+
+	if repo == "" {
+		return syncParams{}, errors.New("repo is required (set via --repo flag, INPUT_REPO, or GITHUB_REPOSITORY)")
+	}
+
+	if configFile == "" {
+		return syncParams{}, errors.Newf("%s is required (set via --%s flag or INPUT_%s)",
+			configFlag, configFlag, strings.ToUpper(strings.ReplaceAll(configFlag, "-", "_")))
+	}
 
 	return syncParams{
 		org:        org,
@@ -159,7 +263,7 @@ func getSyncParams(cmd *cobra.Command, configFlag string) syncParams {
 		configFile: configFile,
 		configJSON: configJSON,
 		dryRun:     dryRun,
-	}
+	}, nil
 }
 
 func setupGitHubClient(
@@ -194,7 +298,10 @@ func createSyncCommand(
 			ctx := cmd.Context()
 			log := logger.FromContext(ctx)
 
-			params := getSyncParams(cmd, configFlag)
+			params, err := getSyncParams(cmd, configFlag)
+			if err != nil {
+				return err
+			}
 
 			log.Info("starting "+syncType+" sync",
 				"org", params.org,
@@ -253,15 +360,36 @@ var filesSyncCmd = &cobra.Command{
 		ctx := cmd.Context()
 		log := logger.FromContext(ctx)
 
-		// Get flags
-		org, _ := cmd.Root().PersistentFlags().GetString("org")
-		dryRun, _ := cmd.Root().PersistentFlags().GetBool("dry-run")
+		// Get flags with env fallback
+		org := getPersistentStringFlagWithEnvFallback(cmd, "org", "GITHUB_REPOSITORY_OWNER")
+		dryRun := getPersistentBoolFlagWithEnvFallback(cmd, "dry-run")
 		useGHAuth, _ := cmd.Root().PersistentFlags().GetBool("use-gh-auth")
-		repo, _ := cmd.Flags().GetString("repo")
-		filesConfig, _ := cmd.Flags().GetString("files-config")
-		configJSON, _ := cmd.Flags().GetString("config")
-		branchPrefix, _ := cmd.Flags().GetString("branch-prefix")
-		prLabelsStr, _ := cmd.Flags().GetString("pr-labels")
+
+		// Repo has special handling: flag → INPUT_REPO → extract from GITHUB_REPOSITORY
+		repo := getStringFlagWithEnvFallback(cmd, "repo", "")
+		if repo == "" {
+			repo = getRepoFromEnv()
+		}
+
+		filesConfig := getStringFlagWithEnvFallback(cmd, "files-config", "")
+		configJSON := getStringFlagWithEnvFallback(cmd, "config", "")
+
+		// These only check INPUT_* env vars (no GitHub standard fallback)
+		branchPrefix := getStringFlagWithEnvFallback(cmd, "branch-prefix", "")
+		prLabelsStr := getStringFlagWithEnvFallback(cmd, "pr-labels", "")
+
+		// Validate required fields
+		if org == "" {
+			return errors.New("org is required (set via --org flag, INPUT_ORG, or GITHUB_REPOSITORY_OWNER)")
+		}
+
+		if repo == "" {
+			return errors.New("repo is required (set via --repo flag, INPUT_REPO, or GITHUB_REPOSITORY)")
+		}
+
+		if filesConfig == "" {
+			return errors.New("files-config is required (set via --files-config flag or INPUT_FILES_CONFIG)")
+		}
 
 		log.Info("starting file sync",
 			"org", org,
@@ -325,9 +453,9 @@ var filesDiscoverCmd = &cobra.Command{
 		ctx := cmd.Context()
 		log := logger.FromContext(ctx)
 
-		// Get flags
+		// Get flags with env fallback
 		githubOutput, _ := cmd.Root().PersistentFlags().GetBool("github-output")
-		templatesDir, _ := cmd.Flags().GetString("templates-dir")
+		templatesDir := getStringFlagWithEnvFallback(cmd, "templates-dir", "")
 
 		log.Debug("discovering files", "templates_dir", templatesDir)
 
@@ -385,14 +513,20 @@ var smyklotSyncCmd = &cobra.Command{
 		ctx := cmd.Context()
 		log := logger.FromContext(ctx)
 
-		// Get flags
-		org, _ := cmd.Root().PersistentFlags().GetString("org")
-		dryRun, _ := cmd.Root().PersistentFlags().GetBool("dry-run")
+		// Get flags with env fallback
+		org := getPersistentStringFlagWithEnvFallback(cmd, "org", "GITHUB_REPOSITORY_OWNER")
+		dryRun := getPersistentBoolFlagWithEnvFallback(cmd, "dry-run")
 		useGHAuth, _ := cmd.Root().PersistentFlags().GetBool("use-gh-auth")
-		repo, _ := cmd.Flags().GetString("repo")
-		smyklotVersion, _ := cmd.Flags().GetString("version")
-		tag, _ := cmd.Flags().GetString("tag")
-		configJSON, _ := cmd.Flags().GetString("config")
+
+		// Repo has special handling: flag → INPUT_REPO → extract from GITHUB_REPOSITORY
+		repo := getStringFlagWithEnvFallback(cmd, "repo", "")
+		if repo == "" {
+			repo = getRepoFromEnv()
+		}
+
+		smyklotVersion := getStringFlagWithEnvFallback(cmd, "version", "")
+		tag := getStringFlagWithEnvFallback(cmd, "tag", "")
+		configJSON := getStringFlagWithEnvFallback(cmd, "config", "")
 
 		log.Info("starting smyklot sync",
 			"org", org,
@@ -459,11 +593,11 @@ var reposListCmd = &cobra.Command{
 		ctx := cmd.Context()
 		log := logger.FromContext(ctx)
 
-		// Get flags
-		org, _ := cmd.Root().PersistentFlags().GetString("org")
+		// Get flags with env fallback
+		org := getPersistentStringFlagWithEnvFallback(cmd, "org", "GITHUB_REPOSITORY_OWNER")
 		useGHAuth, _ := cmd.Root().PersistentFlags().GetBool("use-gh-auth")
 		githubOutput, _ := cmd.Root().PersistentFlags().GetBool("github-output")
-		format, _ := cmd.Flags().GetString("format")
+		format := getStringFlagWithEnvFallback(cmd, "format", "")
 
 		token, err := github.GetToken(ctx, log, useGHAuth)
 		if err != nil {
@@ -558,12 +692,18 @@ var configVerifyCmd = &cobra.Command{
 		ctx := cmd.Context()
 		log := logger.FromContext(ctx)
 
-		// Get flags
-		dryRun, _ := cmd.Root().PersistentFlags().GetBool("dry-run")
+		// Get flags with env fallback
+		dryRun := getPersistentBoolFlagWithEnvFallback(cmd, "dry-run")
 		useGHAuth, _ := cmd.Root().PersistentFlags().GetBool("use-gh-auth")
-		repo, _ := cmd.Flags().GetString("repo")
-		branch, _ := cmd.Flags().GetString("branch")
-		schemaFile, _ := cmd.Flags().GetString("schema-file")
+
+		// Repo and branch have GitHub standard env fallbacks
+		repo := getStringFlagWithEnvFallback(cmd, "repo", "")
+		if repo == "" {
+			repo = getRepoFromEnv()
+		}
+
+		branch := getStringFlagWithEnvFallback(cmd, "branch", "GITHUB_REF_NAME")
+		schemaFile := getStringFlagWithEnvFallback(cmd, "schema-file", "")
 
 		log.Info("verifying schema sync status",
 			"repo", repo,
@@ -614,14 +754,12 @@ func init() {
 	rootCmd.PersistentFlags().Bool("use-gh-auth", false, "Use 'gh auth token' for authentication")
 	rootCmd.PersistentFlags().Bool("dry-run", false, "Preview changes without applying them")
 	rootCmd.PersistentFlags().Bool("github-output", false, "Write outputs to GITHUB_OUTPUT for GitHub Actions")
-	rootCmd.PersistentFlags().String("org", "smykla-labs", "GitHub organization")
+	rootCmd.PersistentFlags().String("org", "", "GitHub organization")
 
 	// Configure label sync command flags
 	labelsSyncCmd.Flags().String("repo", "", "Target repository (e.g., 'myrepo')")
 	labelsSyncCmd.Flags().String("labels-file", "", "Path to labels YAML file")
 	labelsSyncCmd.Flags().String("config", "", "JSON sync config (optional)")
-	_ = labelsSyncCmd.MarkFlagRequired("repo")
-	_ = labelsSyncCmd.MarkFlagRequired("labels-file")
 
 	// Configure file sync command flags
 	filesSyncCmd.Flags().String("repo", "", "Target repository (e.g., 'myrepo')")
@@ -629,8 +767,6 @@ func init() {
 	filesSyncCmd.Flags().String("config", "", "JSON sync config (optional)")
 	filesSyncCmd.Flags().String("branch-prefix", "chore/org-sync", "Branch name prefix")
 	filesSyncCmd.Flags().String("pr-labels", "ci/skip-all", "Comma-separated PR labels")
-	_ = filesSyncCmd.MarkFlagRequired("repo")
-	_ = filesSyncCmd.MarkFlagRequired("files-config")
 
 	// Configure files discover command flags
 	filesDiscoverCmd.Flags().String("templates-dir", "templates", "Path to templates directory")
@@ -640,16 +776,11 @@ func init() {
 	smyklotSyncCmd.Flags().String("version", "", "Smyklot version (e.g., '1.9.2')")
 	smyklotSyncCmd.Flags().String("tag", "", "Smyklot tag (e.g., 'v1.9.2')")
 	smyklotSyncCmd.Flags().String("config", "", "JSON sync config (optional)")
-	_ = smyklotSyncCmd.MarkFlagRequired("repo")
-	_ = smyklotSyncCmd.MarkFlagRequired("version")
-	_ = smyklotSyncCmd.MarkFlagRequired("tag")
 
 	// Configure settings sync command flags
 	settingsSyncCmd.Flags().String("repo", "", "Target repository (e.g., 'myrepo')")
 	settingsSyncCmd.Flags().String("settings-file", "", "Path to settings YAML file")
 	settingsSyncCmd.Flags().String("config", "", "JSON sync config (optional)")
-	_ = settingsSyncCmd.MarkFlagRequired("repo")
-	_ = settingsSyncCmd.MarkFlagRequired("settings-file")
 
 	// Configure repos list command flags
 	reposListCmd.Flags().String("format", "json", "Output format (json|names)")
@@ -658,8 +789,6 @@ func init() {
 	configVerifyCmd.Flags().String("repo", "", "Repository (owner/name)")
 	configVerifyCmd.Flags().String("branch", "", "Branch name")
 	configVerifyCmd.Flags().String("schema-file", "schemas/sync-config.schema.json", "Path to schema file")
-	_ = configVerifyCmd.MarkFlagRequired("repo")
-	_ = configVerifyCmd.MarkFlagRequired("branch")
 
 	// Build command tree
 	labelsCmd.AddCommand(labelsSyncCmd)
