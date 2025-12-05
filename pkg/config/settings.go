@@ -97,7 +97,7 @@ type RepositorySettingsConfig struct {
 	AllowRebaseMerge *bool `json:"allow_rebase_merge" yaml:"allow_rebase_merge"`
 	// Allow auto-merge for pull requests
 	AllowAutoMerge *bool `json:"allow_auto_merge" yaml:"allow_auto_merge"`
-	// Automatically delete head branch after pull requests
+	// Automatically delete head branch after pull request is merged
 	DeleteBranchOnMerge *bool `json:"delete_branch_on_merge" yaml:"delete_branch_on_merge"`
 }
 
