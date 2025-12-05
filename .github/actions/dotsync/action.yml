@@ -1,0 +1,100 @@
+---
+name: Dotsync (Unified)
+description: >-
+  Unified dotsync action leveraging INPUT_* env vars and GitHub context for automatic parameter inference
+
+inputs:
+  # Required: Command routing
+  command:
+    description: Command to execute (labels, files, settings, smyklot, repos, config)
+    required: true
+  subcommand:
+    description: Subcommand to execute (sync, discover, list, verify)
+    required: true
+
+  # Auth (optional - defaults to GITHUB_TOKEN via CLI)
+  token:
+    description: GitHub token for API access
+    required: false
+    default: ""
+
+  # Common with GitHub context fallback (flag → INPUT_* → GitHub standard env)
+  org:
+    description: Organization name (defaults to GITHUB_REPOSITORY_OWNER)
+    required: false
+    default: ""
+  repo:
+    description: Repository name (defaults to GITHUB_REPOSITORY)
+    required: false
+    default: ""
+  branch:
+    description: Branch name (defaults to GITHUB_REF_NAME)
+    required: false
+    default: ""
+
+  # Common with INPUT_* fallback only (flag → INPUT_*)
+  dry-run:
+    description: Dry run mode - preview changes without making them
+    required: false
+    default: "false"
+  sync-config:
+    description: JSON sync config from get-sync-config action
+    required: false
+    default: "{}"
+
+  # Command-specific inputs
+  labels-file:
+    description: Path to labels YAML file (labels sync)
+    required: false
+    default: ""
+  settings-file:
+    description: Path to settings YAML file (settings sync)
+    required: false
+    default: ""
+  files-config:
+    description: JSON config with files to sync (files sync)
+    required: false
+    default: ""
+  branch-prefix:
+    description: Git branch prefix for file sync PRs (files sync)
+    required: false
+    default: ""
+  pr-labels:
+    description: Comma-separated labels for file sync PRs (files sync)
+    required: false
+    default: ""
+  version:
+    description: Smyklot version to sync (smyklot sync)
+    required: false
+    default: ""
+  tag:
+    description: Smyklot git tag to sync (smyklot sync)
+    required: false
+    default: ""
+  templates-dir:
+    description: Path to templates directory (files discover)
+    required: false
+    default: ""
+  format:
+    description: Output format for repos list (json|names)
+    required: false
+    default: ""
+  schema-file:
+    description: Path to schema file (config verify)
+    required: false
+    default: ""
+
+outputs:
+  config:
+    description: JSON array of file mappings (files discover)
+  repos:
+    description: JSON array of repository info (repos list)
+
+runs:
+  using: docker
+  image: docker://ghcr.io/smykla-labs/dotsync:1.0.2
+  args:
+    - ${{ inputs.command }}
+    - ${{ inputs.subcommand }}
+  env:
+    GITHUB_TOKEN: ${{ inputs.token }}
