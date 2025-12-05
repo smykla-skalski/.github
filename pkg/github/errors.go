@@ -23,4 +23,5 @@ var (
 	)
 	ErrMergeParseError          = errors.New("failed to parse file for merge")
 	ErrMergeUnsupportedFileType = errors.New("merge only supports JSON and YAML files")
+	ErrMergeUnknownStrategy     = errors.New("unknown merge strategy")
 )

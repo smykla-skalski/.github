@@ -3,8 +3,8 @@ module github.com/smykla-labs/.github
 go 1.25.5
 
 require (
-	github.com/alecthomas/kong v1.13.0
 	github.com/cockroachdb/errors v1.12.0
+	github.com/evanphx/json-patch/v5 v5.9.11
 	github.com/gofri/go-github-ratelimit/v2 v2.0.2
 	github.com/google/go-github/v80 v80.0.0
 	github.com/invopop/jsonschema v0.13.0
