@@ -1,3 +1,5 @@
+<!-- markdownlint-disable MD024 -->
+
 # Changelog
 
 ## [1.2.1](https://github.com/smykla-labs/.github/compare/dotsync/v1.2.0...dotsync/v1.2.1) (2025-12-05)
@@ -6,9 +8,6 @@
 
 * **cli:** add missing input validation ([#13](https://github.com/smykla-labs/.github/issues/13)) ([baedd48](https://github.com/smykla-labs/.github/commit/baedd48d26fc8ddbce0f34eb0872eb7d6a167023))
 * **lint:** disable MD024 for CHANGELOG.md ([c64abbc](https://github.com/smykla-labs/.github/commit/c64abbc024d5ca237f1358e6677afa56294b5986))
-
-<!-- markdownlint-disable MD024 -->
-# Changelog
 
 ## [1.2.0](https://github.com/smykla-labs/.github/compare/dotsync/v1.1.0...dotsync/v1.2.0) (2025-12-05)
 

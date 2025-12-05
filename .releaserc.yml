@@ -62,7 +62,7 @@ plugins:
 
   - - "@semantic-release/changelog"
     - changelogFile: CHANGELOG.md
-      changelogTitle: "# Changelog"
+      changelogTitle: ""
 
   - - "@semantic-release/git"
     - assets:
