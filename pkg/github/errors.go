@@ -15,4 +15,5 @@ var (
 	ErrLabelSync        = errors.New("failed to sync labels")
 	ErrFileSync         = errors.New("failed to sync files")
 	ErrSmyklotSync      = errors.New("failed to sync smyklot version")
+	ErrSettingsSync     = errors.New("failed to sync repository settings")
 )
