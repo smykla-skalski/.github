@@ -426,3 +426,7 @@ For CI/CD workflows, use reusable workflows instead of file sync:
 - Reusable workflows provide instant updates without PRs
 - See `examples/sync-config.yml` for complete configuration schema
 - See `docs/MIGRATION.md` for reusable workflow migration guide
+- **Matrix pattern**: All sync workflows use `dotsync-repos-list` action with `format: json` (default)
+  - Format `json`: Returns array of objects `[{name, full_name, ...}]` - use `${{ matrix.repo.name }}`
+  - Format `names`: Returns array of strings `["repo1", "repo2"]` - use `${{ matrix.repo }}`
+  - Current workflows use `json` format for richer repository metadata access
