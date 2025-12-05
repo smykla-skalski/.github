@@ -1,8 +1,11 @@
 package github
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/cockroachdb/errors"
 )
@@ -15,7 +18,8 @@ import (
 // If GITHUB_OUTPUT environment variable is not set (not running in GitHub
 // Actions), this function does nothing and returns nil.
 //
-// Format: outputs are written as key=value pairs, one per line.
+// For single-line values: key=value
+// For multi-line values: heredoc syntax with random delimiter
 func WriteGitHubOutput(enabled bool, key, value string) error {
 	if !enabled {
 		return nil
@@ -23,7 +27,6 @@ func WriteGitHubOutput(enabled bool, key, value string) error {
 
 	outputFile := os.Getenv("GITHUB_OUTPUT")
 	if outputFile == "" {
-		// Not running in GitHub Actions, skip silently
 		return nil
 	}
 
@@ -38,10 +41,26 @@ func WriteGitHubOutput(enabled bool, key, value string) error {
 		}
 	}()
 
-	_, err = fmt.Fprintf(f, "%s=%s\n", key, value)
+	if strings.Contains(value, "\n") {
+		delimiter := randomDelimiter()
+		_, err = fmt.Fprintf(f, "%s<<%s\n%s\n%s\n", key, delimiter, value, delimiter)
+	} else {
+		_, err = fmt.Fprintf(f, "%s=%s\n", key, value)
+	}
+
 	if err != nil {
 		return errors.Wrap(err, "writing to GITHUB_OUTPUT")
 	}
 
 	return err
+}
+
+const delimiterBytes = 16
+
+func randomDelimiter() string {
+	b := make([]byte, delimiterBytes)
+
+	_, _ = rand.Read(b)
+
+	return "EOF_" + hex.EncodeToString(b)
 }
