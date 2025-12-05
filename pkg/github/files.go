@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/cockroachdb/errors"
-	"github.com/google/go-github/v79/github"
+	"github.com/google/go-github/v80/github"
 
 	"github.com/smykla-labs/.github/pkg/config"
 	"github.com/smykla-labs/.github/pkg/logger"
@@ -593,13 +593,15 @@ func ensureBranchExists(
 	_, existingRef, err := client.Git.GetRef(ctx, org, repo, "heads/"+branchName)
 	branchExists := err == nil && existingRef != nil
 
-	// If branch exists, check for merged PR
+	// If branch exists, check for merged PR and delete if merged
 	if branchExists {
 		if mergeErr := handleMergedPR(ctx, log, client, org, repo, branchName); mergeErr != nil {
 			log.Warn("failed to handle merged PR", "error", mergeErr)
 		}
 
-		branchExists = false // Reset so we create a fresh branch
+		// Check again if branch still exists after handling merged PR
+		_, existingRef, err = client.Git.GetRef(ctx, org, repo, "heads/"+branchName)
+		branchExists = err == nil && existingRef != nil
 	}
 
 	// Create branch if it doesn't exist
