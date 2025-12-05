@@ -41,10 +41,11 @@ jobs:
 
       - name: Get repositories
         id: repos
-        uses: ./.github/actions/dotsync-repos-list
+        uses: ./.github/actions/dotsync
         with:
+          command: repos
+          subcommand: list
           token: ${{ steps.token.outputs.token }}
-          org: ${{ github.repository_owner }}
 
   sync-smyklot:
     needs: get-repos
@@ -70,10 +71,11 @@ jobs:
           repositories: ${{ matrix.repo.name }}
 
       - name: Sync smyklot version
-        uses: ./.github/actions/dotsync-smyklot
+        uses: ./.github/actions/dotsync
         with:
+          command: smyklot
+          subcommand: sync
           token: ${{ steps.token.outputs.token }}
-          org: ${{ github.repository_owner }}
           repo: ${{ matrix.repo.name }}
           version: ${{ github.event.client_payload.version || inputs.version }}
           tag: ${{ github.event.client_payload.tag || inputs.tag }}

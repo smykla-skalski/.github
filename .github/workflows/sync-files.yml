@@ -7,7 +7,7 @@ on:
     paths:
       - "templates/**"
       - ".github/workflows/sync-files.yml"
-      - ".github/actions/dotsync-files/**"
+      - ".github/actions/dotsync/**"
   workflow_dispatch:
     inputs:
       dry_run:
@@ -38,15 +38,18 @@ jobs:
 
       - name: Get repositories
         id: repos
-        uses: ./.github/actions/dotsync-repos-list
+        uses: ./.github/actions/dotsync
         with:
+          command: repos
+          subcommand: list
           token: ${{ steps.token.outputs.token }}
-          org: ${{ github.repository_owner }}
 
       - name: Discover files from templates directory
         id: files
-        uses: ./.github/actions/dotsync-files-discover
+        uses: ./.github/actions/dotsync
         with:
+          command: files
+          subcommand: discover
           templates-dir: templates
 
   sync-files:
@@ -73,10 +76,11 @@ jobs:
           repositories: ${{ matrix.repo.name }}
 
       - name: Sync files
-        uses: ./.github/actions/dotsync-files
+        uses: ./.github/actions/dotsync
         with:
+          command: files
+          subcommand: sync
           token: ${{ steps.token.outputs.token }}
-          org: ${{ github.repository_owner }}
           repo: ${{ matrix.repo.name }}
           files-config: ${{ needs.prepare.outputs.files-config }}
           dry-run: ${{ inputs.dry_run || 'false' }}
