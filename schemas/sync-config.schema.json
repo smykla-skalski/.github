@@ -190,3 +190,4 @@
   "description": "Configuration for organization-wide label, file, and smyklot version synchronization. Place at .github/sync-config.yml in your repository.",
   "title": "Sync Configuration"
 }
+

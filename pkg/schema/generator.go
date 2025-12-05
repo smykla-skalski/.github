@@ -52,6 +52,9 @@ func GenerateSchema(modulePath, configPkgPath string) ([]byte, error) {
 		return nil, errors.Wrap(err, "marshaling final schema")
 	}
 
+	// Add trailing newline for better git diffs
+	output = append(output, '\n')
+
 	return output, nil
 }
 
