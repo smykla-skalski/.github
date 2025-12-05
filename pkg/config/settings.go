@@ -203,3 +203,134 @@ type BranchRestrictionsConfig struct {
 	// GitHub App slugs allowed to push
 	Apps []string `json:"apps" yaml:"apps"`
 }
+
+// Configures GitHub Rulesets (modern replacement for branch protection) with more granular
+// targeting, additional rule types, better bypass management, and enforcement modes
+//
+//nolint:staticcheck // ST1021: Descriptive comment preferred over struct name prefix
+type RulesetConfig struct {
+	// Ruleset name (unique per repository)
+	Name string `json:"name" jsonschema:"minLength=1,required" yaml:"name"`
+	// Target type (branch, tag, or push)
+	Target string `json:"target" jsonschema:"enum=branch,enum=tag,enum=push,required" yaml:"target"`
+	// Enforcement level (active, disabled, or evaluate)
+	Enforcement string `json:"enforcement" jsonschema:"enum=active,enum=disabled,enum=evaluate,required" yaml:"enforcement"`
+	// Conditions for when ruleset applies
+	Conditions *RulesetConditionsConfig `json:"conditions" yaml:"conditions"`
+	// Actors who can bypass this ruleset
+	BypassActors []BypassActorConfig `json:"bypass_actors" yaml:"bypass_actors"`
+	// Rules to enforce
+	Rules *RulesetRulesConfig `json:"rules" yaml:"rules"`
+}
+
+// Defines conditions for when a ruleset applies, primarily using ref name patterns
+//
+//nolint:staticcheck // ST1021: Descriptive comment preferred over struct name prefix
+type RulesetConditionsConfig struct {
+	// Ref name patterns (branch/tag names)
+	RefName *RefNameCondition `json:"ref_name" yaml:"ref_name"`
+}
+
+// Specifies include/exclude patterns for ref names (branches or tags)
+//
+//nolint:staticcheck // ST1021: Descriptive comment preferred over struct name prefix
+type RefNameCondition struct {
+	// Ref patterns to include (e.g., "refs/heads/main", "refs/heads/release/*")
+	Include []string `json:"include" jsonschema:"minLength=1,pattern=^refs/,uniqueItems=true" yaml:"include"`
+	// Ref patterns to exclude
+	Exclude []string `json:"exclude" jsonschema:"minLength=1,pattern=^refs/,uniqueItems=true" yaml:"exclude"`
+}
+
+// Defines an actor (user, team, app, or role) who can bypass ruleset requirements
+//
+//nolint:staticcheck // ST1021: Descriptive comment preferred over struct name prefix
+type BypassActorConfig struct {
+	// Actor ID (user ID, team ID, app ID, or role ID)
+	ActorID int64 `json:"actor_id" jsonschema:"required" yaml:"actor_id"`
+	// Actor type (Integration, OrganizationAdmin, RepositoryRole, or Team)
+	ActorType string `json:"actor_type" jsonschema:"enum=Integration,enum=OrganizationAdmin,enum=RepositoryRole,enum=Team,required" yaml:"actor_type"`
+	// Bypass mode (always or pull_request)
+	BypassMode string `json:"bypass_mode" jsonschema:"enum=always,enum=pull_request,required" yaml:"bypass_mode"`
+}
+
+// Contains all rule types that can be enforced by a ruleset
+//
+//nolint:staticcheck // ST1021: Descriptive comment preferred over struct name prefix
+type RulesetRulesConfig struct {
+	// Pull request rules (reviews, dismissal, code owners)
+	PullRequest *PullRequestRuleConfig `json:"pull_request" yaml:"pull_request"`
+	// Required status checks that must pass
+	RequiredStatusChecks *StatusChecksRuleConfig `json:"required_status_checks" yaml:"required_status_checks"`
+	// Prevent branch/tag deletion
+	Deletion *bool `json:"deletion" yaml:"deletion"`
+	// Prevent non-fast-forward pushes
+	NonFastForward *bool `json:"non_fast_forward" yaml:"non_fast_forward"`
+	// Require linear commit history (no merge commits)
+	RequiredLinearHistory *bool `json:"required_linear_history" yaml:"required_linear_history"`
+	// Require signed commits
+	RequiredSignatures *bool `json:"required_signatures" yaml:"required_signatures"`
+	// Code scanning requirements
+	CodeScanning *CodeScanningRuleConfig `json:"code_scanning" yaml:"code_scanning"`
+	// Prevent branch/tag creation
+	Creation *bool `json:"creation" yaml:"creation"`
+	// Restrict updates to refs
+	Update *bool `json:"update" yaml:"update"`
+}
+
+// Configures pull request requirements including reviews, code owners, and merge strategies
+//
+//nolint:staticcheck // ST1021: Descriptive comment preferred over struct name prefix
+type PullRequestRuleConfig struct {
+	// Dismiss stale reviews when new commits are pushed
+	DismissStaleReviewsOnPush *bool `json:"dismiss_stale_reviews_on_push" yaml:"dismiss_stale_reviews_on_push"`
+	// Require review from code owners
+	RequireCodeOwnerReview *bool `json:"require_code_owner_review" yaml:"require_code_owner_review"`
+	// Require approval of the most recent reviewable push
+	RequireLastPushApproval *bool `json:"require_last_push_approval" yaml:"require_last_push_approval"`
+	// Number of required approving reviews (0-6)
+	RequiredApprovingReviewCount *int `json:"required_approving_review_count" jsonschema:"maximum=6,minimum=0" yaml:"required_approving_review_count"`
+	// Require all conversations to be resolved before merging
+	RequiredReviewThreadResolution *bool `json:"required_review_thread_resolution" yaml:"required_review_thread_resolution"`
+	// Allowed merge methods (squash, merge, rebase)
+	AllowedMergeMethods []string `json:"allowed_merge_methods" jsonschema:"enum=squash,enum=merge,enum=rebase,uniqueItems=true" yaml:"allowed_merge_methods"`
+}
+
+// Specifies CI/CD status checks that must pass, with option to require strict updates
+//
+//nolint:staticcheck // ST1021: Descriptive comment preferred over struct name prefix
+type StatusChecksRuleConfig struct {
+	// Require branches to be up to date before merging (strict mode)
+	StrictRequiredStatusChecksPolicy *bool `json:"strict_required_status_checks_policy" yaml:"strict_required_status_checks_policy"`
+	// Required status checks. Empty array = skip setting checks (inherit repo's existing)
+	RequiredStatusChecks []StatusCheckConfig `json:"required_status_checks" yaml:"required_status_checks"`
+}
+
+// Defines a single required status check with context name and optional integration ID
+//
+//nolint:staticcheck // ST1021: Descriptive comment preferred over struct name prefix
+type StatusCheckConfig struct {
+	// Status check context name
+	Context string `json:"context" jsonschema:"minLength=1,required" yaml:"context"`
+	// Integration ID for GitHub App status checks (optional)
+	IntegrationID *int64 `json:"integration_id" yaml:"integration_id"`
+}
+
+// Configures code scanning tool requirements and alert thresholds
+//
+//nolint:staticcheck // ST1021: Descriptive comment preferred over struct name prefix
+type CodeScanningRuleConfig struct {
+	// Code scanning tools and their thresholds
+	CodeScanningTools []CodeScanningToolConfig `json:"code_scanning_tools" yaml:"code_scanning_tools"`
+}
+
+// Defines a code scanning tool with alert thresholds
+//
+//nolint:staticcheck // ST1021: Descriptive comment preferred over struct name prefix
+type CodeScanningToolConfig struct {
+	// Tool name (e.g., "CodeQL")
+	Tool string `json:"tool" jsonschema:"minLength=1,required" yaml:"tool"`
+	// Alert threshold level (none, errors, errors_and_warnings, all)
+	AlertsThreshold string `json:"alerts_threshold" jsonschema:"enum=none,enum=errors,enum=errors_and_warnings,enum=all,required" yaml:"alerts_threshold"`
+	// Security alert threshold level (none, critical, high_or_higher, medium_or_higher, all)
+	SecurityAlertsThreshold string `json:"security_alerts_threshold" jsonschema:"enum=none,enum=critical,enum=high_or_higher,enum=medium_or_higher,enum=all,required" yaml:"security_alerts_threshold"`
+}
