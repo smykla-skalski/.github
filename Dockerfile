@@ -1,5 +1,7 @@
 # syntax=docker/dockerfile:1
-FROM alpine:latest AS certs
+
+# Use BUILDPLATFORM to run apk on native arch (avoids QEMU issues on cross-build)
+FROM --platform=$BUILDPLATFORM alpine:latest AS certs
 RUN apk --no-cache add ca-certificates
 
 FROM scratch
