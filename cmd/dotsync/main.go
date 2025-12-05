@@ -1,8 +1,10 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
@@ -123,68 +125,125 @@ var configCmd = &cobra.Command{
 	Long:  "Commands for managing sync configuration schemas",
 }
 
+// Helper types and functions for sync commands
+
+type syncParams struct {
+	org        string
+	repo       string
+	configFile string
+	configJSON string
+	dryRun     bool
+}
+
+type syncFunc func(
+	ctx context.Context,
+	log *slog.Logger,
+	client *github.Client,
+	org string,
+	repo string,
+	configFile string,
+	syncConfig *config.SyncConfig,
+	dryRun bool,
+) error
+
+func getSyncParams(cmd *cobra.Command, configFlag string) syncParams {
+	org, _ := cmd.Root().PersistentFlags().GetString("org")
+	dryRun, _ := cmd.Root().PersistentFlags().GetBool("dry-run")
+	repo, _ := cmd.Flags().GetString("repo")
+	configFile, _ := cmd.Flags().GetString(configFlag)
+	configJSON, _ := cmd.Flags().GetString("config")
+
+	return syncParams{
+		org:        org,
+		repo:       repo,
+		configFile: configFile,
+		configJSON: configJSON,
+		dryRun:     dryRun,
+	}
+}
+
+func setupGitHubClient(
+	ctx context.Context,
+	log *slog.Logger,
+	cmd *cobra.Command,
+) (*github.Client, error) {
+	useGHAuth, _ := cmd.Root().PersistentFlags().GetBool("use-gh-auth")
+
+	token, err := github.GetToken(ctx, log, useGHAuth)
+	if err != nil {
+		return nil, err
+	}
+
+	return github.NewClient(ctx, log, token)
+}
+
+func createSyncCommand(
+	use string,
+	short string,
+	long string,
+	configFlag string,
+	configFileLogKey string,
+	syncType string,
+	syncFn syncFunc,
+) *cobra.Command {
+	return &cobra.Command{
+		Use:   use,
+		Short: short,
+		Long:  long,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			ctx := cmd.Context()
+			log := logger.FromContext(ctx)
+
+			params := getSyncParams(cmd, configFlag)
+
+			log.Info("starting "+syncType+" sync",
+				"org", params.org,
+				"repo", params.repo,
+				configFileLogKey, params.configFile,
+				"dry_run", params.dryRun,
+			)
+
+			client, err := setupGitHubClient(ctx, log, cmd)
+			if err != nil {
+				return err
+			}
+
+			syncConfig, err := config.ParseSyncConfigJSON(params.configJSON)
+			if err != nil {
+				return err
+			}
+
+			if err := syncFn(
+				ctx,
+				log,
+				client,
+				params.org,
+				params.repo,
+				params.configFile,
+				syncConfig,
+				params.dryRun,
+			); err != nil {
+				return err
+			}
+
+			log.Info(syncType + " sync completed successfully")
+
+			return nil
+		},
+	}
+}
+
 // Subcommand definitions
 
-var labelsSyncCmd = &cobra.Command{
-	Use:   "sync",
-	Short: "Sync labels to a repository",
-	Long:  "Synchronize GitHub labels from a YAML file to a target repository",
-	RunE: func(cmd *cobra.Command, _ []string) error {
-		ctx := cmd.Context()
-		log := logger.FromContext(ctx)
-
-		// Get flags
-		org, _ := cmd.Root().PersistentFlags().GetString("org")
-		dryRun, _ := cmd.Root().PersistentFlags().GetBool("dry-run")
-		useGHAuth, _ := cmd.Root().PersistentFlags().GetBool("use-gh-auth")
-		repo, _ := cmd.Flags().GetString("repo")
-		labelsFile, _ := cmd.Flags().GetString("labels-file")
-		configJSON, _ := cmd.Flags().GetString("config")
-
-		log.Info("starting label sync",
-			"org", org,
-			"repo", repo,
-			"labels_file", labelsFile,
-			"dry_run", dryRun,
-		)
-
-		// Get GitHub token
-		token, err := github.GetToken(ctx, log, useGHAuth)
-		if err != nil {
-			return err
-		}
-
-		// Create GitHub client
-		client, err := github.NewClient(ctx, log, token)
-		if err != nil {
-			return err
-		}
-
-		// Parse sync config
-		syncConfig, err := config.ParseSyncConfigJSON(configJSON)
-		if err != nil {
-			return err
-		}
-
-		// Sync labels
-		if err := github.SyncLabels(
-			ctx,
-			log,
-			client,
-			org,
-			repo,
-			labelsFile,
-			syncConfig,
-			dryRun,
-		); err != nil {
-			return err
-		}
-
-		log.Info("label sync completed successfully")
-
-		return nil
-	},
-}
+var labelsSyncCmd = createSyncCommand(
+	"sync",
+	"Sync labels to a repository",
+	"Synchronize GitHub labels from a YAML file to a target repository",
+	"labels-file",
+	"labels_file",
+	"label",
+	github.SyncLabels,
+)
 
 var filesSyncCmd = &cobra.Command{
 	Use:   "sync",
@@ -382,66 +441,15 @@ var smyklotSyncCmd = &cobra.Command{
 	},
 }
 
-var settingsSyncCmd = &cobra.Command{
-	Use:   "sync",
-	Short: "Sync settings to a repository",
-	Long:  "Synchronize repository settings from a YAML file to a target repository",
-	RunE: func(cmd *cobra.Command, _ []string) error {
-		ctx := cmd.Context()
-		log := logger.FromContext(ctx)
-
-		// Get flags
-		org, _ := cmd.Root().PersistentFlags().GetString("org")
-		dryRun, _ := cmd.Root().PersistentFlags().GetBool("dry-run")
-		useGHAuth, _ := cmd.Root().PersistentFlags().GetBool("use-gh-auth")
-		repo, _ := cmd.Flags().GetString("repo")
-		settingsFile, _ := cmd.Flags().GetString("settings-file")
-		configJSON, _ := cmd.Flags().GetString("config")
-
-		log.Info("starting settings sync",
-			"org", org,
-			"repo", repo,
-			"settings_file", settingsFile,
-			"dry_run", dryRun,
-		)
-
-		// Get GitHub token
-		token, err := github.GetToken(ctx, log, useGHAuth)
-		if err != nil {
-			return err
-		}
-
-		// Create GitHub client
-		client, err := github.NewClient(ctx, log, token)
-		if err != nil {
-			return err
-		}
-
-		// Parse sync config
-		syncConfig, err := config.ParseSyncConfigJSON(configJSON)
-		if err != nil {
-			return err
-		}
-
-		// Sync settings
-		if err := github.SyncSettings(
-			ctx,
-			log,
-			client,
-			org,
-			repo,
-			settingsFile,
-			syncConfig,
-			dryRun,
-		); err != nil {
-			return err
-		}
-
-		log.Info("settings sync completed successfully")
-
-		return nil
-	},
-}
+var settingsSyncCmd = createSyncCommand(
+	"sync",
+	"Sync settings to a repository",
+	"Synchronize repository settings from a YAML file to a target repository",
+	"settings-file",
+	"settings_file",
+	"settings",
+	github.SyncSettings,
+)
 
 var reposListCmd = &cobra.Command{
 	Use:   "list",
