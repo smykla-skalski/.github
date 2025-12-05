@@ -34,10 +34,9 @@ jobs:
 
       - name: Verify and commit schema
         uses: ./.github/actions/dotsync
-        env:
-          GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
         with:
           command: config
           subcommand: verify
+          token: ${{ steps.generate-token.outputs.token }}
           repo: smykla-labs/.github
           branch: ${{ github.head_ref }}

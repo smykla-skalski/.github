@@ -96,5 +96,6 @@ runs:
   args:
     - ${{ inputs.command }}
     - ${{ inputs.subcommand }}
+    - --github-output
   env:
     GITHUB_TOKEN: ${{ inputs.token }}

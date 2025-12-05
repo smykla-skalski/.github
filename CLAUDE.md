@@ -36,7 +36,7 @@ Organization-wide defaults and synchronization for smykla-labs repositories. Thi
 │   └── PULL_REQUEST_TEMPLATE.md
 ├── cmd/
 │   └── dotsync/
-│       └── main.go             # Go CLI entry point (Kong framework)
+│       └── main.go             # Go CLI entry point (Cobra framework)
 ├── pkg/
 │   ├── github/
 │   │   ├── client.go           # GitHub client with rate limiting
@@ -86,7 +86,7 @@ The synchronization system uses a Go CLI (`dotsync`) packaged as a container, wr
 
 **Architecture:**
 
-- **CLI**: `dotsync` - Go-based CLI tool using Kong framework
+- **CLI**: `dotsync` - Go-based CLI tool using Cobra framework
 - **Container**: Published to `ghcr.io/smykla-labs/dotsync:latest`
 - **Action**: Single unified container-based composite action (`.github/actions/dotsync`)
 - **Implementation**: Type-safe Go code with proper error handling (cockroachdb/errors)
@@ -455,7 +455,7 @@ The sync system is implemented as a Go CLI (`dotsync`) packaged in containers, r
 
 **Implementation Stack:**
 
-- **CLI Framework**: Kong (struct-based, cleaner than Cobra)
+- **CLI Framework**: Cobra
 - **GitHub API**: google/go-github v79+ with rate limiting wrapper
 - **Error Handling**: cockroachdb/errors for stack traces and wrapping
 - **Logging**: Standard library slog with configurable levels
