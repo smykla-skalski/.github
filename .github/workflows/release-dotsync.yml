@@ -142,6 +142,16 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Extract version from tag
+        id: version
+        env:
+          RELEASE_TAG: ${{ needs.release.outputs.new_release_git_tag }}
+        run: |
+          # Strip dotsync/ prefix from tag (dotsync/v1.1.0 -> v1.1.0)
+          CLEAN_TAG="${RELEASE_TAG#dotsync/}"
+          echo "tag=$CLEAN_TAG" >> "$GITHUB_OUTPUT"
+          echo "Extracted version: $CLEAN_TAG"
+
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@e435ccd777264be153ace6237001ef4d979d3a7a # v6.4.0
         with:
@@ -150,3 +160,4 @@ jobs:
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GORELEASER_CURRENT_TAG: ${{ steps.version.outputs.tag }}
