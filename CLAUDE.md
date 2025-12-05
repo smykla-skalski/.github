@@ -31,12 +31,7 @@ Organization-wide defaults and synchronization for smykla-labs repositories. Thi
 │   │   ├── lib-build.yml       # Reusable build workflow
 │   │   └── lib-release.yml     # Reusable release workflow
 │   ├── actions/                # Reusable composite actions
-│   │   ├── generate-token/     # GitHub App token generation
-│   │   ├── get-org-repos/      # Fetch org repositories
-│   │   ├── dotsync-labels/     # Container-based label sync action
-│   │   ├── dotsync-files/      # Container-based file sync action
-│   │   ├── dotsync-settings/   # Container-based settings sync action
-│   │   └── dotsync-smyklot/    # Container-based smyklot sync action
+│   │   └── dotsync/            # Unified container-based sync action
 │   ├── ISSUE_TEMPLATE/         # Default issue templates
 │   └── PULL_REQUEST_TEMPLATE.md
 ├── cmd/
@@ -87,19 +82,44 @@ Files in the root automatically apply to all smykla-labs repositories that don't
 
 ### Synchronization System
 
-The synchronization system uses a Go CLI (`dotsync`) packaged as a container, wrapped in composite actions for easy workflow integration:
+The synchronization system uses a Go CLI (`dotsync`) packaged as a container, wrapped in a unified composite action for easy workflow integration:
 
 **Architecture:**
 
 - **CLI**: `dotsync` - Go-based CLI tool using Kong framework
 - **Container**: Published to `ghcr.io/smykla-labs/dotsync:latest`
-- **Actions**: Container-based composite actions wrap the CLI commands
+- **Action**: Single unified container-based composite action (`.github/actions/dotsync`)
 - **Implementation**: Type-safe Go code with proper error handling (cockroachdb/errors)
 - **Distribution**: Multi-arch container builds via GoReleaser
 
+**Unified Action:**
+
+The unified `dotsync` action supports all sync operations through `command` and `subcommand` parameters:
+
+- **Location**: `.github/actions/dotsync/action.yml`
+- **Usage**: Specify `command` (labels/files/settings/smyklot/repos/config) and `subcommand` (sync/discover/list/verify)
+- **Inputs**: Most inputs are optional, leveraging INPUT_* environment variables and GitHub context
+- **Env Fallback**: Three-tier hierarchy for automatic parameter inference:
+  1. Explicit input value (highest priority)
+  2. INPUT_* environment variable (from action inputs)
+  3. GitHub standard environment variables (GITHUB_REPOSITORY_OWNER, GITHUB_REPOSITORY, GITHUB_REF_NAME, GITHUB_TOKEN)
+
+Example usage:
+
+```yaml
+- uses: ./.github/actions/dotsync
+  with:
+    command: labels
+    subcommand: sync
+    token: ${{ steps.token.outputs.token }}
+    repo: ${{ matrix.repo.name }}
+    labels-file: .github/labels.yml
+    # org: auto-inferred from GITHUB_REPOSITORY_OWNER
+    # dry-run: defaults to false
+```
+
 **Label Sync:**
 
-- **Action**: Container-based composite action (`.github/actions/dotsync-labels`)
 - **Workflow**: `.github/workflows/sync-labels.yml`
 - **CLI Command**: `dotsync labels sync`
 - **Config**: `.github/labels.yml` (central) + per-repo `.github/sync-config.yml`
@@ -108,9 +128,8 @@ The synchronization system uses a Go CLI (`dotsync`) packaged as a container, wr
 
 **File Sync:**
 
-- **Action**: Container-based composite action (`.github/actions/dotsync-files`)
 - **Workflow**: `.github/workflows/sync-files.yml`
-- **CLI Command**: `dotsync files sync`
+- **CLI Commands**: `dotsync files discover`, `dotsync files sync`
 - **Source**: All files in `templates/` directory (auto-discovered)
 - **Config**: Per-repo `.github/sync-config.yml` (optional)
 - **Method**: Creates PRs with file changes via go-github SDK
@@ -118,7 +137,6 @@ The synchronization system uses a Go CLI (`dotsync`) packaged as a container, wr
 
 **Settings Sync:**
 
-- **Action**: Container-based composite action (`.github/actions/dotsync-settings`)
 - **Workflow**: `.github/workflows/sync-settings.yml`
 - **CLI Command**: `dotsync settings sync`
 - **Config**: `.github/settings.yml` (central) + per-repo `.github/sync-config.yml`
@@ -127,7 +145,6 @@ The synchronization system uses a Go CLI (`dotsync`) packaged as a container, wr
 
 **Smyklot Sync:**
 
-- **Action**: Container-based composite action (`.github/actions/dotsync-smyklot`)
 - **Workflow**: `.github/workflows/sync-smyklot.yml`
 - **CLI Command**: `dotsync smyklot sync`
 - **Trigger**: Repository dispatch from smyklot releases or manual dispatch
@@ -490,7 +507,7 @@ For CI/CD workflows, use reusable workflows instead of file sync:
 - Reusable workflows provide instant updates without PRs
 - See `examples/sync-config.yml` for complete configuration schema
 - See `docs/MIGRATION.md` for reusable workflow migration guide
-- **Matrix pattern**: All sync workflows use `dotsync-repos-list` action with `format: json` (default)
+- **Matrix pattern**: All sync workflows use unified `dotsync` action with `command: repos, subcommand: list` and `format: json` (default)
   - Format `json`: Returns array of objects `[{name, full_name, ...}]` - use `${{ matrix.repo.name }}`
   - Format `names`: Returns array of strings `["repo1", "repo2"]` - use `${{ matrix.repo }}`
   - Current workflows use `json` format for richer repository metadata access
