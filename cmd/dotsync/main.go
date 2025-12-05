@@ -447,6 +447,9 @@ func (*ConfigSchemaCmd) Run(_ context.Context) error {
 	// Add examples to specific fields
 	addExamples(schemaMap)
 
+	// Normalize descriptions (replace newlines with spaces)
+	normalizeDescriptions(schemaMap)
+
 	output, err := json.MarshalIndent(schemaMap, "", "  ")
 	if err != nil {
 		return errors.Wrap(err, "marshaling final schema")
@@ -495,6 +498,26 @@ func addExcludeExamples(defs map[string]any, configName string, examples []any) 
 	}
 
 	exclude["examples"] = examples
+}
+
+// normalizeDescriptions recursively replaces newlines in description fields with spaces.
+func normalizeDescriptions(v any) {
+	switch val := v.(type) {
+	case map[string]any:
+		for key, value := range val {
+			if key == "description" {
+				if desc, ok := value.(string); ok {
+					val[key] = strings.ReplaceAll(desc, "\n", " ")
+				}
+			} else {
+				normalizeDescriptions(value)
+			}
+		}
+	case []any:
+		for _, item := range val {
+			normalizeDescriptions(item)
+		}
+	}
 }
 
 // ConfigVerifyCmd verifies schema is in sync and commits if needed.
