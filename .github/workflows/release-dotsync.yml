@@ -1,23 +1,130 @@
 ---
+# Release workflow for dotsync
+# Triggers on PR merge with release labels, daily at 10 AM UTC, or manually
+
 name: Release dotsync
 
 on:
-  push:
-    tags: ["dotsync/v*"]
+  pull_request:
+    types: [closed]
+    branches: [main]
+  schedule:
+    # Run daily at 10 AM UTC
+    - cron: '0 10 * * *'
+  workflow_dispatch:
 
-permissions:
-  contents: write
-  packages: write
-  id-token: write
+permissions: {}
 
 jobs:
-  goreleaser:
+  # Check if workflow should proceed
+  check:
+    name: Check Conditions
     runs-on: ubuntu-24.04
+    if: |
+      (github.event_name == 'schedule') ||
+      (github.event_name == 'workflow_dispatch') ||
+      (github.event_name == 'pull_request' &&
+       github.event.pull_request.merged == true &&
+       (contains(github.event.pull_request.labels.*.name, 'release') ||
+        contains(github.event.pull_request.labels.*.name, 'release/major') ||
+        contains(github.event.pull_request.labels.*.name, 'release/minor') ||
+        contains(github.event.pull_request.labels.*.name, 'release/patch')))
+    steps:
+      - name: Conditions met
+        run: echo "Workflow conditions met, proceeding with release process"
+
+  # Run tests first
+  test:
+    needs: check
+    name: Test
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    env:
+      MISE_ENV: ci
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+
+      - name: Install mise
+        uses: jdx/mise-action@146a28175021df8ca24f8ee1828cc2a60f980bd5 # v3.5.1
+        with:
+          cache: true
+
+      - name: Run tests
+        run: task test
+
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@1e7e51e771db61008b38414a730f564565cf7c20 # v9.2.0
+        with:
+          version: latest
+
+      - name: Run other linters
+        run: |
+          task lint:markdown
+          task lint:mod
+
+  # Determine if a release should be created
+  release:
+    name: Semantic Release
+    runs-on: ubuntu-24.04
+    needs: test
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    outputs:
+      new_release_published: ${{ steps.semantic.outputs.new_release_published }}
+      new_release_version: ${{ steps.semantic.outputs.new_release_version }}
+      new_release_git_tag: ${{ steps.semantic.outputs.new_release_git_tag }}
+
+    steps:
+      - name: Generate App Token
+        id: app-token
+        uses: actions/create-github-app-token@7e473efe3cb98aa54f8d4bac15400b15fad77d94 # v2.2.0
+        with:
+          app-id: ${{ vars.SMYKLOT_APP_ID }}
+          private-key: ${{ secrets.SMYKLOT_APP_PRIVATE_KEY }}
+
+      - name: Checkout
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Run semantic-release
+        id: semantic
+        uses: cycjimmy/semantic-release-action@b12c8f6015dc215fe37bc154d4ad456dd3833c90 # v6.0.0
+        with:
+          extra_plugins: |
+            @semantic-release/changelog
+            @semantic-release/git
+            @semantic-release/exec
+            conventional-changelog-conventionalcommits
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+          GIT_AUTHOR_NAME: smyklot[bot]
+          GIT_AUTHOR_EMAIL: 205507218+smyklot[bot]@users.noreply.github.com
+          GIT_COMMITTER_NAME: smyklot[bot]
+          GIT_COMMITTER_EMAIL: 205507218+smyklot[bot]@users.noreply.github.com
+
+  # Build and release binaries with GoReleaser
+  goreleaser:
+    name: GoReleaser
+    runs-on: ubuntu-24.04
+    needs: release
+    if: needs.release.outputs.new_release_published == 'true'
+    permissions:
+      contents: write
+      packages: write
+
     steps:
       - name: Checkout
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           fetch-depth: 0
+          ref: ${{ needs.release.outputs.new_release_git_tag }}
 
       - name: Set up Go
         uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
@@ -40,24 +147,6 @@ jobs:
         with:
           distribution: goreleaser
           version: "~> v2"
-          args: release --clean --skip=validate
+          args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GORELEASER_CURRENT_TAG: ${{ github.ref_name }}
-
-      - name: Dispatch dotsync sync event
-        if: startsWith(github.ref, 'refs/tags/dotsync/v')
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_REF: ${{ github.ref }}
-        run: |
-          tag="${GITHUB_REF#refs/tags/dotsync/}"
-          version="${tag#v}"
-
-          gh api repos/smykla-labs/.github/dispatches \
-            --method POST \
-            --field event_type="dotsync-release" \
-            --field client_payload[version]="$version" \
-            --field client_payload[tag]="$tag"
-
-          echo "✓ Dispatched dotsync-release event (version=$version, tag=$tag)"

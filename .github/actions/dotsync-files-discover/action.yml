@@ -15,7 +15,7 @@ outputs:
 
 runs:
   using: docker
-  image: docker://ghcr.io/smykla-labs/dotsync:latest
+  image: docker://ghcr.io/smykla-labs/dotsync:1.0.2
   args:
     - files
     - discover

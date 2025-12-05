@@ -1,0 +1,83 @@
+---
+branches:
+  - main
+
+tagFormat: "dotsync/v${version}"
+
+plugins:
+  - - "@semantic-release/commit-analyzer"
+    - preset: conventionalcommits
+      releaseRules:
+        - type: feat
+          release: minor
+        - type: fix
+          release: patch
+        - type: perf
+          release: patch
+        - type: refactor
+          release: patch
+        - type: chore
+          scope: deps
+          release: patch
+        - type: docs
+          release: false
+        - type: style
+          release: false
+        - type: chore
+          release: false
+        - type: test
+          release: false
+        - type: ci
+          release: false
+        - type: build
+          release: false
+
+  - - "@semantic-release/release-notes-generator"
+    - preset: conventionalcommits
+      presetConfig:
+        types:
+          - type: feat
+            section: Features
+          - type: fix
+            section: Bug Fixes
+          - type: perf
+            section: Performance Improvements
+          - type: refactor
+            section: Code Refactoring
+          - type: chore
+            scope: deps
+            section: Dependencies
+          - type: docs
+            hidden: true
+          - type: style
+            hidden: true
+          - type: chore
+            hidden: true
+          - type: test
+            hidden: true
+          - type: ci
+            hidden: true
+          - type: build
+            hidden: true
+
+  - - "@semantic-release/changelog"
+    - changelogFile: CHANGELOG.md
+      changelogTitle: "# Changelog"
+
+  - - "@semantic-release/exec"
+    - prepareCmd: |
+        perl -i -pe 's|ghcr\.io/smykla-labs/dotsync:[0-9]+\.[0-9]+\.[0-9]+|ghcr.io/smykla-labs/dotsync:${nextRelease.version}|g' .github/actions/dotsync-*/action.yml
+
+  - - "@semantic-release/git"
+    - assets:
+        - CHANGELOG.md
+        - .github/actions/dotsync-labels/action.yml
+        - .github/actions/dotsync-files/action.yml
+        - .github/actions/dotsync-settings/action.yml
+        - .github/actions/dotsync-smyklot/action.yml
+        - .github/actions/dotsync-config-verify/action.yml
+        - .github/actions/dotsync-files-discover/action.yml
+        - .github/actions/dotsync-repos-list/action.yml
+      message: "chore(release): bump version to ${nextRelease.version}\n\n${nextRelease.notes}"
+
+  - "@semantic-release/github"
