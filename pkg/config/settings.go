@@ -3,13 +3,15 @@ package config
 
 // SyncConfig is the root configuration structure.
 type SyncConfig struct {
-	// Top-level sync configuration controlling label, file, and smyklot version synchronization behavior
+	// Top-level sync configuration controlling label, file, and smyklot version synchronization
+	// behavior
 	Sync SyncSettings `json:"sync" yaml:"sync"`
 }
 
 // SyncSettings contains all sync-related settings.
 type SyncSettings struct {
-	// Skip ALL syncs for this repository. Equivalent to setting labels.skip, files.skip, smyklot.skip, and settings.skip to true
+	// Skip ALL syncs for this repository. Equivalent to setting labels.skip, files.skip,
+	// smyklot.skip, and settings.skip to true
 	Skip bool `json:"skip" jsonschema:"default=false" yaml:"skip"`
 	// Label synchronization configuration
 	Labels LabelsConfig `json:"labels" yaml:"labels"`
@@ -23,36 +25,46 @@ type SyncSettings struct {
 
 // LabelsConfig controls label synchronization behavior.
 type LabelsConfig struct {
-	// Skip label synchronization only. File sync still runs unless sync.skip or sync.files.skip is true
+	// Skip label synchronization only. File sync still runs unless sync.skip or sync.files.skip
+	// is true
 	Skip bool `json:"skip" jsonschema:"default=false" yaml:"skip"`
-	// Label names to exclude from synchronization. These labels will NOT be created/updated in this repository. Existing labels with these names are preserved but not managed
-	Exclude []string `json:"exclude" jsonschema:"minLength=1,uniqueItems=true" yaml:"exclude"`
-	// When true, labels in this repo that are NOT in the central config will be DELETED. Use with caution - this removes custom labels
+	// Label names to exclude from synchronization. These labels will NOT be created/updated in
+	// this repository. Existing labels with these names are preserved but not managed
+	Exclude []string `json:"exclude" jsonschema:"examples=ci/skip-tests|ci/force-full,examples=release/major|release/minor|release/patch,minLength=1,uniqueItems=true" yaml:"exclude"`
+	// When true, labels in this repo that are NOT in the central config will be DELETED. Use
+	// with caution - this removes custom labels
 	AllowRemoval bool `json:"allow_removal" jsonschema:"default=false" yaml:"allow_removal"`
 }
 
 // FilesConfig controls file synchronization behavior.
 type FilesConfig struct {
-	// Skip file synchronization only. Label sync still runs unless sync.skip or sync.labels.skip is true
+	// Skip file synchronization only. Label sync still runs unless sync.skip or
+	// sync.labels.skip is true
 	Skip bool `json:"skip" jsonschema:"default=false" yaml:"skip"`
-	// File paths (relative to repo root) to exclude from sync. These files will NOT be created/updated in this repository. Existing files at these paths are preserved but not managed
-	Exclude []string `json:"exclude" jsonschema:"minLength=1,pattern=^[^/].*$,uniqueItems=true" yaml:"exclude"`
-	// DANGEROUS: When true, files in this repo that are NOT in the central sync config will be DELETED. This can cause data loss. Strongly recommend keeping this false
+	// File paths (relative to repo root) to exclude from sync. These files will NOT be
+	// created/updated in this repository. Existing files at these paths are preserved but not
+	// managed
+	Exclude []string `json:"exclude" jsonschema:"examples=CONTRIBUTING.md|CODE_OF_CONDUCT.md,examples=.github/PULL_REQUEST_TEMPLATE.md|SECURITY.md,minLength=1,pattern=^[^/].*$,uniqueItems=true" yaml:"exclude"`
+	// DANGEROUS: When true, files in this repo that are NOT in the central sync config will be
+	// DELETED. This can cause data loss. Strongly recommend keeping this false
 	AllowRemoval bool `json:"allow_removal" jsonschema:"default=false" yaml:"allow_removal"`
 }
 
 // SmyklotConfig controls smyklot version synchronization behavior.
 type SmyklotConfig struct {
-	// Skip smyklot version synchronization only. Label and file sync still run unless their respective skip flags are set. Use this for repos that don't use smyklot or manage their own versions
+	// Skip smyklot version synchronization only. Label and file sync still run unless their
+	// respective skip flags are set. Use this for repos that don't use smyklot or manage their
+	// own versions
 	Skip bool `json:"skip" jsonschema:"default=false" yaml:"skip"`
 }
 
 // SettingsConfig controls repository settings synchronization behavior.
 type SettingsConfig struct {
-	// Skip repository settings synchronization. Other sync operations still run unless their respective skip flags are set
+	// Skip repository settings synchronization. Other sync operations still run unless their
+	// respective skip flags are set
 	Skip bool `json:"skip" jsonschema:"default=false" yaml:"skip"`
-	// Specific settings sections or fields to exclude from sync. Format: 'section' or 'section.field'. Examples: 'branch_protection', 'security.secret_scanning'
-	Exclude []string `json:"exclude" jsonschema:"minLength=1,uniqueItems=true" yaml:"exclude"`
+	// Specific settings sections or fields to exclude from sync
+	Exclude []string `json:"exclude" jsonschema:"examples=branch_protection,examples=security.secret_scanning,minLength=1,uniqueItems=true" yaml:"exclude"`
 }
 
 // RepositorySettingsConfig defines repository-level settings.
@@ -85,7 +97,8 @@ type FeaturesConfig struct {
 type SecurityConfig struct {
 	// Enable secret scanning (requires GitHub Advanced Security)
 	SecretScanning *string `json:"secret_scanning" jsonschema:"enum=enabled,enum=disabled" yaml:"secret_scanning"`
-	// Enable secret scanning push protection (requires GitHub Advanced Security and secret scanning enabled)
+	// Enable secret scanning push protection (requires GitHub Advanced Security and secret
+	// scanning enabled)
 	SecretScanningPushProtection *string `json:"secret_scanning_push_protection" jsonschema:"enum=enabled,enum=disabled" yaml:"secret_scanning_push_protection"`
 	// Enable Dependabot security updates
 	DependabotSecurityUpdates *string `json:"dependabot_security_updates" jsonschema:"enum=enabled,enum=disabled" yaml:"dependabot_security_updates"`
@@ -93,8 +106,8 @@ type SecurityConfig struct {
 
 // BranchProtectionRuleConfig defines branch protection rules.
 type BranchProtectionRuleConfig struct {
-	// Branch name pattern (e.g. 'main' or 'release/*')
-	Pattern string `json:"pattern" jsonschema:"minLength=1,required" yaml:"pattern"`
+	// Branch name pattern
+	Pattern string `json:"pattern" jsonschema:"examples=main,examples=release/*,minLength=1,required" yaml:"pattern"`
 	// Required status checks configuration
 	RequiredStatusChecks *RequiredStatusChecks `json:"required_status_checks" yaml:"required_status_checks"`
 	// Required pull request reviews configuration
@@ -117,7 +130,8 @@ type BranchProtectionRuleConfig struct {
 type RequiredStatusChecks struct {
 	// Require branches to be up to date before merging
 	Strict *bool `json:"strict" yaml:"strict"`
-	// Required status check contexts. Empty array inherits repo's existing checks (hybrid approach)
+	// Required status check contexts. Empty array inherits repo's existing checks (hybrid
+	// approach)
 	Contexts []string `json:"contexts" yaml:"contexts"`
 }
 
