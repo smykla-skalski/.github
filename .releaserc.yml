@@ -64,20 +64,9 @@ plugins:
     - changelogFile: CHANGELOG.md
       changelogTitle: "# Changelog"
 
-  - - "@semantic-release/exec"
-    - prepareCmd: |
-        perl -i -pe 's|ghcr\.io/smykla-labs/dotsync:[0-9]+\.[0-9]+\.[0-9]+|ghcr.io/smykla-labs/dotsync:${nextRelease.version}|g' .github/actions/dotsync-*/action.yml
-
   - - "@semantic-release/git"
     - assets:
         - CHANGELOG.md
-        - .github/actions/dotsync-labels/action.yml
-        - .github/actions/dotsync-files/action.yml
-        - .github/actions/dotsync-settings/action.yml
-        - .github/actions/dotsync-smyklot/action.yml
-        - .github/actions/dotsync-config-verify/action.yml
-        - .github/actions/dotsync-files-discover/action.yml
-        - .github/actions/dotsync-repos-list/action.yml
       message: "chore(release): bump version to ${nextRelease.version}\n\n${nextRelease.notes}"
 
   - "@semantic-release/github"
