@@ -69,10 +69,7 @@ plugins:
         sed -i.bak 's|ghcr.io/smykla-labs/dotsync:[0-9.]*|ghcr.io/smykla-labs/dotsync:${nextRelease.version}|g' .github/actions/dotsync/action.yml
         rm -f .github/actions/dotsync/action.yml.bak
 
-  - - "@semantic-release/git"
-    - assets:
-        - CHANGELOG.md
-        - .github/actions/dotsync/action.yml
-      message: "chore(release): bump version to ${nextRelease.version}\n\n${nextRelease.notes}"
+  # NOTE: @semantic-release/git removed - using verified-bot-commit action in workflow instead
+  # This enables automatic GPG signing via GitHub API
 
   - "@semantic-release/github"
