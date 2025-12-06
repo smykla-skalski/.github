@@ -281,6 +281,38 @@ func setupGitHubClient(
 	return github.NewClient(ctx, log, token)
 }
 
+func fetchSyncConfig(
+	ctx context.Context,
+	log *slog.Logger,
+	client *github.Client,
+	org string,
+	repo string,
+	configJSON string,
+) (*configtypes.SyncConfig, error) {
+	// If config JSON provided, use it
+	if configJSON != "" {
+		return config.ParseSyncConfigJSON(configJSON)
+	}
+
+	// Otherwise, fetch from target repo
+	log.Debug("fetching sync config from target repo", "org", org, "repo", repo)
+
+	syncConfigBytes, err := github.FetchSyncConfig(ctx, client, org, repo)
+	if err != nil {
+		// If file doesn't exist, return empty config (all syncs enabled by default)
+		if errors.Is(err, github.ErrFileNotFound) {
+			log.Debug("no sync-config.yml found in target repo, using defaults")
+
+			return &configtypes.SyncConfig{}, nil
+		}
+
+		return nil, errors.Wrap(err, "fetching sync config from target repo")
+	}
+
+	// Parse config (handles both YAML and JSON)
+	return config.ParseSyncConfig(syncConfigBytes)
+}
+
 func createSyncCommand(
 	use string,
 	short string,
@@ -315,7 +347,7 @@ func createSyncCommand(
 				return err
 			}
 
-			syncConfig, err := config.ParseSyncConfigJSON(params.configJSON)
+			syncConfig, err := fetchSyncConfig(ctx, log, client, params.org, params.repo, params.configJSON)
 			if err != nil {
 				return err
 			}
@@ -410,8 +442,8 @@ var filesSyncCmd = &cobra.Command{
 			return err
 		}
 
-		// Parse sync config
-		syncConfig, err := config.ParseSyncConfigJSON(configJSON)
+		// Fetch sync config (auto-fetch from target repo if not provided)
+		syncConfig, err := fetchSyncConfig(ctx, log, client, org, repo, configJSON)
 		if err != nil {
 			return err
 		}
@@ -565,8 +597,8 @@ var smyklotSyncCmd = &cobra.Command{
 			return err
 		}
 
-		// Parse sync config
-		syncConfig, err := config.ParseSyncConfigJSON(configJSON)
+		// Fetch sync config (auto-fetch from target repo if not provided)
+		syncConfig, err := fetchSyncConfig(ctx, log, client, org, repo, configJSON)
 		if err != nil {
 			return err
 		}

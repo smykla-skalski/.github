@@ -37,7 +37,7 @@ inputs:
     description: Dry run mode - preview changes without making them
     required: false
     default: "false"
-  sync_config:
+  config:
     description: JSON sync config from get-sync-config action
     required: false
     default: "{}"
