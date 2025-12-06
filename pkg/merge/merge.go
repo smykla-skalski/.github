@@ -2,6 +2,7 @@
 package merge
 
 import (
+	"bytes"
 	"encoding/json"
 	"maps"
 
@@ -158,13 +159,20 @@ func ParseYAML(data []byte) (map[string]any, error) {
 }
 
 // MarshalJSON converts a map to indented JSON bytes for readable config files.
+// Uses SetEscapeHTML(false) to preserve <, >, & characters in regex patterns.
 func MarshalJSON(data map[string]any) ([]byte, error) {
-	result, err := json.MarshalIndent(data, "", "  ")
-	if err != nil {
+	var buf bytes.Buffer
+
+	encoder := json.NewEncoder(&buf)
+	encoder.SetEscapeHTML(false)
+	encoder.SetIndent("", "  ")
+
+	if err := encoder.Encode(data); err != nil {
 		return nil, errors.Wrap(ErrMergeParseError, "marshaling to JSON")
 	}
 
-	return result, nil
+	// Encode adds trailing newline, trim for consistency with MarshalIndent
+	return bytes.TrimSuffix(buf.Bytes(), []byte("\n")), nil
 }
 
 // MarshalYAML converts a map to YAML bytes.
