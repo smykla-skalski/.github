@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.3.1](https://github.com/smykla-labs/.github/compare/dotsync/v1.3.0...dotsync/v1.3.1) (2025-12-06)
+
+### Bug Fixes
+
+* **sync:** auto-fetch sync-config from targets ([4134cbf](https://github.com/smykla-labs/.github/commit/4134cbfb5b34fc43400f2a1e26e74392b9d2babf))
+
 ## [1.3.0](https://github.com/smykla-labs/.github/compare/dotsync/v1.2.2...dotsync/v1.3.0) (2025-12-06)
 
 ### Features
