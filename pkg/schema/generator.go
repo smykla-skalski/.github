@@ -41,9 +41,6 @@ func GenerateSchema(modulePath, configPkgPath string) ([]byte, error) {
 		return nil, errors.Wrap(err, "unmarshaling schema to map")
 	}
 
-	// Add examples to specific fields
-	addExamples(schemaMap)
-
 	// Normalize descriptions (replace newlines with spaces)
 	normalizeDescriptions(schemaMap)
 
@@ -56,46 +53,6 @@ func GenerateSchema(modulePath, configPkgPath string) ([]byte, error) {
 	output = append(output, '\n')
 
 	return output, nil
-}
-
-// addExamples adds examples to specific fields in the schema.
-func addExamples(schemaMap map[string]any) {
-	defs, ok := schemaMap["$defs"].(map[string]any)
-	if !ok {
-		return
-	}
-
-	// Add examples to LabelsConfig.exclude
-	addExcludeExamples(defs, "LabelsConfig", []any{
-		[]string{"ci/skip-tests", "ci/force-full"},
-		[]string{"release/major", "release/minor", "release/patch"},
-	})
-
-	// Add examples to FilesConfig.exclude
-	addExcludeExamples(defs, "FilesConfig", []any{
-		[]string{"CONTRIBUTING.md", "CODE_OF_CONDUCT.md"},
-		[]string{".github/PULL_REQUEST_TEMPLATE.md", "SECURITY.md"},
-	})
-}
-
-// addExcludeExamples adds examples to the exclude field of a config type.
-func addExcludeExamples(defs map[string]any, configName string, examples []any) {
-	configDef, ok := defs[configName].(map[string]any)
-	if !ok {
-		return
-	}
-
-	props, ok := configDef["properties"].(map[string]any)
-	if !ok {
-		return
-	}
-
-	exclude, ok := props["exclude"].(map[string]any)
-	if !ok {
-		return
-	}
-
-	exclude["examples"] = examples
 }
 
 // normalizeDescriptions recursively replaces newlines in description fields with spaces.

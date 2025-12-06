@@ -1,5 +1,4 @@
 // Package configtypes provides minimal type definitions for sync configuration.
-// This package has NO external imports to minimize compilation time for schemagen.
 //
 //nolint:golines // struct tags with jsonschema annotations exceed line limits
 package configtypes
@@ -42,7 +41,7 @@ type LabelsConfig struct {
 	Skip bool `json:"skip" jsonschema:"default=false" yaml:"skip"`
 	// Label names to exclude from synchronization. These labels will NOT be created/updated in
 	// this repository. Existing labels with these names are preserved but not managed
-	Exclude []string `json:"exclude" jsonschema:"examples=ci/skip-tests|ci/force-full,examples=release/major|release/minor|release/patch,minLength=1,uniqueItems=true" yaml:"exclude"`
+	Exclude []string `json:"exclude" jsonschema:"minLength=1,uniqueItems=true" yaml:"exclude"`
 	// When true, labels in this repo that are NOT in the central config will be DELETED. Use
 	// with caution - this removes custom labels
 	AllowRemoval bool `json:"allow_removal" jsonschema:"default=false" yaml:"allow_removal"`
@@ -59,7 +58,7 @@ type FilesConfig struct {
 	// File paths (relative to repo root) to exclude from sync. These files will NOT be
 	// created/updated in this repository. Existing files at these paths are preserved but not
 	// managed
-	Exclude []string `json:"exclude" jsonschema:"examples=CONTRIBUTING.md|CODE_OF_CONDUCT.md,examples=.github/PULL_REQUEST_TEMPLATE.md|SECURITY.md,minLength=1,pattern=^[^/].*$,uniqueItems=true" yaml:"exclude"`
+	Exclude []string `json:"exclude" jsonschema:"minLength=1,pattern=^[^/].*$,uniqueItems=true" yaml:"exclude"`
 	// DANGEROUS: When true, files in this repo that are NOT in the central sync config will be
 	// DELETED. This can cause data loss. Strongly recommend keeping this false
 	AllowRemoval bool `json:"allow_removal" jsonschema:"default=false" yaml:"allow_removal"`
@@ -74,7 +73,7 @@ type FilesConfig struct {
 //nolint:staticcheck // ST1021: Descriptive comment preferred over struct name prefix
 type FileMergeConfig struct {
 	// File path (relative to repo root) to merge. Must be a JSON or YAML file
-	Path string `json:"path" jsonschema:"examples=renovate.json,examples=.github/dependabot.yml,minLength=1,pattern=^[^/].*$,required" yaml:"path"`
+	Path string `json:"path" jsonschema:"minLength=1,pattern=^[^/].*$,required" yaml:"path"`
 	// Merge strategy to use. deep-merge (default) recursively merges nested objects; shallow-merge
 	// only merges top-level keys
 	Strategy MergeStrategy `json:"strategy" jsonschema:"enum=deep-merge,enum=shallow-merge,enum=overlay,default=deep-merge" yaml:"strategy"`
