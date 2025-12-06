@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.4.1](https://github.com/smykla-labs/.github/compare/dotsync/v1.4.0...dotsync/v1.4.1) (2025-12-06)
+
+### Bug Fixes
+
+* **release:** CI matrix and goreleaser append ([#18](https://github.com/smykla-labs/.github/issues/18)) ([cb0f08d](https://github.com/smykla-labs/.github/commit/cb0f08d43142b83f9a58171d45a4a14dbd1cddbc))
+
 ## [1.4.0](https://github.com/smykla-labs/.github/compare/dotsync/v1.3.1...dotsync/v1.4.0) (2025-12-06)
 
 ### Features
