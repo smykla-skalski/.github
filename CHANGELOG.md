@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.4.2](https://github.com/smykla-labs/.github/compare/dotsync/v1.4.1...dotsync/v1.4.2) (2025-12-06)
+
+### Bug Fixes
+
+* **action:** use empty string for config default ([c2d08f1](https://github.com/smykla-labs/.github/commit/c2d08f18c73765d2700c6eef854a0f7c4a6d3d48))
+
 ## [1.4.1](https://github.com/smykla-labs/.github/compare/dotsync/v1.4.0...dotsync/v1.4.1) (2025-12-06)
 
 ### Bug Fixes
