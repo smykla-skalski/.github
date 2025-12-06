@@ -117,8 +117,6 @@ jobs:
         include:
           - name: Test
             command: task test
-          - name: Lint Go
-            command: task lint:go
           - name: Lint Other
             command: task lint:markdown lint:mod
     steps:
@@ -133,11 +131,27 @@ jobs:
       - name: ${{ matrix.name }}
         run: ${{ matrix.command }}
 
+  # Run golangci-lint
+  lint-go:
+    needs: prepare
+    name: Lint Go
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@1e7e51e771db61008b38414a730f564565cf7c20 # v9.2.0
+        with:
+          version: latest
+
   # Determine if a release should be created
   release:
     name: Semantic Release
     runs-on: ubuntu-24.04
-    needs: validate
+    needs: [validate, lint-go]
     permissions:
       contents: write
       issues: write
