@@ -40,7 +40,7 @@ inputs:
   config:
     description: JSON sync config from get-sync-config action
     required: false
-    default: "{}"
+    default: ""
 
   # Command-specific inputs
   labels_file:
