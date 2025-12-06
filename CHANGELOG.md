@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.4.3](https://github.com/smykla-labs/.github/compare/dotsync/v1.4.2...dotsync/v1.4.3) (2025-12-06)
+
+### Bug Fixes
+
+* **merge:** preserve < > & in JSON output ([64e0506](https://github.com/smykla-labs/.github/commit/64e0506583bfc923cda8662ea8d263598f81396a))
+
 ## [1.4.2](https://github.com/smykla-labs/.github/compare/dotsync/v1.4.1...dotsync/v1.4.2) (2025-12-06)
 
 ### Bug Fixes
