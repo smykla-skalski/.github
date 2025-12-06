@@ -133,6 +133,13 @@ type RepositorySettingsConfig struct {
 	AllowAutoMerge *bool `json:"allow_auto_merge" yaml:"allow_auto_merge"`
 	// Automatically delete head branch after pull request is merged
 	DeleteBranchOnMerge *bool `json:"delete_branch_on_merge" yaml:"delete_branch_on_merge"`
+	// Allow users to update the head branch of a pull request with the latest changes from the
+	// base branch
+	AllowUpdateBranch *bool `json:"allow_update_branch" yaml:"allow_update_branch"`
+	// Title format for squash merge commits (COMMIT_OR_PR_TITLE or PR_TITLE)
+	SquashMergeCommitTitle *string `json:"squash_merge_commit_title" jsonschema:"enum=COMMIT_OR_PR_TITLE,enum=PR_TITLE" yaml:"squash_merge_commit_title"`
+	// Message format for squash merge commits (PR_BODY, COMMIT_MESSAGES, or BLANK)
+	SquashMergeCommitMessage *string `json:"squash_merge_commit_message" jsonschema:"enum=PR_BODY,enum=COMMIT_MESSAGES,enum=BLANK" yaml:"squash_merge_commit_message"`
 }
 
 // Controls which GitHub features are enabled for the repository (Issues, Wiki, Projects,
@@ -337,6 +344,9 @@ type StatusChecksRuleConfig struct {
 	StrictRequiredStatusChecksPolicy *bool `json:"strict_required_status_checks_policy" yaml:"strict_required_status_checks_policy"`
 	// Required status checks. Empty array = skip setting checks (inherit repo's existing)
 	RequiredStatusChecks []StatusCheckConfig `json:"required_status_checks" yaml:"required_status_checks"`
+	// When true, do not enforce status check requirements on branches created from protected
+	// branches. New branches can temporarily bypass checks when first created
+	DoNotEnforceOnCreate *bool `json:"do_not_enforce_on_create" yaml:"do_not_enforce_on_create"`
 }
 
 // Defines a single required status check with context name and optional integration ID
