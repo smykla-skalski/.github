@@ -1,0 +1,20 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/smykla-labs/.github/main/schemas/smyklot.schema.json
+# Organization-wide Smyklot Configuration
+# ========================================
+# This file controls smyklot workflow synchronization across all repositories.
+# Individual repos can override via .github/sync-config.yml (sync.smyklot section).
+#
+# See: https://github.com/smykla-labs/.github/blob/main/examples/sync-config.yml
+
+# Whether to sync version references in existing workflows (default: true)
+# When enabled, updates smyklot action versions (@vX.Y.Z) in workflows
+sync_version: true
+
+# Which workflows to sync to all repositories by default
+workflows:
+  # Sync pr-commands workflow (enables slash commands in PRs)
+  pr_commands: true
+
+  # Sync poll-reactions workflow (enables reaction-based polling)
+  poll_reactions: true
