@@ -15,7 +15,7 @@ import (
 
 const (
 	modulePath    = "github.com/smykla-labs/.github"
-	configPkgPath = "./pkg/config"
+	configPkgPath = "./internal/configtypes"
 	// schemaFileMode is the permission mode for generated schema files.
 	// Schemas need to be world-readable for CI verification and external tooling.
 	schemaFileMode = 0o644
