@@ -6,10 +6,13 @@ on:
     paths:
       - "go.mod"
       - "go.sum"
+      - "internal/configtypes/**"
       - "pkg/config/**"
+      - "pkg/github/**"
       - "pkg/schema/**"
       - "cmd/schemagen/**"
       - "schemas/sync-config.schema.json"
+      - "schemas/settings.schema.json"
       - ".github/workflows/verify-schema.yml"
 
 permissions:
@@ -19,6 +22,14 @@ permissions:
 jobs:
   verify-schema:
     runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        schema:
+          - name: sync-config
+            file: schemas/sync-config.schema.json
+          - name: settings
+            file: schemas/settings.schema.json
     steps:
       - name: Generate token
         id: generate-token
@@ -38,8 +49,10 @@ jobs:
         with:
           go-version-file: go.mod
 
-      - name: Generate schema from PR branch
-        run: go run ./cmd/schemagen > /tmp/generated-schema.json
+      - name: Generate schema
+        env:
+          SCHEMA_TYPE: ${{ matrix.schema.name }}
+        run: go run ./cmd/schemagen --type "$SCHEMA_TYPE" > /tmp/generated-schema.json
 
       - name: Verify and commit schema
         uses: ./.github/actions/dotsync
@@ -49,5 +62,5 @@ jobs:
           token: ${{ steps.generate-token.outputs.token }}
           repo: smykla-labs/.github
           branch: ${{ github.head_ref }}
-          schema_file: schemas/sync-config.schema.json
+          schema_file: ${{ matrix.schema.file }}
           generated_schema: /tmp/generated-schema.json
