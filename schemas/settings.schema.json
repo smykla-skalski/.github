@@ -513,6 +513,7 @@
     },
     "SettingsDefinition": {
       "additionalProperties": false,
+      "description": "SettingsDefinition contains all repository settings to sync.",
       "properties": {
         "BranchProtection": {
           "items": {
@@ -540,6 +541,7 @@
     },
     "SettingsFile": {
       "additionalProperties": false,
+      "description": "SettingsFile represents the structure of a settings YAML file.",
       "properties": {
         "Settings": {
           "$ref": "#/$defs/SettingsDefinition"

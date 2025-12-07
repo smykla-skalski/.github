@@ -32,9 +32,16 @@ const (
 	SchemaSettings SchemaType = "settings"
 )
 
+// commentPaths lists all source directories containing types used in schemas.
+// These paths are loaded to extract Go doc comments as JSON Schema descriptions.
+var commentPaths = []string{
+	"./internal/configtypes",
+	"./pkg/github",
+}
+
 // GenerateSchemaForType generates JSON Schema for the specified schema type.
 func GenerateSchemaForType(
-	modulePath, configPkgPath string,
+	modulePath, _ string, // configPkgPath deprecated, using commentPaths instead
 	schemaType SchemaType,
 ) (*SchemaOutput, error) {
 	reflector := jsonschema.Reflector{
@@ -42,9 +49,11 @@ func GenerateSchemaForType(
 		RequiredFromJSONSchemaTags: true,
 	}
 
-	// Load Go comments as descriptions
-	if err := reflector.AddGoComments(modulePath, configPkgPath); err != nil {
-		return nil, errors.Wrap(err, "loading Go comments for schema descriptions")
+	// Load Go comments as descriptions from all type source directories
+	for _, path := range commentPaths {
+		if err := reflector.AddGoComments(modulePath, path); err != nil {
+			return nil, errors.Wrapf(err, "loading Go comments from %s", path)
+		}
 	}
 
 	var schema *jsonschema.Schema
