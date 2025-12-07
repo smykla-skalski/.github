@@ -52,6 +52,12 @@ func SyncSettings(
 		return err
 	}
 
+	// Apply merge configurations if present
+	desiredSettings, err = ApplySettingsMerge(log, desiredSettings, syncConfig)
+	if err != nil {
+		return errors.Wrap(err, "applying settings merge")
+	}
+
 	// Compute all changes
 	repoChanges, hasBranchProtectionChanges := computeAllSettingsChanges(
 		desiredSettings,

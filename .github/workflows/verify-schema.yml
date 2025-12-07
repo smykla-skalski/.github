@@ -18,7 +18,7 @@ on:
 # Note: matrix context is not available at workflow level, but this is intentional -
 # we want all matrix jobs cancelled together when a new commit arrives
 concurrency:
-  group: ${{ github.workflow }}-${{ github.head_ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 permissions:
