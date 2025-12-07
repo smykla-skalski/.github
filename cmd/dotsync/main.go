@@ -580,7 +580,10 @@ var smyklotSyncCmd = &cobra.Command{
 
 		smyklotVersion := getStringFlagWithEnvFallback(cmd, "version", "")
 		tag := getStringFlagWithEnvFallback(cmd, "tag", "")
+		sha := getStringFlagWithEnvFallback(cmd, "sha", "")
 		configJSON := getStringFlagWithEnvFallback(cmd, "config", "")
+		templatesDir := getStringFlagWithEnvFallback(cmd, "templates-dir", "smyklot-templates")
+		smyklotFilePath := getStringFlagWithEnvFallback(cmd, "smyklot-file", "")
 
 		// Validate required fields
 		if org == "" {
@@ -599,11 +602,17 @@ var smyklotSyncCmd = &cobra.Command{
 			return errors.New("tag is required (set via --tag flag or INPUT_TAG)")
 		}
 
+		if sha == "" {
+			return errors.New("sha is required (set via --sha flag or INPUT_SHA)")
+		}
+
 		log.Info("starting smyklot sync",
 			"org", org,
 			"repo", repo,
 			"version", smyklotVersion,
 			"tag", tag,
+			"sha", sha,
+			"templates_dir", templatesDir,
 			"dry_run", dryRun,
 		)
 
@@ -634,7 +643,10 @@ var smyklotSyncCmd = &cobra.Command{
 			repo,
 			smyklotVersion,
 			tag,
+			sha,
 			syncConfig,
+			templatesDir,
+			smyklotFilePath,
 			dryRun,
 		); err != nil {
 			return err
@@ -858,7 +870,14 @@ func init() {
 	smyklotSyncCmd.Flags().String("repo", "", "Target repository (e.g., 'myrepo')")
 	smyklotSyncCmd.Flags().String("version", "", "Smyklot version (e.g., '1.9.2')")
 	smyklotSyncCmd.Flags().String("tag", "", "Smyklot tag (e.g., 'v1.9.2')")
+	smyklotSyncCmd.Flags().String("sha", "", "Smyklot commit SHA")
 	smyklotSyncCmd.Flags().String("config", "", "JSON sync config (optional)")
+	smyklotSyncCmd.Flags().String(
+		"templates-dir",
+		"smyklot-templates",
+		"Path to smyklot workflow templates directory",
+	)
+	smyklotSyncCmd.Flags().String("smyklot-file", "", "Path to smyklot.yml config file")
 
 	// Configure settings sync command flags
 	settingsSyncCmd.Flags().String("repo", "", "Target repository (e.g., 'myrepo')")
