@@ -9,7 +9,7 @@ import (
 	"github.com/cockroachdb/errors"
 	jsonpatch "github.com/evanphx/json-patch/v5"
 	"github.com/tidwall/pretty"
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v4"
 
 	"github.com/smykla-labs/.github/internal/configtypes"
 )
