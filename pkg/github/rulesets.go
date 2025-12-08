@@ -174,14 +174,19 @@ func buildConditions(
 	conditions := &github.RepositoryRulesetConditions{}
 
 	if conditionsConfig.RefName != nil {
-		refNameCondition := &github.RepositoryRulesetRefConditionParameters{}
-
-		if len(conditionsConfig.RefName.Include) > 0 {
-			refNameCondition.Include = conditionsConfig.RefName.Include
+		// Always initialize both arrays - GitHub API requires non-null arrays
+		refNameCondition := &github.RepositoryRulesetRefConditionParameters{
+			Include: conditionsConfig.RefName.Include,
+			Exclude: conditionsConfig.RefName.Exclude,
 		}
 
-		if len(conditionsConfig.RefName.Exclude) > 0 {
-			refNameCondition.Exclude = conditionsConfig.RefName.Exclude
+		// Ensure empty arrays instead of nil (GitHub API rejects null values)
+		if refNameCondition.Include == nil {
+			refNameCondition.Include = []string{}
+		}
+
+		if refNameCondition.Exclude == nil {
+			refNameCondition.Exclude = []string{}
 		}
 
 		conditions.RefName = refNameCondition
@@ -337,7 +342,10 @@ func buildStatusChecksRule(
 	statusConfig *configtypes.StatusChecksRuleConfig,
 	existing *github.RepositoryRuleset,
 ) *github.RequiredStatusChecksRuleParameters {
-	rule := &github.RequiredStatusChecksRuleParameters{}
+	// Initialize with empty slice - GitHub API rejects null for required_status_checks field
+	rule := &github.RequiredStatusChecksRuleParameters{
+		RequiredStatusChecks: []*github.RuleStatusCheck{},
+	}
 
 	if statusConfig.StrictRequiredStatusChecksPolicy != nil {
 		rule.StrictRequiredStatusChecksPolicy = *statusConfig.StrictRequiredStatusChecksPolicy
