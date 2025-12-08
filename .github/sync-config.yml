@@ -1,0 +1,15 @@
+# Sync configuration for .github repository (source AND target)
+#
+# This repo is both the source of org-wide templates AND a target for syncing.
+# We use merge to extend the base renovate.json with smyklot-templates scanning.
+sync:
+  files:
+    merge:
+      - path: "renovate.json"
+        strategy: "deep-merge"
+        overrides:
+          # Extend github-actions manager to scan smyklot workflow templates
+          # These patterns are ADDITIVE to defaults per Renovate docs
+          github-actions:
+            managerFilePatterns:
+              - "/smyklot-templates/.+\\.ya?ml$/"

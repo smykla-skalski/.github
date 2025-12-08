@@ -43,6 +43,8 @@
     "automerge": true
   },
   "ignorePaths": [
-    "**/tmp/**"
+    "**/tmp/**",
+    ".github/workflows/pr-commands.yml",
+    ".github/workflows/poll-reactions.yml"
   ]
 }
