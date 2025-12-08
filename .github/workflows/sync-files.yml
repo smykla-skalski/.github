@@ -108,10 +108,10 @@ jobs:
           PR_URL=$(echo "$PR_JSON" | jq -r '.url')
           PR_BODY=$(echo "$PR_JSON" | jq -r '.body')
 
-          # Extract change sections from PR body
-          FILES_MERGED=$(echo "$PR_BODY" | sed -n '/## Files Merged/,/^##/p' | grep "^- " || true)
-          FILES_CREATED=$(echo "$PR_BODY" | sed -n '/## Files Created/,/^##/p' | grep "^- " || true)
-          FILES_UPDATED=$(echo "$PR_BODY" | sed -n '/## Files Updated/,/^##/p' | grep "^- " || true)
+          # Extract change sections from PR body (patterns match start of headers)
+          FILES_MERGED=$(echo "$PR_BODY" | sed -n '/^## Files Merged/,/^##[^#]/p' | grep "^- " || true)
+          FILES_CREATED=$(echo "$PR_BODY" | sed -n '/^## Files Created/,/^##[^#]/p' | grep "^- " || true)
+          FILES_UPDATED=$(echo "$PR_BODY" | sed -n '/^## Files Updated/,/^##[^#]/p' | grep "^- " || true)
 
           {
             printf '✅ **PR:** [#%s](%s)\n\n' "$PR_NUM" "$PR_URL"

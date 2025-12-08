@@ -209,10 +209,10 @@ jobs:
           PR_URL=$(echo "$PR_JSON" | jq -r '.url')
           PR_BODY=$(echo "$PR_JSON" | jq -r '.body')
 
-          # Extract change sections from PR body
-          WORKFLOWS_INSTALLED=$(echo "$PR_BODY" | sed -n '/## Workflows Installed/,/^##/p' | grep "^- " || true)
-          WORKFLOWS_REPLACED=$(echo "$PR_BODY" | sed -n '/## Workflows Replaced/,/^##/p' | grep "^- " || true)
-          VERSION_UPDATES=$(echo "$PR_BODY" | sed -n '/## Version Updates/,/^##/p' | grep "^- " || true)
+          # Extract change sections from PR body (patterns match start of headers)
+          WORKFLOWS_INSTALLED=$(echo "$PR_BODY" | sed -n '/^## Workflows Installed/,/^##[^#]/p' | grep "^- " || true)
+          WORKFLOWS_REPLACED=$(echo "$PR_BODY" | sed -n '/^## Workflows Replaced/,/^##[^#]/p' | grep "^- " || true)
+          VERSION_UPDATES=$(echo "$PR_BODY" | sed -n '/^## Version Updates/,/^##[^#]/p' | grep "^- " || true)
 
           {
             printf '✅ **PR:** [#%s](%s)\n\n' "$PR_NUM" "$PR_URL"
