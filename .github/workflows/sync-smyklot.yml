@@ -2,6 +2,12 @@
 name: Sync Smyklot
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - "action.yml"
+      - "smyklot-templates/**"
+      - ".github/workflows/sync-smyklot.yml"
   repository_dispatch:
     types: [smyklot-release]
   workflow_dispatch:
