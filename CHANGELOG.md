@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.6.0](https://github.com/smykla-labs/.github/compare/dotsync/v1.5.0...dotsync/v1.6.0) (2025-12-08)
+
+### Features
+
+* **smyklot:** add org config and auto-install ([#20](https://github.com/smykla-labs/.github/issues/20)) ([619e896](https://github.com/smykla-labs/.github/commit/619e8967de408ce8be7ad042c84c74411fb5437f))
+
 ## [1.5.0](https://github.com/smykla-labs/.github/compare/dotsync/v1.4.5...dotsync/v1.5.0) (2025-12-07)
 
 ### Features
