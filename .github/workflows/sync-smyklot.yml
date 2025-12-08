@@ -7,24 +7,24 @@ on:
   workflow_dispatch:
     inputs:
       use_latest:
-        description: "Use latest smyklot release"
+        description: "Fetch latest release automatically"
         required: false
         type: boolean
         default: true
       version:
-        description: "smyklot version (e.g., 1.9.2) - ignored if use_latest is true"
+        description: "Version (e.g., 1.9.2)"
         required: false
         type: string
       tag:
-        description: "smyklot tag (e.g., v1.9.2) - ignored if use_latest is true"
+        description: "Tag (e.g., v1.9.2)"
         required: false
         type: string
       sha:
-        description: "smyklot commit SHA - ignored if use_latest is true"
+        description: "Commit SHA"
         required: false
         type: string
       dry_run:
-        description: "Dry run (no changes)"
+        description: "Preview changes only"
         required: false
         type: boolean
         default: false
