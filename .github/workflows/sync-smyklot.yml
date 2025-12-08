@@ -6,17 +6,22 @@ on:
     types: [smyklot-release]
   workflow_dispatch:
     inputs:
+      use_latest:
+        description: "Use latest smyklot release"
+        required: false
+        type: boolean
+        default: true
       version:
-        description: "smyklot version (e.g., 1.9.2)"
-        required: true
+        description: "smyklot version (e.g., 1.9.2) - ignored if use_latest is true"
+        required: false
         type: string
       tag:
-        description: "smyklot tag (e.g., v1.9.2)"
-        required: true
+        description: "smyklot tag (e.g., v1.9.2) - ignored if use_latest is true"
+        required: false
         type: string
       sha:
-        description: "smyklot commit SHA"
-        required: true
+        description: "smyklot commit SHA - ignored if use_latest is true"
+        required: false
         type: string
       dry_run:
         description: "Dry run (no changes)"
@@ -54,8 +59,67 @@ jobs:
 
           echo "✅ Smyklot configuration validated"
 
-  get-repos:
+  resolve-version:
     needs: validate
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.resolve.outputs.version }}
+      tag: ${{ steps.resolve.outputs.tag }}
+      sha: ${{ steps.resolve.outputs.sha }}
+    steps:
+      - name: Resolve smyklot version
+        id: resolve
+        env:
+          GH_TOKEN: ${{ github.token }}
+          # repository_dispatch payload (from smyklot release workflow)
+          PAYLOAD_VERSION: ${{ github.event.client_payload.version }}
+          PAYLOAD_TAG: ${{ github.event.client_payload.tag }}
+          PAYLOAD_SHA: ${{ github.event.client_payload.sha }}
+          # workflow_dispatch inputs
+          INPUT_USE_LATEST: ${{ inputs.use_latest }}
+          INPUT_VERSION: ${{ inputs.version }}
+          INPUT_TAG: ${{ inputs.tag }}
+          INPUT_SHA: ${{ inputs.sha }}
+        run: |
+          # Priority:
+          # 1. repository_dispatch payload (from smyklot release)
+          # 2. workflow_dispatch with use_latest=false and manual values
+          # 3. Fetch latest release (use_latest=true or no values provided)
+
+          if [[ -n "$PAYLOAD_VERSION" && -n "$PAYLOAD_TAG" && -n "$PAYLOAD_SHA" ]]; then
+            echo "Using repository_dispatch payload"
+            {
+              echo "version=$PAYLOAD_VERSION"
+              echo "tag=$PAYLOAD_TAG"
+              echo "sha=$PAYLOAD_SHA"
+            } >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [[ "$INPUT_USE_LATEST" == "false" && -n "$INPUT_VERSION" && -n "$INPUT_TAG" && -n "$INPUT_SHA" ]]; then
+            echo "Using manual workflow_dispatch inputs"
+            {
+              echo "version=$INPUT_VERSION"
+              echo "tag=$INPUT_TAG"
+              echo "sha=$INPUT_SHA"
+            } >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "Fetching latest smyklot release..."
+          TAG=$(gh api repos/smykla-labs/smyklot/releases/latest --jq '.tag_name')
+          VERSION="${TAG#v}"
+          SHA=$(gh api "repos/smykla-labs/smyklot/git/ref/tags/${TAG}" --jq '.object.sha')
+
+          echo "Resolved: version=$VERSION, tag=$TAG, sha=$SHA"
+          {
+            echo "version=$VERSION"
+            echo "tag=$TAG"
+            echo "sha=$SHA"
+          } >> "$GITHUB_OUTPUT"
+
+  get-repos:
+    needs: [validate, resolve-version]
     runs-on: ubuntu-24.04
     outputs:
       repos: ${{ steps.repos.outputs.repos }}
@@ -80,7 +144,7 @@ jobs:
           token: ${{ steps.token.outputs.token }}
 
   sync-smyklot:
-    needs: get-repos
+    needs: [resolve-version, get-repos]
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
@@ -109,9 +173,9 @@ jobs:
           subcommand: sync
           token: ${{ steps.token.outputs.token }}
           repo: ${{ matrix.repo.name }}
-          version: ${{ github.event.client_payload.version || inputs.version }}
-          tag: ${{ github.event.client_payload.tag || inputs.tag }}
-          sha: ${{ github.event.client_payload.sha || inputs.sha }}
+          version: ${{ needs.resolve-version.outputs.version }}
+          tag: ${{ needs.resolve-version.outputs.tag }}
+          sha: ${{ needs.resolve-version.outputs.sha }}
           smyklot_file: .github/smyklot.yml
           smyklot_templates_dir: smyklot-templates
           dry_run: ${{ inputs.dry_run || 'false' }}
