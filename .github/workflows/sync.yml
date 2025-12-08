@@ -19,6 +19,11 @@ on:
         required: false
         type: boolean
         default: true
+      sync_smyklot:
+        description: "Sync smyklot"
+        required: false
+        type: boolean
+        default: false
       dry_run:
         description: "Dry run (no changes)"
         required: false
@@ -47,6 +52,7 @@ jobs:
           SYNC_LABELS: ${{ inputs.sync_labels }}
           SYNC_FILES: ${{ inputs.sync_files }}
           SYNC_SETTINGS: ${{ inputs.sync_settings }}
+          SYNC_SMYKLOT: ${{ inputs.sync_smyklot }}
           DRY_RUN: ${{ inputs.dry_run }}
         run: |
           echo "## 🔄 Triggering Sync Workflows" >> "$GITHUB_STEP_SUMMARY"
@@ -74,6 +80,14 @@ jobs:
             echo "- ✅ Sync Settings triggered" >> "$GITHUB_STEP_SUMMARY"
           else
             echo "- ⏭️ Sync Settings skipped" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+          if [[ "$SYNC_SMYKLOT" == "true" ]]; then
+            echo "Triggering Sync Smyklot..."
+            gh workflow run sync-smyklot.yml --repo "$REPO" -f "use_latest=true" -f "dry_run=$DRY_RUN"
+            echo "- ✅ Sync Smyklot triggered" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "- ⏭️ Sync Smyklot skipped" >> "$GITHUB_STEP_SUMMARY"
           fi
 
           echo "" >> "$GITHUB_STEP_SUMMARY"
