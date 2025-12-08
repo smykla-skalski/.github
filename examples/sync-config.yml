@@ -36,8 +36,8 @@
 #     version:                   # Version-only sync configuration
 #       skip: bool               # Skip version updates in workflows (default: false)
 #     workflows:                 # Workflow installation configuration
-#       pr_commands: bool        # Sync pr-commands workflow (default: true)
-#       poll_reactions: bool     # Sync poll-reactions workflow (default: true)
+#       pr_commands: bool        # Sync smyklot-pr-commands workflow (default: true)
+#       poll_reactions: bool     # Sync smyklot-poll workflow (default: true)
 #
 #   settings:                    # Settings sync configuration
 #     skip: bool                 # Skip settings sync (default: false)
@@ -219,7 +219,7 @@ sync: {}
 #   smyklot:
 #     workflows:
 #       pr_commands: true
-#       poll_reactions: false  # Don't sync poll-reactions workflow
+#       poll_reactions: false  # Don't sync smyklot-poll workflow
 
 # Example 7: Skip settings sync only (for repos requiring custom settings)
 # sync:
