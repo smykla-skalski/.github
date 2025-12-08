@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.9.1](https://github.com/smykla-labs/.github/compare/dotsync/v1.9.0...dotsync/v1.9.1) (2025-12-08)
+
+### Bug Fixes
+
+* **smyklot:** propagate errors, stop swallowing ([cee08dc](https://github.com/smykla-labs/.github/commit/cee08dc4e71c065ae81fc30a3bb61e899664c787))
+
+### Dependencies
+
+* **deps:** replace yaml.v3 with yaml/v4 ([#30](https://github.com/smykla-labs/.github/issues/30)) ([b6d0734](https://github.com/smykla-labs/.github/commit/b6d0734bb69decdaf859aa9af705c83be475a21e))
+
 ## [1.9.0](https://github.com/smykla-labs/.github/compare/dotsync/v1.8.0...dotsync/v1.9.0) (2025-12-08)
 
 ### Features
