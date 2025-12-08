@@ -338,21 +338,19 @@ func getRequiredReviewCountForRuleset(
 }
 
 // buildStatusChecksRule converts config status checks to go-github RequiredStatusChecksRuleParameters.
+// Returns nil if no status checks would be configured (GitHub API requires at least 1 check).
 func buildStatusChecksRule(
 	statusConfig *configtypes.StatusChecksRuleConfig,
 	existing *github.RepositoryRuleset,
 ) *github.RequiredStatusChecksRuleParameters {
-	// Initialize with empty slice - GitHub API rejects null for required_status_checks field
-	rule := &github.RequiredStatusChecksRuleParameters{
-		RequiredStatusChecks: []*github.RuleStatusCheck{},
-	}
+	rule := &github.RequiredStatusChecksRuleParameters{}
 
 	if statusConfig.StrictRequiredStatusChecksPolicy != nil {
 		rule.StrictRequiredStatusChecksPolicy = *statusConfig.StrictRequiredStatusChecksPolicy
 	}
 
 	// Handle status checks with hybrid approach:
-	// Empty array = skip setting checks (inherit repo's existing)
+	// Empty array = inherit repo's existing checks (or skip rule entirely if none exist)
 	if len(statusConfig.RequiredStatusChecks) > 0 {
 		var checks []*github.RuleStatusCheck
 
@@ -371,9 +369,15 @@ func buildStatusChecksRule(
 		rule.RequiredStatusChecks = checks
 	} else if existing != nil &&
 		existing.Rules != nil &&
-		existing.Rules.RequiredStatusChecks != nil {
+		existing.Rules.RequiredStatusChecks != nil &&
+		len(existing.Rules.RequiredStatusChecks.RequiredStatusChecks) > 0 {
 		// Preserve existing checks if config has empty array
 		rule.RequiredStatusChecks = existing.Rules.RequiredStatusChecks.RequiredStatusChecks
+	}
+
+	// GitHub API requires at least 1 status check - skip rule entirely if empty
+	if len(rule.RequiredStatusChecks) == 0 {
+		return nil
 	}
 
 	return rule

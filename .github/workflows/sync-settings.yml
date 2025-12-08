@@ -67,6 +67,7 @@ jobs:
           repositories: ${{ matrix.repo.name }}
 
       - name: Sync settings to repository
+        id: sync
         uses: ./
         with:
           command: settings
@@ -81,9 +82,12 @@ jobs:
         env:
           REPO_NAME: ${{ matrix.repo.name }}
           DRY_RUN: ${{ inputs.dry_run || 'false' }}
+          SYNC_OUTCOME: ${{ steps.sync.outcome }}
         run: |
           echo "### ⚙️ ${REPO_NAME}" >> "$GITHUB_STEP_SUMMARY"
-          if [[ "$DRY_RUN" == "true" ]]; then
+          if [[ "$SYNC_OUTCOME" == "failure" ]]; then
+            echo "❌ Settings sync failed" >> "$GITHUB_STEP_SUMMARY"
+          elif [[ "$DRY_RUN" == "true" ]]; then
             echo "ℹ️ Dry run completed" >> "$GITHUB_STEP_SUMMARY"
           else
             echo "✅ Settings synced" >> "$GITHUB_STEP_SUMMARY"
