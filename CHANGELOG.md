@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.8.0](https://github.com/smykla-labs/.github/compare/dotsync/v1.7.0...dotsync/v1.8.0) (2025-12-08)
+
+### Features
+
+* **smyklot:** normalize .yaml extensions to .yml ([d0461ef](https://github.com/smykla-labs/.github/commit/d0461ef69418a37162c898dddf75f4e09356555f))
+
 ## [1.7.0](https://github.com/smykla-labs/.github/compare/dotsync/v1.6.1...dotsync/v1.7.0) (2025-12-08)
 
 ### Features
