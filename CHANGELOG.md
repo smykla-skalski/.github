@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.6.1](https://github.com/smykla-labs/.github/compare/dotsync/v1.6.0...dotsync/v1.6.1) (2025-12-08)
+
+### Code Refactoring
+
+* **action:** move action.yml to repo root ([1b194cb](https://github.com/smykla-labs/.github/commit/1b194cb636a37879ba584f03161f6d8e133d70d1))
+
 ## [1.6.0](https://github.com/smykla-labs/.github/compare/dotsync/v1.5.0...dotsync/v1.6.0) (2025-12-08)
 
 ### Features
