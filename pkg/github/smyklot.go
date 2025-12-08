@@ -692,8 +692,8 @@ func buildSmyklotPRTitle(tag string, stats *SmyklotSyncStats) string {
 
 	switch {
 	case hasVersionChanges && hasWorkflowChanges:
-		// Both version and workflow changes - emphasize version update
-		return "chore(deps): update smyklot to " + tag
+		// Both version and workflow changes
+		return "chore(smyklot): update to " + tag + " and sync workflows"
 
 	case hasVersionChanges:
 		// Version-only changes
