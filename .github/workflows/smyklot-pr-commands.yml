@@ -1,11 +1,11 @@
 ---
-# PR Commands workflow
+# Smyklot PR Commands workflow
 # Handles PR commands via smyklot bot
 #
 # This file is managed by smykla-labs/.github org sync.
 # Do not edit manually - changes will be overwritten.
 
-name: PR Commands
+name: Smyklot PR Commands
 
 on:
   issue_comment:

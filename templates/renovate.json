@@ -37,6 +37,12 @@
       "description": "Group golangci-lint across mise and CI workflow",
       "matchPackageNames": ["golangci-lint", "golangci/golangci-lint"],
       "groupName": "golangci-lint"
+    },
+    {
+      "description": "Smyklot action managed by sync-smyklot workflow",
+      "matchManagers": ["github-actions"],
+      "matchPackageNames": ["smykla-labs/smyklot"],
+      "enabled": false
     }
   ],
   "vulnerabilityAlerts": {
