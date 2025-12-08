@@ -21,8 +21,8 @@ const (
 	smyklotPRLabel      = "ci/skip-all"
 
 	// Workflow template names (current)
-	WorkflowPrCommands    = "smyklot-pr-commands"
-	WorkflowPollReactions = "smyklot-poll"
+	WorkflowPrCommands = "smyklot-pr-commands"
+	WorkflowPoll       = "smyklot-poll"
 
 	// Legacy workflow names (for migration)
 	legacyPrCommands    = "pr-commands"
@@ -34,8 +34,8 @@ const (
 
 // legacyWorkflowNames maps current workflow names to their legacy equivalents.
 var legacyWorkflowNames = map[string]string{
-	WorkflowPrCommands:    legacyPrCommands,
-	WorkflowPollReactions: legacyPollReactions,
+	WorkflowPrCommands: legacyPrCommands,
+	WorkflowPoll:       legacyPollReactions,
 }
 
 // SmyklotSyncStats tracks smyklot sync statistics.
@@ -210,7 +210,7 @@ func syncManagedWorkflows(
 ) []FileChange {
 	var changes []FileChange
 
-	workflowNames := []string{WorkflowPrCommands, WorkflowPollReactions}
+	workflowNames := []string{WorkflowPrCommands, WorkflowPoll}
 
 	for _, workflowName := range workflowNames {
 		if !shouldSyncWorkflow(orgConfig, syncConfig, workflowName) {
@@ -483,7 +483,7 @@ func syncVersionOnlyWorkflows(
 
 	for _, workflowPath := range workflowFiles {
 		filename := filepath.Base(workflowPath)
-		if filename == WorkflowPrCommands+".yml" || filename == WorkflowPollReactions+".yml" {
+		if filename == WorkflowPrCommands+".yml" || filename == WorkflowPoll+".yml" {
 			continue
 		}
 
@@ -932,8 +932,8 @@ func fetchSmyklotOrgConfig(
 			return &configtypes.SmyklotFile{
 				SyncVersion: boolPtr(true),
 				Workflows: configtypes.SmyklotWorkflowsConfig{
-					PrCommands:    boolPtr(true),
-					PollReactions: boolPtr(true),
+					PrCommands: boolPtr(true),
+					Poll:       boolPtr(true),
 				},
 			}, nil
 		}
@@ -968,8 +968,8 @@ func shouldSyncWorkflow(
 	switch workflowName {
 	case WorkflowPrCommands:
 		orgEnabled = orgConfig.Workflows.PrCommands
-	case WorkflowPollReactions:
-		orgEnabled = orgConfig.Workflows.PollReactions
+	case WorkflowPoll:
+		orgEnabled = orgConfig.Workflows.Poll
 	default:
 		return false
 	}
@@ -980,8 +980,8 @@ func shouldSyncWorkflow(
 	switch workflowName {
 	case WorkflowPrCommands:
 		repoEnabled = repoConfig.Sync.Smyklot.Workflows.PrCommands
-	case WorkflowPollReactions:
-		repoEnabled = repoConfig.Sync.Smyklot.Workflows.PollReactions
+	case WorkflowPoll:
+		repoEnabled = repoConfig.Sync.Smyklot.Workflows.Poll
 	}
 
 	// Repo config takes precedence

@@ -939,7 +939,7 @@
       "additionalProperties": false,
       "description": "Controls which smyklot workflows are synced to a repository",
       "properties": {
-        "poll_reactions": {
+        "poll": {
           "default": true,
           "description": "Sync smyklot-poll workflow. Default: true",
           "type": "boolean"

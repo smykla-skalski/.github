@@ -128,7 +128,7 @@ type SmyklotWorkflowsConfig struct {
 	// Sync smyklot-pr-commands workflow. Default: true
 	PrCommands *bool `json:"pr_commands" jsonschema:"default=true" yaml:"pr_commands"`
 	// Sync smyklot-poll workflow. Default: true
-	PollReactions *bool `json:"poll_reactions" jsonschema:"default=true" yaml:"poll_reactions"`
+	Poll *bool `json:"poll" jsonschema:"default=true" yaml:"poll"`
 }
 
 // Controls synchronization of GitHub repository settings like merge strategies, branch
@@ -448,8 +448,8 @@ func (sf *SmyklotFile) SetDefaults() {
 		sf.Workflows.PrCommands = &val
 	}
 
-	if sf.Workflows.PollReactions == nil {
+	if sf.Workflows.Poll == nil {
 		val := true
-		sf.Workflows.PollReactions = &val
+		sf.Workflows.Poll = &val
 	}
 }

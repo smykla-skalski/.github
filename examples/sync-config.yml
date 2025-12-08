@@ -37,7 +37,7 @@
 #       skip: bool               # Skip version updates in workflows (default: false)
 #     workflows:                 # Workflow installation configuration
 #       pr_commands: bool        # Sync smyklot-pr-commands workflow (default: true)
-#       poll_reactions: bool     # Sync smyklot-poll workflow (default: true)
+#       poll: bool               # Sync smyklot-poll workflow (default: true)
 #
 #   settings:                    # Settings sync configuration
 #     skip: bool                 # Skip settings sync (default: false)
@@ -123,7 +123,7 @@
 # sync.smyklot.workflows.pr_commands (boolean, default: true)
 #   When true, syncs the smyklot-pr-commands.yml workflow to this repository.
 #
-# sync.smyklot.workflows.poll_reactions (boolean, default: true)
+# sync.smyklot.workflows.poll (boolean, default: true)
 #   When true, syncs the smyklot-poll.yml workflow to this repository.
 #
 # sync.settings.skip (boolean, default: false)
@@ -219,7 +219,7 @@ sync: {}
 #   smyklot:
 #     workflows:
 #       pr_commands: true
-#       poll_reactions: false  # Don't sync smyklot-poll workflow
+#       poll: false  # Don't sync smyklot-poll workflow
 
 # Example 7: Skip settings sync only (for repos requiring custom settings)
 # sync:
