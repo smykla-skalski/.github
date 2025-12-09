@@ -165,23 +165,38 @@ jobs:
           wait_for_run() {
             local run_id="$1"
             local name="$2"
+            local max_wait=1800  # 30 minutes max
+            local elapsed=0
             echo "Waiting for $name (run: $run_id)..."
 
-            while true; do
-              status=$(gh api "repos/$REPO/actions/runs/$run_id" --jq '.status' 2>/dev/null || echo "error")
+            while [ $elapsed -lt $max_wait ]; do
+              status=$(gh api "repos/$REPO/actions/runs/$run_id" --jq '.status' 2>&1)
+              api_exit=$?
 
-              if [[ "$status" == "completed" ]]; then
-                conclusion=$(gh api "repos/$REPO/actions/runs/$run_id" --jq '.conclusion')
-                echo "$name: completed ($conclusion)"
-                return 0
-              elif [[ "$status" == "error" ]]; then
-                echo "$name: API error, retrying..."
+              if [ $api_exit -ne 0 ]; then
+                echo "$name: API call failed (exit $api_exit), retrying..."
                 sleep 5
+                elapsed=$((elapsed + 5))
                 continue
               fi
 
+              if [[ "$status" == "completed" ]]; then
+                conclusion=$(gh api "repos/$REPO/actions/runs/$run_id" --jq '.conclusion')
+                echo "$name: ✅ completed ($conclusion)"
+                return 0
+              fi
+
+              # Show status every 30 seconds for visibility
+              if [ $((elapsed % 30)) -eq 0 ]; then
+                echo "$name: still waiting, status=$status (${elapsed}s elapsed)"
+              fi
+
               sleep 10
+              elapsed=$((elapsed + 10))
             done
+
+            echo "$name: ⚠️ timeout after ${max_wait}s, last status=$status"
+            return 1
           }
 
           # Start all wait processes in background
