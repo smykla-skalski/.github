@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.11.0](https://github.com/smykla-labs/.github/compare/dotsync/v1.10.3...dotsync/v1.11.0) (2025-12-09)
+
+### Features
+
+* **dotsync:** use tables for sync summaries ([99acfa0](https://github.com/smykla-labs/.github/commit/99acfa028fe756f0f58985fa7473155a03f4e23c))
+
+### Bug Fixes
+
+* **ci-sync:** fix output parameter name mismatch ([c2a1045](https://github.com/smykla-labs/.github/commit/c2a1045218c2549d8bb50e3113e25713d2d56be6))
+
 ## [1.10.3](https://github.com/smykla-labs/.github/compare/dotsync/v1.10.2...dotsync/v1.10.3) (2025-12-09)
 
 ### Bug Fixes
