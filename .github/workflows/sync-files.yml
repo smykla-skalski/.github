@@ -90,13 +90,14 @@ jobs:
         env:
           REPO: ${{ github.repository_owner }}/${{ matrix.repo.name }}
           REPO_NAME: ${{ matrix.repo.name }}
+          BRANCH_NAME: chore/org-sync/${{ matrix.repo.name }}
           GH_TOKEN: ${{ steps.token.outputs.token }}
         run: |
           echo "### 📁 ${REPO_NAME}" >> "$GITHUB_STEP_SUMMARY"
 
           # Search for files sync PRs by branch
           PR_JSON=$(gh pr list --repo "$REPO" --state open \
-            --head "chore/org-sync" \
+            --head "$BRANCH_NAME" \
             --json number,url,title,body --jq '.[0] // empty' 2>/dev/null || true)
 
           if [[ -z "$PR_JSON" ]]; then
