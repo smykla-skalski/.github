@@ -79,7 +79,7 @@ jobs:
 
       - name: Upload result artifact
         if: always()
-        uses: actions/upload-artifact@ea054086033fdfb9b1f127f5c0fb3f03a1906e2f # v4.6.1
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
           name: labels-result-${{ matrix.repo.name }}
           path: labels-result-${{ matrix.repo.name }}.json
@@ -94,7 +94,7 @@ jobs:
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
       - name: Download all result artifacts
-        uses: actions/download-artifact@3ea1eab1ff7a7b2c1e0bafc8152f7a3df2d42b0e # v4.4.1
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0
         with:
           pattern: labels-result-*
           path: results
@@ -124,7 +124,7 @@ jobs:
           dry_run: ${{ inputs.dry_run || 'false' }}
 
       - name: Upload workflow summary artifact
-        uses: actions/upload-artifact@ea054086033fdfb9b1f127f5c0fb3f03a1906e2f # v4.6.1
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
           name: workflow-summary-labels
           path: summary-labels.json
