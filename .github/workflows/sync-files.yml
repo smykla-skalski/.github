@@ -93,3 +93,44 @@ jobs:
           name: files-result-${{ matrix.repo.name }}
           path: files-result-${{ matrix.repo.name }}.json
           retention-days: 1
+
+  summary:
+    needs: sync-files
+    if: always()
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+
+      - name: Download all result artifacts
+        uses: actions/download-artifact@3ea1eab1ff7a7b2c1e0bafc8152f7a3df2d42b0e # v4.4.1
+        with:
+          pattern: files-result-*
+          path: results
+
+      - name: Generate markdown summary
+        uses: ./
+        with:
+          command: summary
+          subcommand: generate
+          type: files
+          results_dir: results
+          format: markdown
+          dry_run: ${{ inputs.dry_run || 'false' }}
+
+      - name: Generate workflow summary JSON
+        uses: ./
+        with:
+          command: summary
+          subcommand: generate
+          type: files
+          results_dir: results
+          format: json
+          output_file: workflow-summary.json
+
+      - name: Upload workflow summary artifact
+        uses: actions/upload-artifact@ea054086033fdfb9b1f127f5c0fb3f03a1906e2f # v4.6.1
+        with:
+          name: workflow-summary-files
+          path: workflow-summary.json
+          retention-days: 7

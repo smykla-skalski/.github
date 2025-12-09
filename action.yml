@@ -99,6 +99,26 @@ inputs:
     description: Path to externally generated schema file (config verify-file)
     required: false
     default: ""
+  result_file:
+    description: Path to write sync result JSON (all sync commands)
+    required: false
+    default: ""
+  type:
+    description: Sync type for summary generation (labels, files, settings, smyklot, all)
+    required: false
+    default: ""
+  results_dir:
+    description: Directory containing result JSON files (summary generate)
+    required: false
+    default: ""
+  output_file:
+    description: Output file path for summary (summary generate)
+    required: false
+    default: ""
+  filter:
+    description: Filter results by status (all, failures, successes, skipped)
+    required: false
+    default: ""
 
 outputs:
   config:
