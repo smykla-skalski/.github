@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.10.2](https://github.com/smykla-labs/.github/compare/dotsync/v1.10.1...dotsync/v1.10.2) (2025-12-09)
+
+### Bug Fixes
+
+* **ci-sync:** check state before triggering ([63bd46c](https://github.com/smykla-labs/.github/commit/63bd46c264a69c13953ed5dc3975eeb4606f3068))
+
 ## [1.10.1](https://github.com/smykla-labs/.github/compare/dotsync/v1.10.0...dotsync/v1.10.1) (2025-12-09)
 
 ### Bug Fixes
