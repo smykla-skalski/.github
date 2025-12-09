@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.10.0](https://github.com/smykla-labs/.github/compare/dotsync/v1.9.2...dotsync/v1.10.0) (2025-12-09)
+
+### Features
+
+* **ci-sync:** add consolidated workflow summaries ([#42](https://github.com/smykla-labs/.github/issues/42)) ([41555f9](https://github.com/smykla-labs/.github/commit/41555f9ff3e66f5178c67226104111dfa8f2f468))
+
+### Bug Fixes
+
+* **deps:** update module golang.org/x/term to v0.38.0 ([#37](https://github.com/smykla-labs/.github/issues/37)) ([3870903](https://github.com/smykla-labs/.github/commit/387090332125260af3c5d744ddbc03c7511c2d87))
+* **security:** anchor version regex patterns ([#38](https://github.com/smykla-labs/.github/issues/38)) ([c763c2d](https://github.com/smykla-labs/.github/commit/c763c2d6d1538126f4ea9252dc0879789b66b393))
+
 ## [1.9.2](https://github.com/smykla-labs/.github/compare/dotsync/v1.9.1...dotsync/v1.9.2) (2025-12-08)
 
 ### Bug Fixes
