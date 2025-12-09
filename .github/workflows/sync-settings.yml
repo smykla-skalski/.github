@@ -77,6 +77,12 @@ jobs:
           dry_run: ${{ inputs.dry_run || 'false' }}
           result_file: settings-result-${{ matrix.repo.name }}.json
 
+      - name: Fix result file permissions
+        if: always()
+        env:
+          RESULT_FILE: settings-result-${{ matrix.repo.name }}.json
+        run: chmod 644 "$RESULT_FILE" || true
+
       - name: Upload result artifact
         if: always()
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
