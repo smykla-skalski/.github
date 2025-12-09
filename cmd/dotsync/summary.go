@@ -433,8 +433,8 @@ func generateWorkflowJSON(
 		return errors.New("output file required for JSON format")
 	}
 
-	//nolint:mnd // 0o600 is standard file permission for user-only read/write
-	err = os.WriteFile(output, data, 0o600)
+	//nolint:mnd,gosec // 0o644 required for GitHub Actions artifact upload
+	err = os.WriteFile(output, data, 0o644)
 	if err != nil {
 		return errors.Wrap(err, "writing workflow summary")
 	}
@@ -793,8 +793,8 @@ func writeOutput(log *logger.Logger, builder *strings.Builder, output string) er
 	}
 
 	// Write to file
-	//nolint:mnd // 0o600 is standard file permission for user-only read/write
-	err := os.WriteFile(outputFile, []byte(content), 0o600)
+	//nolint:mnd,gosec // 0o644 required for GitHub Actions artifact upload
+	err := os.WriteFile(outputFile, []byte(content), 0o644)
 	if err != nil {
 		return errors.Wrap(err, "writing output file")
 	}

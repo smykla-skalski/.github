@@ -345,8 +345,8 @@ func writeResultFile(log *logger.Logger, resultFile string, result any) error {
 		return errors.Wrap(err, "marshaling result to JSON")
 	}
 
-	//nolint:mnd // 0o600 is standard file permission for user-only read/write
-	err = os.WriteFile(resultFile, data, 0o600)
+	//nolint:mnd,gosec // 0o644 required for GitHub Actions artifact upload
+	err = os.WriteFile(resultFile, data, 0o644)
 	if err != nil {
 		return errors.Wrap(err, "writing result file")
 	}
