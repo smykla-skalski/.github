@@ -598,12 +598,16 @@ func applyVersionReplacements(content string, version string, tag string) (strin
 	original := content
 
 	// Pattern 1: GitHub Action reference (uses: smykla-labs/smyklot@v1.2.3)
-	actionPattern := regexp.MustCompile(`(uses:\s*smykla-labs/smyklot@)v\d+\.\d+\.\d+`)
-	content = actionPattern.ReplaceAllString(content, "${1}"+tag)
+	// Anchored to prevent bypass attacks (CWE-020): only matches when followed by
+	// whitespace, newline, or end of string - prevents embedding in URLs or with suffixes
+	actionPattern := regexp.MustCompile(`(uses:\s*smykla-labs/smyklot@)v\d+\.\d+\.\d+(\s|$)`)
+	content = actionPattern.ReplaceAllString(content, "${1}"+tag+"$2")
 
 	// Pattern 2: Docker image reference (ghcr.io/smykla-labs/smyklot:1.2.3)
-	dockerPattern := regexp.MustCompile(`(ghcr\.io/smykla-labs/smyklot:)\d+\.\d+\.\d+`)
-	content = dockerPattern.ReplaceAllString(content, "${1}"+version)
+	// Anchored to prevent bypass attacks (CWE-020): only matches when followed by
+	// whitespace, newline, or end of string - prevents embedding in URLs or with suffixes
+	dockerPattern := regexp.MustCompile(`(ghcr\.io/smykla-labs/smyklot:)\d+\.\d+\.\d+(\s|$)`)
+	content = dockerPattern.ReplaceAllString(content, "${1}"+version+"$2")
 
 	return content, content != original
 }
