@@ -363,7 +363,7 @@ func generateWorkflowJSON(
 		DryRun:         dryRun,
 		StartedAt:      stats.startedAt,
 		CompletedAt:    stats.completedAt,
-		Duration:       stats.duration,
+		Duration:       github.Duration(stats.duration),
 		TotalRepos:     stats.total,
 		SuccessCount:   stats.success,
 		FailureCount:   stats.failure,
@@ -496,7 +496,11 @@ func writeWorkflowSections(
 		// Workflow stats
 		fmt.Fprintf(builder, "- Total: %d | ✅ Success: %d | ❌ Failed: %d | ⏭️ Skipped: %d\n",
 			summary.TotalRepos, summary.SuccessCount, summary.FailureCount, summary.SkippedCount)
-		fmt.Fprintf(builder, "- ⏱️ Duration: %s\n\n", formatDuration(summary.Duration))
+		fmt.Fprintf(
+			builder,
+			"- ⏱️ Duration: %s\n\n",
+			formatDuration(time.Duration(summary.Duration)),
+		)
 
 		// Show filtered results
 		if len(filteredResults) > 0 {
@@ -559,7 +563,7 @@ func formatLabelsResult(result *github.LabelsSyncResult) string {
 		fmt.Fprintf(&builder, "- **Error:** %s\n", result.ErrorMessage)
 	}
 
-	fmt.Fprintf(&builder, "- Duration: %s\n", formatDuration(result.Duration))
+	fmt.Fprintf(&builder, "- Duration: %s\n", formatDuration(time.Duration(result.Duration)))
 
 	return builder.String()
 }
@@ -596,7 +600,7 @@ func formatFilesResult(result *github.FilesSyncResult) string {
 		fmt.Fprintf(&builder, "- **Error:** %s\n", result.ErrorMessage)
 	}
 
-	fmt.Fprintf(&builder, "- Duration: %s\n", formatDuration(result.Duration))
+	fmt.Fprintf(&builder, "- Duration: %s\n", formatDuration(time.Duration(result.Duration)))
 
 	return builder.String()
 }
@@ -623,7 +627,7 @@ func formatSettingsResult(result *github.SettingsSyncResult) string {
 		fmt.Fprintf(&builder, "- **Error:** %s\n", result.ErrorMessage)
 	}
 
-	fmt.Fprintf(&builder, "- Duration: %s\n", formatDuration(result.Duration))
+	fmt.Fprintf(&builder, "- Duration: %s\n", formatDuration(time.Duration(result.Duration)))
 
 	return builder.String()
 }
@@ -656,7 +660,7 @@ func formatSmyklotResult(result *github.SmyklotSyncResult) string {
 		fmt.Fprintf(&builder, "- **Error:** %s\n", result.ErrorMessage)
 	}
 
-	fmt.Fprintf(&builder, "- Duration: %s\n", formatDuration(result.Duration))
+	fmt.Fprintf(&builder, "- Duration: %s\n", formatDuration(time.Duration(result.Duration)))
 
 	return builder.String()
 }
