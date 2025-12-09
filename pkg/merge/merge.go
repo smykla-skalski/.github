@@ -87,15 +87,28 @@ func mergeArrays(
 }
 
 // deduplicateArray removes duplicate elements from an array, keeping the first occurrence.
-// Uses cmp.Equal for deep equality comparison of objects.
+// Uses O(1) map lookups for primitives and cmp.Equal for deep equality comparison of complex types.
 func deduplicateArray(arr []any) []any {
 	if len(arr) == 0 {
 		return arr
 	}
 
 	seen := make([]any, 0, len(arr))
+	primitiveSet := make(map[any]bool) // for O(1) primitive lookups
 
 	for _, item := range arr {
+		// Fast path for primitives using map lookup
+		switch item.(type) {
+		case string, float64, int, int64, bool, nil:
+			if !primitiveSet[item] {
+				primitiveSet[item] = true
+				seen = append(seen, item)
+			}
+
+			continue
+		}
+
+		// Slow path for complex types (maps, arrays)
 		found := false
 
 		for _, seenItem := range seen {
@@ -219,7 +232,7 @@ func setValueAtPath(obj map[string]any, path string, value any) error {
 		return errors.Newf("invalid path format: %s", path)
 	}
 
-	// Remove "$."]
+	// Remove "$."
 	pathStr := path[2:]
 
 	// Split by "."

@@ -529,66 +529,6 @@ func TestMarshalYAML(t *testing.T) {
 	}
 }
 
-// mapsEqual compares two maps deeply.
-func mapsEqual(a, b map[string]any) bool {
-	if len(a) != len(b) {
-		return false
-	}
-
-	for k, va := range a {
-		vb, ok := b[k]
-		if !ok {
-			return false
-		}
-
-		if !valuesEqual(va, vb) {
-			return false
-		}
-	}
-
-	return true
-}
-
-// valuesEqual compares two values deeply.
-func valuesEqual(a, b any) bool {
-	if a == nil && b == nil {
-		return true
-	}
-
-	if a == nil || b == nil {
-		return false
-	}
-
-	switch va := a.(type) {
-	case map[string]any:
-		vb, ok := b.(map[string]any)
-		if !ok {
-			return false
-		}
-
-		return mapsEqual(va, vb)
-	case []any:
-		vb, ok := b.([]any)
-		if !ok {
-			return false
-		}
-
-		if len(va) != len(vb) {
-			return false
-		}
-
-		for i := range va {
-			if !valuesEqual(va[i], vb[i]) {
-				return false
-			}
-		}
-
-		return true
-	default:
-		return a == b
-	}
-}
-
 func TestDeepMerge_ComplexScenarios(t *testing.T) {
 	t.Parallel()
 

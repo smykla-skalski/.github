@@ -81,8 +81,9 @@ type FileMergeConfig struct {
 	// "$.packageRules") to merge strategy (append/prepend/replace). Only applies to arrays in the
 	// merged result. If not specified, arrays are replaced (RFC 7396 default behavior)
 	ArrayStrategies map[string]string `json:"arrayStrategies,omitempty" jsonschema:"patternProperties=^\\$\\..+$={enum=[append prepend replace]}" yaml:"arrayStrategies,omitempty"`
-	// When true, removes duplicate elements from arrays after merging. Uses deep equality
-	// comparison for objects. Only applies when arrayStrategies is configured
+	// When true, removes duplicate elements from arrays after merging using array strategies.
+	// Uses deep equality comparison for objects. Has no effect if arrayStrategies is not configured
+	// since arrays are replaced by default (RFC 7396).
 	DeduplicateArrays bool `json:"deduplicateArrays,omitempty" jsonschema:"default=false" yaml:"deduplicateArrays,omitempty"`
 	// Static override values to merge with the org template. These values take precedence over org
 	// defaults. Use null to explicitly remove a field from the result
