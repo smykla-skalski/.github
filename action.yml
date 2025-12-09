@@ -111,7 +111,7 @@ inputs:
     description: Directory containing result JSON files (summary generate)
     required: false
     default: ""
-  output_file:
+  output:
     description: Output file path for summary (summary generate)
     required: false
     default: ""

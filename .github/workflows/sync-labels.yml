@@ -120,7 +120,7 @@ jobs:
           type: labels
           results_dir: results
           format: json
-          output_file: summary-labels.json
+          output: summary-labels.json
           dry_run: ${{ inputs.dry_run || 'false' }}
 
       - name: Upload workflow summary artifact

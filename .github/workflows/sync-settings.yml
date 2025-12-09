@@ -120,7 +120,7 @@ jobs:
           type: settings
           results_dir: results
           format: json
-          output_file: summary-settings.json
+          output: summary-settings.json
           dry_run: ${{ inputs.dry_run || 'false' }}
 
       - name: Upload workflow summary artifact

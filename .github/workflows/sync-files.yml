@@ -129,7 +129,7 @@ jobs:
           type: files
           results_dir: results
           format: json
-          output_file: summary-files.json
+          output: summary-files.json
           dry_run: ${{ inputs.dry_run || 'false' }}
 
       - name: Upload workflow summary artifact

@@ -230,7 +230,7 @@ jobs:
           type: smyklot
           results_dir: results
           format: json
-          output_file: summary-smyklot.json
+          output: summary-smyklot.json
           dry_run: ${{ inputs.dry_run || 'false' }}
 
       - name: Upload workflow summary artifact
