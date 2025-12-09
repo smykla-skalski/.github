@@ -39,18 +39,23 @@ func SyncLabels(
 	labelsFile string,
 	syncConfig *configtypes.SyncConfig,
 	dryRun bool,
-) error {
+) (*LabelsSyncResult, error) {
+	result := NewLabelsSyncResult(repo, dryRun)
+
 	// Check if sync is skipped
 	if syncConfig.Sync.Skip || syncConfig.Sync.Labels.Skip {
 		log.Info("label sync skipped by config")
+		result.CompleteSkipped("sync disabled by config")
 
-		return nil
+		return result, nil
 	}
 
 	// Parse labels file
 	desiredLabels, err := parseLabelsFile(labelsFile)
 	if err != nil {
-		return errors.Wrap(err, "parsing labels file")
+		result.CompleteWithError(errors.Wrap(err, "parsing labels file"))
+
+		return result, errors.Wrap(err, "parsing labels file")
 	}
 
 	log.Debug("parsed labels file",
@@ -66,7 +71,9 @@ func SyncLabels(
 	// Fetch current labels from repository
 	currentLabels, err := fetchCurrentLabels(ctx, client, org, repo)
 	if err != nil {
-		return errors.Wrap(err, "fetching current labels")
+		result.CompleteWithError(errors.Wrap(err, "fetching current labels"))
+
+		return result, errors.Wrap(err, "fetching current labels")
 	}
 
 	log.Debug("fetched current labels", "count", len(currentLabels))
@@ -84,21 +91,30 @@ func SyncLabels(
 		"to_delete", len(toDelete),
 	)
 
+	// Set counts in result
+	result.Created = len(toCreate)
+	result.Updated = len(toUpdate)
+	result.Deleted = len(toDelete)
+
 	// Apply changes
 	if dryRun {
 		log.Info("dry-run mode: skipping label changes")
 		logLabelChanges(log, toCreate, toUpdate, toDelete)
+		result.Complete(StatusSuccess)
 
-		return nil
+		return result, nil
 	}
 
 	if err := applyLabelChanges(ctx, client, org, repo, toCreate, toUpdate, toDelete); err != nil {
-		return errors.Wrap(err, "applying label changes")
+		result.CompleteWithError(errors.Wrap(err, "applying label changes"))
+
+		return result, errors.Wrap(err, "applying label changes")
 	}
 
 	log.Info("label sync completed successfully")
+	result.Complete(StatusSuccess)
 
-	return nil
+	return result, nil
 }
 
 // parseLabelsFile reads and parses a YAML labels file.

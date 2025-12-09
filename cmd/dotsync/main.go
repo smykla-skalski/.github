@@ -230,7 +230,7 @@ type syncParams struct {
 	dryRun     bool
 }
 
-type syncFunc func(
+type syncFunc[T any] func(
 	ctx context.Context,
 	log *slog.Logger,
 	client *github.Client,
@@ -239,7 +239,7 @@ type syncFunc func(
 	configFile string,
 	syncConfig *configtypes.SyncConfig,
 	dryRun bool,
-) error
+) (T, error)
 
 func getSyncParams(cmd *cobra.Command, configFlag string) (syncParams, error) {
 	// Use env fallback for org (GITHUB_REPOSITORY_OWNER) and repo (GITHUB_REPOSITORY)
@@ -335,14 +335,14 @@ func fetchSyncConfig(
 	return syncConfig, nil
 }
 
-func createSyncCommand(
+func createSyncCommand[T any](
 	use string,
 	short string,
 	long string,
 	configFlag string,
 	configFileLogKey string,
 	syncType string,
-	syncFn syncFunc,
+	syncFn syncFunc[T],
 ) *cobra.Command {
 	return &cobra.Command{
 		Use:   use,
@@ -374,7 +374,7 @@ func createSyncCommand(
 				return err
 			}
 
-			if err := syncFn(
+			if _, err := syncFn(
 				ctx,
 				log,
 				client,
@@ -477,7 +477,7 @@ var filesSyncCmd = &cobra.Command{
 		}
 
 		// Sync files
-		if err := github.SyncFiles(
+		if _, err := github.SyncFiles(
 			ctx,
 			log,
 			client,
@@ -635,7 +635,7 @@ var smyklotSyncCmd = &cobra.Command{
 		}
 
 		// Sync smyklot version
-		if err := github.SyncSmyklot(
+		if _, err := github.SyncSmyklot(
 			ctx,
 			log,
 			client,

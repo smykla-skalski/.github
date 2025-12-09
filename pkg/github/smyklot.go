@@ -50,6 +50,8 @@ type SmyklotSyncStats struct {
 }
 
 // SyncSmyklot synchronizes smyklot workflows and version references.
+//
+//nolint:funlen // TODO: refactor to reduce function complexity
 func SyncSmyklot(
 	ctx context.Context,
 	log *logger.Logger,
@@ -63,28 +65,38 @@ func SyncSmyklot(
 	templatesDir string,
 	smyklotFilePath string,
 	dryRun bool,
-) error {
+) (*SmyklotSyncResult, error) {
+	result := NewSmyklotSyncResult(repo, dryRun)
+
 	// Check if sync is skipped
 	if syncConfig.Sync.Skip || syncConfig.Sync.Smyklot.Skip {
-		return handleSkippedSync(ctx, log, client, org, repo, syncConfig)
+		err := handleSkippedSyncWithResult(ctx, log, client, org, repo, syncConfig, result)
+
+		return result, err
 	}
 
 	// Fetch org-level smyklot config
 	orgConfig, err := fetchSmyklotOrgConfig(ctx, client, org, smyklotFilePath)
 	if err != nil {
-		return errors.Wrap(err, "fetching org smyklot config")
+		result.CompleteWithError(errors.Wrap(err, "fetching org smyklot config"))
+
+		return result, errors.Wrap(err, "fetching org smyklot config")
 	}
 
 	// Get repository info
 	defaultBranch, baseSHA, err := getRepoBaseInfo(ctx, log, client, org, repo)
 	if err != nil {
-		return errors.Wrap(err, "getting repository base info")
+		result.CompleteWithError(errors.Wrap(err, "getting repository base info"))
+
+		return result, errors.Wrap(err, "getting repository base info")
 	}
 
 	// List existing workflow files
 	workflowFiles, err := listWorkflowFiles(ctx, log, client, org, repo)
 	if err != nil {
-		return errors.Wrap(err, "listing workflow files")
+		result.CompleteWithError(errors.Wrap(err, "listing workflow files"))
+
+		return result, errors.Wrap(err, "listing workflow files")
 	}
 
 	// Build map of existing workflows (name without extension -> full path)
@@ -98,7 +110,9 @@ func SyncSmyklot(
 		orgConfig, syncConfig, templatesDir, existingWorkflows, stats,
 	)
 	if err != nil {
-		return errors.Wrap(err, "syncing managed workflows")
+		result.CompleteWithError(errors.Wrap(err, "syncing managed workflows"))
+
+		return result, errors.Wrap(err, "syncing managed workflows")
 	}
 
 	// Version-only sync for other workflows if enabled
@@ -107,7 +121,9 @@ func SyncSmyklot(
 		orgConfig, syncConfig, workflowFiles, stats,
 	)
 	if err != nil {
-		return errors.Wrap(err, "syncing version-only workflows")
+		result.CompleteWithError(errors.Wrap(err, "syncing version-only workflows"))
+
+		return result, errors.Wrap(err, "syncing version-only workflows")
 	}
 
 	changes = append(changes, versionChanges...)
@@ -120,27 +136,35 @@ func SyncSmyklot(
 		"skipped", stats.Skipped,
 	)
 
+	// Populate result from stats
+	result.InstalledFiles = stats.InstalledFiles
+	result.ReplacedFiles = stats.ReplacedFiles
+	result.VersionOnlyFiles = stats.VersionOnlyFiles
+
 	// If no changes, close any existing PR
 	if len(changes) == 0 {
 		log.Info("no changes needed")
 
-		if err := closeSmyklotPR(ctx, log, client, org, repo,
-			"smyklot is already up to date. Closing this PR."); err != nil {
-			log.Warn("failed to close existing PR", "error", err)
+		if closeErr := closeSmyklotPR(ctx, log, client, org, repo,
+			"smyklot is already up to date. Closing this PR."); closeErr != nil {
+			log.Warn("failed to close existing PR", "error", closeErr)
 		}
 
-		return nil
+		result.Complete(StatusSuccess)
+
+		return result, nil
 	}
 
 	if dryRun {
 		log.Info("dry-run mode: skipping PR creation")
 		logSmyklotChanges(log, stats)
+		result.Complete(StatusSuccess)
 
-		return nil
+		return result, nil
 	}
 
 	// Create/update PR
-	if err := createSmyklotPR(
+	prNumber, prURL, err := createSmyklotPRWithResult(
 		ctx,
 		log,
 		client,
@@ -151,13 +175,20 @@ func SyncSmyklot(
 		tag,
 		changes,
 		stats,
-	); err != nil {
-		return errors.Wrap(err, "creating or updating PR")
+	)
+	if err != nil {
+		result.CompleteWithError(errors.Wrap(err, "creating or updating PR"))
+
+		return result, errors.Wrap(err, "creating or updating PR")
 	}
 
-	log.Info("smyklot sync completed successfully")
+	result.PRNumber = prNumber
+	result.PRURL = prURL
 
-	return nil
+	log.Info("smyklot sync completed successfully")
+	result.Complete(StatusSuccess)
+
+	return result, nil
 }
 
 // getSkipReason returns the reason for skipping smyklot sync.
@@ -169,14 +200,17 @@ func getSkipReason(syncConfig *configtypes.SyncConfig) string {
 	return "smyklot version synchronization is disabled for this repository (sync.smyklot.skip=true)"
 }
 
-// handleSkippedSync handles the case when smyklot sync is skipped by config.
-func handleSkippedSync(
+// handleSkippedSyncWithResult handles the case when smyklot sync is skipped and updates result.
+//
+//nolint:unparam // Error return kept for consistency with sync function pattern
+func handleSkippedSyncWithResult(
 	ctx context.Context,
 	log *logger.Logger,
 	client *Client,
 	org string,
 	repo string,
 	syncConfig *configtypes.SyncConfig,
+	result *SmyklotSyncResult,
 ) error {
 	log.Info("smyklot sync skipped by config")
 
@@ -184,6 +218,8 @@ func handleSkippedSync(
 	if err := closeSmyklotPR(ctx, log, client, org, repo, skipReason); err != nil {
 		log.Warn("failed to close existing PR", "error", err)
 	}
+
+	result.CompleteSkipped(skipReason)
 
 	return nil
 }
@@ -662,8 +698,8 @@ func closeSmyklotPR(
 	return nil
 }
 
-// createSmyklotPR creates or updates a PR with smyklot version updates.
-func createSmyklotPR(
+// createSmyklotPRWithResult creates or updates a PR and returns PR number and URL.
+func createSmyklotPRWithResult(
 	ctx context.Context,
 	log *logger.Logger,
 	client *Client,
@@ -674,34 +710,38 @@ func createSmyklotPR(
 	tag string,
 	changes []FileChange,
 	stats *SmyklotSyncStats,
-) error {
+) (int, string, error) {
 	branchName := smyklotBranchPrefix
 	log.Info("creating/updating PR", "branch", branchName)
 
 	// Ensure branch exists
 	if err := ensureBranchExists(ctx, log, client, org, repo, branchName, baseSHA); err != nil {
-		return errors.Wrap(err, "ensuring branch exists")
+		return 0, "", errors.Wrap(err, "ensuring branch exists")
 	}
 
 	// Create Git commit
 	if err := createGitCommit(ctx, log, client, org, repo, branchName, baseSHA, changes); err != nil {
-		return errors.Wrap(err, "creating Git commit")
+		return 0, "", errors.Wrap(err, "creating Git commit")
 	}
 
 	// Create or update pull request
-	prNumber, err := upsertSmyklotPullRequest(
+	prNumber, prURL, err := upsertSmyklotPullRequestWithURL(
 		ctx, log, client, org, repo, defaultBranch, branchName, tag, stats,
 	)
 	if err != nil {
-		return errors.Wrap(err, "upserting pull request")
+		return 0, "", errors.Wrap(err, "upserting pull request")
 	}
 
 	// Add labels and enable auto-merge
-	return finalizeSmyklotPR(ctx, log, client, org, repo, prNumber)
+	if err := finalizeSmyklotPR(ctx, log, client, org, repo, prNumber); err != nil {
+		return prNumber, prURL, err
+	}
+
+	return prNumber, prURL, nil
 }
 
-// upsertSmyklotPullRequest creates or updates a smyklot sync pull request.
-func upsertSmyklotPullRequest(
+// upsertSmyklotPullRequestWithURL creates or updates a PR and returns number and URL.
+func upsertSmyklotPullRequestWithURL(
 	ctx context.Context,
 	log *logger.Logger,
 	client *Client,
@@ -711,7 +751,7 @@ func upsertSmyklotPullRequest(
 	branchName string,
 	tag string,
 	stats *SmyklotSyncStats,
-) (int, error) {
+) (int, string, error) {
 	prTitle := buildSmyklotPRTitle(tag, stats)
 	prBody := buildSmyklotPRBody(tag, stats)
 
@@ -721,12 +761,14 @@ func upsertSmyklotPullRequest(
 		Head:  org + ":" + branchName,
 	})
 	if err != nil {
-		return 0, errors.Wrap(err, "listing PRs")
+		return 0, "", errors.Wrap(err, "listing PRs")
 	}
 
 	if len(prs) > 0 {
 		// Update existing PR
 		prNumber := prs[0].GetNumber()
+		prURL := prs[0].GetHTMLURL()
+
 		log.Info("updating existing PR", "pr", prNumber)
 
 		pr := &github.PullRequest{
@@ -736,10 +778,10 @@ func upsertSmyklotPullRequest(
 
 		_, _, editErr := client.PullRequests.Edit(ctx, org, repo, prNumber, pr)
 		if editErr != nil {
-			return 0, errors.Wrap(editErr, "updating PR")
+			return 0, "", errors.Wrap(editErr, "updating PR")
 		}
 
-		return prNumber, nil
+		return prNumber, prURL, nil
 	}
 
 	// Create new PR
@@ -754,16 +796,19 @@ func upsertSmyklotPullRequest(
 
 	createdPR, _, err := client.PullRequests.Create(ctx, org, repo, pr)
 	if err != nil {
-		return 0, errors.Wrap(err, "creating PR")
+		return 0, "", errors.Wrap(err, "creating PR")
 	}
 
 	prNumber := createdPR.GetNumber()
-	log.Info("created PR", "pr", prNumber, "url", createdPR.GetHTMLURL())
+	prURL := createdPR.GetHTMLURL()
+	log.Info("created PR", "pr", prNumber, "url", prURL)
 
-	return prNumber, nil
+	return prNumber, prURL, nil
 }
 
 // finalizeSmyklotPR adds labels and enables auto-merge for a smyklot PR.
+//
+//nolint:unparam // Error return kept for consistency with similar functions
 func finalizeSmyklotPR(
 	ctx context.Context,
 	log *logger.Logger,

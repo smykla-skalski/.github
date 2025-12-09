@@ -38,24 +38,31 @@ func SyncSettings(
 	settingsFile string,
 	syncConfig *configtypes.SyncConfig,
 	dryRun bool,
-) error {
+) (*SettingsSyncResult, error) {
+	result := NewSettingsSyncResult(repo, dryRun)
+
 	// Check if sync is skipped
 	if syncConfig.Sync.Skip || syncConfig.Sync.Settings.Skip {
 		log.Info("settings sync skipped by config")
+		result.CompleteSkipped("sync disabled by config")
 
-		return nil
+		return result, nil
 	}
 
 	// Parse settings file and fetch current repository
 	desiredSettings, currentRepo, err := loadSettings(ctx, log, client, org, repo, settingsFile)
 	if err != nil {
-		return err
+		result.CompleteWithError(err)
+
+		return result, err
 	}
 
 	// Apply merge configurations if present
 	desiredSettings, err = ApplySettingsMerge(log, desiredSettings, syncConfig)
 	if err != nil {
-		return errors.Wrap(err, "applying settings merge")
+		result.CompleteWithError(errors.Wrap(err, "applying settings merge"))
+
+		return result, errors.Wrap(err, "applying settings merge")
 	}
 
 	// Compute all changes
@@ -69,6 +76,18 @@ func SyncSettings(
 		"has_repo_changes", repoChanges != nil,
 		"has_branch_protection", hasBranchProtectionChanges,
 	)
+
+	// Count changes
+	changesCount := 0
+	if repoChanges != nil {
+		changesCount++
+	}
+
+	if hasBranchProtectionChanges {
+		changesCount++
+	}
+
+	result.ChangesApplied = changesCount
 
 	// Handle dry-run mode or apply changes
 	if dryRun {
@@ -87,7 +106,9 @@ func SyncSettings(
 	}
 
 	if err != nil {
-		return err
+		result.CompleteWithError(err)
+
+		return result, err
 	}
 
 	// Sync rulesets
@@ -101,10 +122,14 @@ func SyncSettings(
 		syncConfig.Sync.Settings.Exclude,
 		dryRun,
 	); err != nil {
-		return errors.Wrap(err, "syncing rulesets")
+		result.CompleteWithError(errors.Wrap(err, "syncing rulesets"))
+
+		return result, errors.Wrap(err, "syncing rulesets")
 	}
 
-	return nil
+	result.Complete(StatusSuccess)
+
+	return result, nil
 }
 
 // loadSettings loads desired settings from file and fetches current repository state.

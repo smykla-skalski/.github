@@ -52,6 +52,8 @@ type FileSyncStats struct {
 }
 
 // SyncFiles synchronizes files from a central repo to a target repository.
+//
+//nolint:funlen // TODO: refactor to reduce function length
 func SyncFiles(
 	ctx context.Context,
 	log *logger.Logger,
@@ -64,7 +66,9 @@ func SyncFiles(
 	branchPrefix string,
 	prLabels []string,
 	dryRun bool,
-) error {
+) (*FilesSyncResult, error) {
+	result := NewFilesSyncResult(repo, dryRun)
+
 	// Check if sync is skipped
 	if syncConfig.Sync.Skip || syncConfig.Sync.Files.Skip {
 		log.Info("file sync skipped by config")
@@ -75,13 +79,17 @@ func SyncFiles(
 			log.Warn("failed to close existing PR", "error", err)
 		}
 
-		return nil
+		result.CompleteSkipped("sync disabled by config")
+
+		return result, nil
 	}
 
 	// Parse files config
 	fileMappings, err := parseFilesConfig(filesConfig)
 	if err != nil {
-		return errors.Wrap(err, "parsing files config")
+		result.CompleteWithError(errors.Wrap(err, "parsing files config"))
+
+		return result, errors.Wrap(err, "parsing files config")
 	}
 
 	log.Debug("parsed files config", "count", len(fileMappings))
@@ -89,7 +97,9 @@ func SyncFiles(
 	// Get repository info
 	defaultBranch, baseSHA, err := getRepoBaseInfo(ctx, log, client, org, repo)
 	if err != nil {
-		return errors.Wrap(err, "getting repository base info")
+		result.CompleteWithError(errors.Wrap(err, "getting repository base info"))
+
+		return result, errors.Wrap(err, "getting repository base info")
 	}
 
 	// Process files
@@ -116,27 +126,36 @@ func SyncFiles(
 		"modified_excluded", stats.ModifiedExcluded,
 	)
 
+	// Populate result from stats
+	result.CreatedFiles = stats.CreatedFiles
+	result.UpdatedFiles = stats.UpdatedFiles
+	result.DeletedFiles = stats.DeletedFiles
+	result.HasDeletionsWarn = len(stats.DeletedFiles) > 0
+
 	// If no changes, close any existing PR
 	if len(changes) == 0 {
 		log.Info("no changes needed")
 
-		if err := closeExistingPR(ctx, log, client, org, repo, branchPrefix,
-			"All files are now in sync. Closing this PR."); err != nil {
-			log.Warn("failed to close existing PR", "error", err)
+		if closeErr := closeExistingPR(ctx, log, client, org, repo, branchPrefix,
+			"All files are now in sync. Closing this PR."); closeErr != nil {
+			log.Warn("failed to close existing PR", "error", closeErr)
 		}
 
-		return nil
+		result.Complete(StatusSuccess)
+
+		return result, nil
 	}
 
 	if dryRun {
 		log.Info("dry-run mode: skipping PR creation")
 		logFileChanges(log, stats)
+		result.Complete(StatusSuccess)
 
-		return nil
+		return result, nil
 	}
 
 	// Create/update PR
-	if err := createOrUpdatePR(
+	prNumber, prURL, err := createOrUpdatePRWithResult(
 		ctx,
 		log,
 		client,
@@ -149,13 +168,20 @@ func SyncFiles(
 		prLabels,
 		changes,
 		stats,
-	); err != nil {
-		return errors.Wrap(err, "creating or updating PR")
+	)
+	if err != nil {
+		result.CompleteWithError(errors.Wrap(err, "creating or updating PR"))
+
+		return result, errors.Wrap(err, "creating or updating PR")
 	}
 
-	log.Info("file sync completed successfully")
+	result.PRNumber = prNumber
+	result.PRURL = prURL
 
-	return nil
+	log.Info("file sync completed successfully")
+	result.Complete(StatusSuccess)
+
+	return result, nil
 }
 
 // getRepoBaseInfo retrieves the default branch and base SHA for a repository.
@@ -676,8 +702,8 @@ func getBranchName(repo string, branchPrefix string) string {
 	return fmt.Sprintf("%s/%s", branchPrefix, repoSanitized)
 }
 
-// createOrUpdatePR creates or updates a PR with the file changes.
-func createOrUpdatePR(
+// createOrUpdatePRWithResult creates or updates a PR and returns PR number and URL.
+func createOrUpdatePRWithResult(
 	ctx context.Context,
 	log *logger.Logger,
 	client *Client,
@@ -690,30 +716,34 @@ func createOrUpdatePR(
 	prLabels []string,
 	changes []FileChange,
 	stats *FileSyncStats,
-) error {
+) (int, string, error) {
 	branchName := getBranchName(repo, branchPrefix)
 	log.Info("creating/updating PR", "branch", branchName)
 
 	// Ensure branch exists
 	if err := ensureBranchExists(ctx, log, client, org, repo, branchName, baseSHA); err != nil {
-		return errors.Wrap(err, "ensuring branch exists")
+		return 0, "", errors.Wrap(err, "ensuring branch exists")
 	}
 
 	// Create Git commit
 	if err := createGitCommit(ctx, log, client, org, repo, branchName, baseSHA, changes); err != nil {
-		return errors.Wrap(err, "creating Git commit")
+		return 0, "", errors.Wrap(err, "creating Git commit")
 	}
 
 	// Create or update pull request
-	prNumber, err := upsertPullRequest(
+	prNumber, prURL, err := upsertPullRequestWithURL(
 		ctx, log, client, org, repo, sourceRepo, defaultBranch, branchName, stats,
 	)
 	if err != nil {
-		return errors.Wrap(err, "upserting pull request")
+		return 0, "", errors.Wrap(err, "upserting pull request")
 	}
 
 	// Add labels and enable auto-merge
-	return finalizePR(ctx, log, client, org, repo, prNumber, prLabels, stats)
+	if err := finalizePR(ctx, log, client, org, repo, prNumber, prLabels, stats); err != nil {
+		return prNumber, prURL, err
+	}
+
+	return prNumber, prURL, nil
 }
 
 // ensureBranchExists creates the branch if it doesn't exist.
@@ -868,8 +898,8 @@ func buildTreeEntries(changes []FileChange) []*github.TreeEntry {
 	return treeEntries
 }
 
-// upsertPullRequest creates or updates a pull request.
-func upsertPullRequest(
+// upsertPullRequestWithURL creates or updates a pull request and returns number and URL.
+func upsertPullRequestWithURL(
 	ctx context.Context,
 	log *logger.Logger,
 	client *Client,
@@ -879,7 +909,7 @@ func upsertPullRequest(
 	defaultBranch string,
 	branchName string,
 	stats *FileSyncStats,
-) (int, error) {
+) (int, string, error) {
 	prTitle := "chore(sync): sync organization files"
 	prBody := buildPRBody(org, sourceRepo, stats)
 
@@ -889,12 +919,14 @@ func upsertPullRequest(
 		Head:  org + ":" + branchName,
 	})
 	if err != nil {
-		return 0, errors.Wrap(err, "listing PRs")
+		return 0, "", errors.Wrap(err, "listing PRs")
 	}
 
 	if len(prs) > 0 {
 		// Update existing PR
 		prNumber := prs[0].GetNumber()
+		prURL := prs[0].GetHTMLURL()
+
 		log.Info("updating existing PR", "pr", prNumber)
 
 		pr := &github.PullRequest{
@@ -904,10 +936,10 @@ func upsertPullRequest(
 
 		_, _, editErr := client.PullRequests.Edit(ctx, org, repo, prNumber, pr)
 		if editErr != nil {
-			return 0, errors.Wrap(editErr, "updating PR")
+			return 0, "", errors.Wrap(editErr, "updating PR")
 		}
 
-		return prNumber, nil
+		return prNumber, prURL, nil
 	}
 
 	// Create new PR
@@ -922,16 +954,19 @@ func upsertPullRequest(
 
 	createdPR, _, err := client.PullRequests.Create(ctx, org, repo, pr)
 	if err != nil {
-		return 0, errors.Wrap(err, "creating PR")
+		return 0, "", errors.Wrap(err, "creating PR")
 	}
 
 	prNumber := createdPR.GetNumber()
-	log.Info("created PR", "pr", prNumber, "url", createdPR.GetHTMLURL())
+	prURL := createdPR.GetHTMLURL()
+	log.Info("created PR", "pr", prNumber, "url", prURL)
 
-	return prNumber, nil
+	return prNumber, prURL, nil
 }
 
 // finalizePR adds labels and enables auto-merge for a PR.
+//
+//nolint:unparam // Error return kept for consistency with similar functions
 func finalizePR(
 	ctx context.Context,
 	log *logger.Logger,
