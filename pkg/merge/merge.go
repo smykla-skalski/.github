@@ -114,6 +114,27 @@ func deduplicateArray(arr []any) []any {
 	return seen
 }
 
+// isNestedPath returns true if the path contains nested levels (more than one dot after $).
+// Examples: "$.field" is top-level, "$.field.nested" is nested.
+func isNestedPath(path string) bool {
+	// Top-level paths have format "$.field"
+	// Nested paths have format "$.field.nested" or deeper
+	if len(path) < 2 || path[0] != '$' || path[1] != '.' {
+		return false
+	}
+
+	// Count dots after "$."
+	dotCount := 0
+
+	for i := 2; i < len(path); i++ {
+		if path[i] == '.' {
+			dotCount++
+		}
+	}
+
+	return dotCount > 0
+}
+
 // collectArrays recursively walks a map and collects all arrays with their JSONPath expressions.
 // Returns a map of JSONPath -> array slice.
 func collectArrays(obj map[string]any, prefix string) map[string][]any {
@@ -141,9 +162,12 @@ func collectArrays(obj map[string]any, prefix string) map[string][]any {
 //
 // Walks the merged result, finds arrays, matches them against arrayStrategies,
 // and re-merges with the specified strategy.
+//
+// If topLevelOnly is true, only applies strategies to top-level paths (for shallow merge).
 func applyArrayStrategies(
 	merged, base, override map[string]any,
 	opts *MergeOptions,
+	topLevelOnly bool,
 ) error {
 	if opts == nil || len(opts.ArrayStrategies) == 0 {
 		return nil
@@ -155,11 +179,22 @@ func applyArrayStrategies(
 
 	// Apply strategies to matching arrays
 	for path, strategy := range opts.ArrayStrategies {
+		// Skip nested paths if topLevelOnly is true
+		if topLevelOnly && isNestedPath(path) {
+			continue
+		}
+
 		baseArray := baseArrays[path]
 		overrideArray := overrideArrays[path]
 
 		// Skip if neither base nor override has an array at this path
 		if baseArray == nil && overrideArray == nil {
+			continue
+		}
+
+		// Skip if override doesn't have an array at this path
+		// (RFC 7396 already handled null, missing, or type mismatch correctly)
+		if overrideArray == nil {
 			continue
 		}
 
@@ -304,7 +339,7 @@ func DeepMerge(
 	}
 
 	// Apply array merge strategies if configured
-	if err := applyArrayStrategies(result, base, override, opts); err != nil {
+	if err := applyArrayStrategies(result, base, override, opts, false); err != nil {
 		return nil, errors.Wrap(err, "applying array strategies")
 	}
 
@@ -352,7 +387,7 @@ func ShallowMerge(
 	}
 
 	// Apply array merge strategies if configured
-	if err := applyArrayStrategies(result, base, override, opts); err != nil {
+	if err := applyArrayStrategies(result, base, override, opts, true); err != nil {
 		return nil, errors.Wrap(err, "applying array strategies")
 	}
 
