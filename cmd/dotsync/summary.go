@@ -46,12 +46,17 @@ var summaryGenerateCmd = &cobra.Command{
 		ctx := cmd.Context()
 		log := logger.FromContext(ctx)
 
-		syncType, _ := cmd.Flags().GetString("type")
-		resultsDir, _ := cmd.Flags().GetString("results-dir")
-		output, _ := cmd.Flags().GetString("output")
-		format, _ := cmd.Flags().GetString("format")
-		filter, _ := cmd.Flags().GetString("filter")
+		syncType := getStringFlagWithEnvFallback(cmd, "type", "")
+		resultsDir := getStringFlagWithEnvFallback(cmd, "results-dir", "")
+		output := getStringFlagWithEnvFallback(cmd, "output", "")
+		format := getStringFlagWithEnvFallback(cmd, "format", "")
+		filter := getStringFlagWithEnvFallback(cmd, "filter", "")
 		dryRun := getPersistentBoolFlagWithEnvFallback(cmd, "dry-run")
+
+		// Validate required parameters
+		if resultsDir == "" {
+			return errors.New("results-dir is required")
+		}
 
 		// Infer sync type from result files if not provided
 		if syncType == "" {
@@ -917,10 +922,6 @@ func init() {
 		"all",
 		"Filter results (all|failures|successes|skipped)",
 	)
-
-	// Mark required flags
-	_ = summaryGenerateCmd.MarkFlagRequired("type")
-	_ = summaryGenerateCmd.MarkFlagRequired("results-dir")
 
 	// Add subcommands
 	summaryCmd.AddCommand(summaryGenerateCmd)
