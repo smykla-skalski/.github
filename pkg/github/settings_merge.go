@@ -33,7 +33,7 @@ func mergeStructWithOverrides(
 	}
 
 	// Apply merge
-	mergedMap, err := merge.MergeYAML(orgMap, overrides, strategy)
+	mergedMap, err := merge.MergeYAML(orgMap, overrides, strategy, nil)
 	if err != nil {
 		return errors.Wrap(err, "applying merge")
 	}

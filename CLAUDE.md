@@ -67,6 +67,15 @@ sync:
   files:
     skip: false
     exclude: ["path/to/file"]
+    merge:
+      - path: "renovate.json"
+        strategy: "deep-merge"
+        arrayStrategies:           # Per-path array merge control
+          "$.packageRules": "append"    # append | prepend | replace
+          "$.extends": "prepend"
+        deduplicateArrays: true    # Remove duplicate items
+        overrides:
+          packageRules: [{...}]
   settings:
     skip: false
     exclude: ["branch_protection", "security.secret_scanning"]
@@ -80,6 +89,7 @@ sync:
 - **GHAS-aware**: Skips security settings gracefully if Advanced Security unavailable
 - **Hybrid status checks**: Empty `contexts: []` inherits existing; explicit overrides
 - **Smart renovate.json**: Detects manual modifications, excludes from sync, shows alert
+- **Array merge strategies**: Control per-path array merging (append/prepend/replace) with optional deduplication. Default: arrays replaced per RFC 7396. JSONPath exact match only (no wildcards).
 - **Matrix pattern**: `dotsync repos list --format json` returns `[{name, full_name, ...}]`
 
 ## Common Tasks

@@ -200,6 +200,18 @@
       "type": "object",
       "required": [ "path", "overrides" ],
       "properties": {
+        "arrayStrategies": {
+          "description": "Per-path array merge strategies. Maps JSONPath expressions (exact match only, e.g., \"$.packageRules\") to merge strategy (append/prepend/replace). Only applies to arrays in the merged result. If not specified, arrays are replaced (RFC 7396 default behavior). NOTE: Key pattern validation (JSONPath format) is not enforced at the schema level, only at runtime.",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "deduplicateArrays": {
+          "description": "When true, removes duplicate elements from arrays after merging using array strategies. Uses deep equality comparison for objects. Has no effect if arrayStrategies is not configured since arrays are replaced by default (RFC 7396).",
+          "default": false,
+          "type": "boolean"
+        },
         "overrides": {
           "description": "Static override values to merge with the org template. These values take precedence over org defaults. Use null to explicitly remove a field from the result",
           "type": "object"

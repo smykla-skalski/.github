@@ -451,7 +451,7 @@ func applyMerge(
 	var (
 		parseFunc   func([]byte) (map[string]any, error)
 		marshalFunc func(map[string]any) ([]byte, error)
-		mergeFunc   func(map[string]any, map[string]any, configtypes.MergeStrategy) (map[string]any, error)
+		mergeFunc   func(map[string]any, map[string]any, configtypes.MergeStrategy, *merge.MergeOptions) (map[string]any, error)
 		isJSON      bool
 	)
 
@@ -481,11 +481,27 @@ func applyMerge(
 		return nil, errors.Wrapf(err, "parsing source file %s", path)
 	}
 
+	// Construct merge options from config
+	var opts *merge.MergeOptions
+	if len(mergeConfig.ArrayStrategies) > 0 || mergeConfig.DeduplicateArrays {
+		opts = &merge.MergeOptions{
+			ArrayStrategies:   mergeConfig.ArrayStrategies,
+			DeduplicateArrays: mergeConfig.DeduplicateArrays,
+		}
+
+		log.Debug(
+			"applying array merge strategies",
+			"file", path,
+			"strategies", mergeConfig.ArrayStrategies,
+			"deduplicate", mergeConfig.DeduplicateArrays,
+		)
+	}
+
 	// Apply merge: org template (base) + configured overrides
 	// This ensures repos always get org template updates while preserving their custom overrides
 	var result map[string]any
 
-	result, err = mergeFunc(sourceMap, mergeConfig.Overrides, mergeConfig.Strategy)
+	result, err = mergeFunc(sourceMap, mergeConfig.Overrides, mergeConfig.Strategy, opts)
 	if err != nil {
 		return nil, errors.Wrapf(err, "merging file %s", path)
 	}

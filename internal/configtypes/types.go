@@ -77,6 +77,15 @@ type FileMergeConfig struct {
 	// Merge strategy to use. deep-merge (default) recursively merges nested objects; shallow-merge
 	// only merges top-level keys
 	Strategy MergeStrategy `json:"strategy" jsonschema:"enum=deep-merge,enum=shallow-merge,enum=overlay,default=deep-merge" yaml:"strategy"`
+	// Per-path array merge strategies. Maps JSONPath expressions (exact match only, e.g.,
+	// "$.packageRules") to merge strategy (append/prepend/replace). Only applies to arrays in the
+	// merged result. If not specified, arrays are replaced (RFC 7396 default behavior).
+	// NOTE: Key pattern validation (JSONPath format) is not enforced at the schema level, only at runtime.
+	ArrayStrategies map[string]string `json:"arrayStrategies,omitempty" jsonschema:"patternProperties=^\\$\\..+$={enum=[append prepend replace]}" yaml:"arrayStrategies,omitempty"`
+	// When true, removes duplicate elements from arrays after merging using array strategies.
+	// Uses deep equality comparison for objects. Has no effect if arrayStrategies is not configured
+	// since arrays are replaced by default (RFC 7396).
+	DeduplicateArrays bool `json:"deduplicateArrays,omitempty" jsonschema:"default=false" yaml:"deduplicateArrays,omitempty"`
 	// Static override values to merge with the org template. These values take precedence over org
 	// defaults. Use null to explicitly remove a field from the result
 	Overrides map[string]any `json:"overrides" jsonschema:"required" yaml:"overrides"`
@@ -94,6 +103,18 @@ const (
 	MergeStrategyShallow MergeStrategy = "shallow-merge"
 	// MergeStrategyOverlay is an alias for deep-merge
 	MergeStrategyOverlay MergeStrategy = "overlay"
+)
+
+// ArrayStrategy defines how arrays are merged when using array merge strategies
+type ArrayStrategy string
+
+const (
+	// ArrayStrategyReplace replaces base array with override array (RFC 7396 default behavior)
+	ArrayStrategyReplace ArrayStrategy = "replace"
+	// ArrayStrategyAppend appends override array elements to base array elements
+	ArrayStrategyAppend ArrayStrategy = "append"
+	// ArrayStrategyPrepend prepends override array elements before base array elements
+	ArrayStrategyPrepend ArrayStrategy = "prepend"
 )
 
 // Controls automatic updates of smyklot version references in workflow files when new versions
