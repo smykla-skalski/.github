@@ -451,3 +451,44 @@ sync: {}
 #               - "build"
 #               - "test"
 #               - "security-scan"
+
+# ---------------------------------------------------------------------------
+# ARRAY MERGE STRATEGY EXAMPLES
+# ---------------------------------------------------------------------------
+# By default, arrays are REPLACED entirely per RFC 7396 (JSON Merge Patch).
+# Use arrayStrategies to control per-path array merging with append/prepend/replace.
+# JSONPath exact match only - wildcards not supported.
+
+# Example 22: Append to renovate.json packageRules (preserve org rules)
+# sync:
+#   files:
+#     merge:
+#       - path: "renovate.json"
+#         strategy: "deep-merge"
+#         arrayStrategies:
+#           "$.packageRules": "append"  # Org rules first, then repo rules
+#         overrides:
+#           packageRules:
+#             - matchManagers: ["npm"]
+#               groupName: "npm dependencies"
+
+# Example 23: Multiple array strategies with deduplication
+# sync:
+#   files:
+#     merge:
+#       - path: "renovate.json"
+#         strategy: "deep-merge"
+#         arrayStrategies:
+#           "$.extends": "prepend"       # Repo presets first, then org presets
+#           "$.packageRules": "append"   # Org rules first, then repo rules
+#           "$.ignorePaths": "replace"   # Repo ignorePaths fully replace org
+#         deduplicateArrays: true        # Remove duplicate items from merged arrays
+#         overrides:
+#           extends:
+#             - "config:recommended"
+#           packageRules:
+#             - matchManagers: ["gomod"]
+#               groupName: "Go dependencies"
+#           ignorePaths:
+#             - "**/*.test.js"
+#             - "**/fixtures/**"
