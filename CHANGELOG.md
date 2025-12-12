@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.13.0](https://github.com/smykla-labs/.github/compare/dotsync/v1.12.1...dotsync/v1.13.0) (2025-12-12)
+
+### Features
+
+* **sync:** add bidirectional sync trigger ([#47](https://github.com/smykla-labs/.github/issues/47)) ([ad7b7b5](https://github.com/smykla-labs/.github/commit/ad7b7b5ab70cbffac27078ef872f141f41b0a94d))
+
 ## [1.12.1](https://github.com/smykla-labs/.github/compare/dotsync/v1.12.0...dotsync/v1.12.1) (2025-12-11)
 
 ### Bug Fixes
