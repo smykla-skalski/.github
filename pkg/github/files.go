@@ -111,7 +111,7 @@ func SyncFiles(
 
 	for _, mapping := range fileMappings {
 		fileChanges := processFileMapping(
-			ctx, log, client, org, repo, sourceRepo, mapping, syncConfig, stats,
+			ctx, log, client, org, repo, sourceRepo, defaultBranch, mapping, syncConfig, stats,
 		)
 		changes = append(changes, fileChanges...)
 	}
@@ -221,6 +221,7 @@ func processFileMapping(
 	org string,
 	repo string,
 	sourceRepo string,
+	defaultBranch string,
 	mapping FileMapping,
 	syncConfig *configtypes.SyncConfig,
 	stats *FileSyncStats,
@@ -243,6 +244,9 @@ func processFileMapping(
 
 		return nil
 	}
+
+	// Apply template replacements
+	sourceContent = renderFileTemplate(sourceContent, defaultBranch)
 
 	var changes []FileChange
 
@@ -1207,4 +1211,13 @@ func logFilesWithPrefix(log *logger.Logger, header string, prefix string, files 
 	for _, file := range files {
 		log.Info("  " + prefix + " " + file)
 	}
+}
+
+// renderFileTemplate replaces template placeholders in file content.
+// Supports: {{DEFAULT_BRANCH}}
+func renderFileTemplate(content []byte, defaultBranch string) []byte {
+	rendered := string(content)
+	rendered = strings.ReplaceAll(rendered, "{{DEFAULT_BRANCH}}", defaultBranch)
+
+	return []byte(rendered)
 }
