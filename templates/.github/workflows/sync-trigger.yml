@@ -33,7 +33,7 @@ permissions: {}
 
 jobs:
   detect-and-trigger:
-    # Skip if triggered by sync bot (prevents infinite loops)
+    # Skip if triggered by smyklot bot (prevents infinite loops)
     if: github.actor != 'smyklot[bot]'
     runs-on: ubuntu-24.04
     steps:
@@ -42,8 +42,8 @@ jobs:
 
       # Note: The paths in on.push.paths (above) determine WHEN this workflow runs.
       # The filters below categorize WHICH changes occurred to set the appropriate
-      # sync flags. The push paths include sync-config.yml which isn't in filters
-      # because config changes trigger ALL sync types, not a specific category.
+      # sync flags. sync-config.yml is in push paths but sets only the config filter
+      # to true (not files/smyklot); the workflow logic then triggers a full sync.
       - name: Detect changed files
         id: changes
         uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
@@ -96,6 +96,7 @@ jobs:
           else
             trigger_type="file-change"
             sync_labels=false
+            # Note: paths-filter outputs are strings "true"/"false", not booleans
             sync_files="$CHANGED_FILES"
             sync_settings=false
             sync_smyklot="$CHANGED_SMYKLOT"

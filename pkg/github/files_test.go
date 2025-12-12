@@ -43,10 +43,28 @@ func TestRenderFileTemplate(t *testing.T) {
 			want:          []byte(`{{default_branch}}`),
 		},
 		{
-			name:          "handles empty default branch",
+			name:          "empty default branch returns unchanged",
 			content:       []byte(`branch: {{DEFAULT_BRANCH}}`),
 			defaultBranch: "",
-			want:          []byte(`branch: `),
+			want:          []byte(`branch: {{DEFAULT_BRANCH}}`),
+		},
+		{
+			name:          "malformed - missing closing braces",
+			content:       []byte(`{{DEFAULT_BRANCH`),
+			defaultBranch: "main",
+			want:          []byte(`{{DEFAULT_BRANCH`),
+		},
+		{
+			name:          "malformed - partial match",
+			content:       []byte(`{{DEFAULT_BRANC}}`),
+			defaultBranch: "main",
+			want:          []byte(`{{DEFAULT_BRANC}}`),
+		},
+		{
+			name:          "malformed - extra braces",
+			content:       []byte(`{{{DEFAULT_BRANCH}}}`),
+			defaultBranch: "main",
+			want:          []byte(`{main}`),
 		},
 	}
 

@@ -1,6 +1,7 @@
 package github
 
 import (
+	"bytes"
 	"context"
 	"encoding/base64"
 	"encoding/json"
@@ -1220,10 +1221,12 @@ func logFilesWithPrefix(log *logger.Logger, header string, prefix string, files 
 //
 // Replacement is case-sensitive and exact-match only. If a placeholder is not
 // found, the content is returned unchanged. Multiple occurrences of the same
-// placeholder are all replaced.
+// placeholder are all replaced. If defaultBranch is empty, content is returned
+// unchanged to avoid creating invalid references.
 func renderFileTemplate(content []byte, defaultBranch string) []byte {
-	rendered := string(content)
-	rendered = strings.ReplaceAll(rendered, "{{DEFAULT_BRANCH}}", defaultBranch)
+	if defaultBranch == "" {
+		return content
+	}
 
-	return []byte(rendered)
+	return bytes.ReplaceAll(content, []byte("{{DEFAULT_BRANCH}}"), []byte(defaultBranch))
 }

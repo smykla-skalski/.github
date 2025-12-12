@@ -8,7 +8,7 @@ on:
 permissions: {}
 
 concurrency:
-  group: sync-triggered-${{ github.event.client_payload.repo }}
+  group: sync-triggered-${{ github.event.client_payload.repo || format('unknown-{0}', github.run_id) }}
   cancel-in-progress: true
 
 jobs:
