@@ -39,6 +39,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          fetch-depth: 2 # Required for paths-filter to compare commits
 
       # Note: The paths in on.push.paths (above) determine WHEN this workflow runs.
       # The filters below categorize WHICH changes occurred to set the appropriate
@@ -100,6 +102,13 @@ jobs:
             sync_files="$CHANGED_FILES"
             sync_settings=false
             sync_smyklot="$CHANGED_SMYKLOT"
+          fi
+
+          # Skip dispatch if no sync is needed
+          if [[ "$sync_labels" != "true" && "$sync_files" != "true" && \
+                "$sync_settings" != "true" && "$sync_smyklot" != "true" ]]; then
+            echo "No sync needed, skipping dispatch"
+            exit 0
           fi
 
           echo "Triggering sync:"
