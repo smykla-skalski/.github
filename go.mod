@@ -1,11 +1,12 @@
 module github.com/smykla-labs/.github
 
-go 1.25.5
+go 1.25.6
 
 require (
 	github.com/cockroachdb/errors v1.12.0
 	github.com/evanphx/json-patch/v5 v5.9.11
 	github.com/gofri/go-github-ratelimit/v2 v2.0.2
+	github.com/google/go-cmp v0.7.0
 	github.com/google/go-github/v80 v80.0.0
 	github.com/invopop/jsonschema v0.13.0
 	github.com/spf13/cobra v1.10.2
@@ -21,7 +22,6 @@ require (
 	github.com/cockroachdb/redact v1.1.6 // indirect
 	github.com/getsentry/sentry-go v0.40.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
-	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
