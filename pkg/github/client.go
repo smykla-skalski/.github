@@ -8,7 +8,7 @@ import (
 	"github.com/gofri/go-github-ratelimit/v2/github_ratelimit"
 	"github.com/google/go-github/v80/github"
 
-	"github.com/smykla-labs/.github/pkg/logger"
+	"github.com/smykla-skalski/.github/pkg/logger"
 )
 
 // Client wraps the GitHub API client with additional functionality.

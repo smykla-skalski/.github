@@ -8,8 +8,8 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/invopop/jsonschema"
 
-	"github.com/smykla-labs/.github/internal/configtypes"
-	"github.com/smykla-labs/.github/pkg/github"
+	"github.com/smykla-skalski/.github/internal/configtypes"
+	"github.com/smykla-skalski/.github/pkg/github"
 )
 
 // SchemaOutput represents a generated schema with its metadata.
@@ -78,7 +78,7 @@ func GenerateSchemaForType(
 	switch schemaType {
 	case SchemaSyncConfig:
 		schema = reflector.Reflect(&configtypes.SyncConfig{})
-		schema.ID = "https://raw.githubusercontent.com/smykla-labs/.github/main/schemas/sync-config.schema.json"
+		schema.ID = "https://raw.githubusercontent.com/smykla-skalski/.github/main/schemas/sync-config.schema.json"
 		schema.Title = "Sync Configuration"
 		schema.Description = "Configuration for organization-wide label, file, and smyklot version synchronization. Place at .github/sync-config.yml in your repository."
 
@@ -90,7 +90,7 @@ func GenerateSchemaForType(
 
 	case SchemaSettings:
 		schema = reflector.Reflect(&github.SettingsFile{})
-		schema.ID = "https://raw.githubusercontent.com/smykla-labs/.github/main/schemas/settings.schema.json"
+		schema.ID = "https://raw.githubusercontent.com/smykla-skalski/.github/main/schemas/settings.schema.json"
 		schema.Title = "Repository Settings"
 		schema.Description = "Repository settings definition for organization-wide synchronization. Place at .github/settings.yml in your repository."
 
@@ -99,7 +99,7 @@ func GenerateSchemaForType(
 
 	case SchemaSmyklot:
 		schema = reflector.Reflect(&configtypes.SmyklotFile{})
-		schema.ID = "https://raw.githubusercontent.com/smykla-labs/.github/main/schemas/smyklot.schema.json"
+		schema.ID = "https://raw.githubusercontent.com/smykla-skalski/.github/main/schemas/smyklot.schema.json"
 		schema.Title = "Smyklot Configuration"
 		schema.Description = "Organization-wide smyklot configuration controlling version sync and workflow installation. Place at .github/smyklot.yml in the .github repository."
 

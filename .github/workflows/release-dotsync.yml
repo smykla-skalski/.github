@@ -110,7 +110,7 @@ jobs:
 
             for workflow in $SYNC_WORKFLOWS; do
               count=$(gh run list \
-                --repo smykla-labs/.github \
+                --repo smykla-skalski/.github \
                 --workflow "$workflow" \
                 --status in_progress \
                 --json databaseId \
@@ -135,11 +135,11 @@ jobs:
           echo "Disabling sync workflows..."
 
           for workflow in $SYNC_WORKFLOWS; do
-            state=$(gh api repos/smykla-labs/.github/actions/workflows/"$workflow" --jq '.state')
+            state=$(gh api repos/smykla-skalski/.github/actions/workflows/"$workflow" --jq '.state')
 
             if [ "$state" = "active" ]; then
               echo "  Disabling $workflow"
-              gh workflow disable "$workflow" --repo smykla-labs/.github
+              gh workflow disable "$workflow" --repo smykla-skalski/.github
             else
               echo "  Skipping $workflow (already $state)"
             fi
@@ -375,11 +375,11 @@ jobs:
           echo "Re-enabling sync workflows..."
 
           for workflow in $SYNC_WORKFLOWS; do
-            state=$(gh api repos/smykla-labs/.github/actions/workflows/"$workflow" --jq '.state')
+            state=$(gh api repos/smykla-skalski/.github/actions/workflows/"$workflow" --jq '.state')
 
             if [ "$state" != "active" ]; then
               echo "  Enabling $workflow"
-              gh workflow enable "$workflow" --repo smykla-labs/.github
+              gh workflow enable "$workflow" --repo smykla-skalski/.github
             else
               echo "  Skipping $workflow (already active)"
             fi

@@ -3,7 +3,7 @@
 # Usage:
 #   jobs:
 #     release:
-#       uses: smykla-labs/.github/.github/workflows/lib-release.yml@<commit-sha> # v1.0.0
+#       uses: smykla-skalski/.github/.github/workflows/lib-release.yml@<commit-sha> # v1.0.0
 #       with:
 #         version-type: "auto"
 # Note: Pin to commit SHA with semver comment. Get SHA: git rev-parse v1.0.0

@@ -2,7 +2,7 @@
 # Smyklot Poll workflow
 # Polls PR reactions via smyklot bot for auto-merge
 #
-# This file is managed by smykla-labs/.github org sync.
+# This file is managed by smykla-skalski/.github org sync.
 # Do not edit manually - changes will be overwritten.
 
 name: Smyklot Poll
@@ -35,7 +35,7 @@ jobs:
           private-key: ${{ secrets.SMYKLOT_APP_PRIVATE_KEY }}
 
       - name: Poll reactions on open PRs
-        uses: smykla-labs/smyklot@{{SHA}} # {{TAG}}
+        uses: smykla-skalski/smyklot@{{SHA}} # {{TAG}}
         with:
           args: poll
         env:

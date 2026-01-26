@@ -4,9 +4,9 @@ import (
 	"github.com/cockroachdb/errors"
 	"go.yaml.in/yaml/v4"
 
-	"github.com/smykla-labs/.github/internal/configtypes"
-	"github.com/smykla-labs/.github/pkg/logger"
-	"github.com/smykla-labs/.github/pkg/merge"
+	"github.com/smykla-skalski/.github/internal/configtypes"
+	"github.com/smykla-skalski/.github/pkg/logger"
+	"github.com/smykla-skalski/.github/pkg/merge"
 )
 
 // ErrSettingsMerge indicates a failure during settings merge operation.

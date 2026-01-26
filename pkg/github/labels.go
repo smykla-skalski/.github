@@ -8,8 +8,8 @@ import (
 	"github.com/google/go-github/v80/github"
 	"go.yaml.in/yaml/v4"
 
-	"github.com/smykla-labs/.github/internal/configtypes"
-	"github.com/smykla-labs/.github/pkg/logger"
+	"github.com/smykla-skalski/.github/internal/configtypes"
+	"github.com/smykla-skalski/.github/pkg/logger"
 )
 
 // Label represents a GitHub label definition.

@@ -13,10 +13,10 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/google/go-github/v80/github"
 
-	"github.com/smykla-labs/.github/internal/configtypes"
-	"github.com/smykla-labs/.github/pkg/config"
-	"github.com/smykla-labs/.github/pkg/logger"
-	"github.com/smykla-labs/.github/pkg/merge"
+	"github.com/smykla-skalski/.github/internal/configtypes"
+	"github.com/smykla-skalski/.github/pkg/config"
+	"github.com/smykla-skalski/.github/pkg/logger"
+	"github.com/smykla-skalski/.github/pkg/merge"
 )
 
 const (

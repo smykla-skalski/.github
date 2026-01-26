@@ -12,8 +12,8 @@ import (
 	"github.com/google/go-github/v80/github"
 	"go.yaml.in/yaml/v4"
 
-	"github.com/smykla-labs/.github/internal/configtypes"
-	"github.com/smykla-labs/.github/pkg/logger"
+	"github.com/smykla-skalski/.github/internal/configtypes"
+	"github.com/smykla-skalski/.github/pkg/logger"
 )
 
 const (
@@ -29,7 +29,7 @@ const (
 	legacyPollReactions = "poll-reactions"
 
 	// Header comment that identifies smyklot-managed workflows
-	smyklotManagedHeader = "# This file is managed by smykla-labs/.github org sync."
+	smyklotManagedHeader = "# This file is managed by smykla-skalski/.github org sync."
 )
 
 // legacyWorkflowNames maps current workflow names to their legacy equivalents.
@@ -633,16 +633,16 @@ func processWorkflowFile(
 func applyVersionReplacements(content string, version string, tag string) (string, bool) {
 	original := content
 
-	// Pattern 1: GitHub Action reference (uses: smykla-labs/smyklot@v1.2.3)
+	// Pattern 1: GitHub Action reference (uses: smykla-skalski/smyklot@v1.2.3)
 	// Anchored to prevent bypass attacks (CWE-020): only matches when followed by
 	// whitespace, newline, or end of string - prevents embedding in URLs or with suffixes
-	actionPattern := regexp.MustCompile(`(uses:\s*smykla-labs/smyklot@)v\d+\.\d+\.\d+(\s|$)`)
+	actionPattern := regexp.MustCompile(`(uses:\s*smykla-skalski/smyklot@)v\d+\.\d+\.\d+(\s|$)`)
 	content = actionPattern.ReplaceAllString(content, "${1}"+tag+"$2")
 
-	// Pattern 2: Docker image reference (ghcr.io/smykla-labs/smyklot:1.2.3)
+	// Pattern 2: Docker image reference (ghcr.io/smykla-skalski/smyklot:1.2.3)
 	// Anchored to prevent bypass attacks (CWE-020): only matches when followed by
 	// whitespace, newline, or end of string - prevents embedding in URLs or with suffixes
-	dockerPattern := regexp.MustCompile(`(ghcr\.io/smykla-labs/smyklot:)\d+\.\d+\.\d+(\s|$)`)
+	dockerPattern := regexp.MustCompile(`(ghcr\.io/smykla-skalski/smyklot:)\d+\.\d+\.\d+(\s|$)`)
 	content = dockerPattern.ReplaceAllString(content, "${1}"+version+"$2")
 
 	return content, content != original
@@ -866,8 +866,8 @@ func buildSmyklotPRBody(tag string, stats *SmyklotSyncStats) string {
 	case hasVersionChanges:
 		// Version changes present - mention the update
 		body.WriteString(fmt.Sprintf(
-			"Updates [`smykla-labs/smyklot`](https://github.com/smykla-labs/smyklot) "+
-				"to version [`%s`](https://github.com/smykla-labs/smyklot/releases/tag/%s).\n",
+			"Updates [`smykla-skalski/smyklot`](https://github.com/smykla-skalski/smyklot) "+
+				"to version [`%s`](https://github.com/smykla-skalski/smyklot/releases/tag/%s).\n",
 			tag, tag,
 		))
 
@@ -875,7 +875,7 @@ func buildSmyklotPRBody(tag string, stats *SmyklotSyncStats) string {
 		// Workflow-only changes
 		body.WriteString(fmt.Sprintf(
 			"Syncs smyklot workflow files from "+
-				"[`smykla-labs/smyklot@%s`](https://github.com/smykla-labs/smyklot/releases/tag/%s).\n",
+				"[`smykla-skalski/smyklot@%s`](https://github.com/smykla-skalski/smyklot/releases/tag/%s).\n",
 			tag, tag,
 		))
 

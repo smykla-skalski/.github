@@ -1,10 +1,10 @@
 ---
 # Organization-wide Repository Settings
 # ======================================
-# These settings are synced to all smykla-labs repositories via dotsync.
+# These settings are synced to all smykla-skalski repositories via dotsync.
 # Individual repos can opt out or customize via .github/sync-config.yml
 #
-# See: https://github.com/smykla-labs/.github/blob/main/examples/sync-config.yml
+# See: https://github.com/smykla-skalski/.github/blob/main/examples/sync-config.yml
 
 settings:
   # Repository Settings

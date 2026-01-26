@@ -10,11 +10,11 @@ import (
 
 	"github.com/cockroachdb/errors"
 
-	"github.com/smykla-labs/.github/pkg/schema"
+	"github.com/smykla-skalski/.github/pkg/schema"
 )
 
 const (
-	modulePath    = "github.com/smykla-labs/.github"
+	modulePath    = "github.com/smykla-skalski/.github"
 	configPkgPath = "./internal/configtypes"
 	// schemaFileMode is the permission mode for generated schema files.
 	// Schemas need to be world-readable for CI verification and external tooling.

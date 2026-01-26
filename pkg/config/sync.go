@@ -8,7 +8,7 @@ import (
 	"github.com/cockroachdb/errors"
 	"go.yaml.in/yaml/v4"
 
-	"github.com/smykla-labs/.github/internal/configtypes"
+	"github.com/smykla-skalski/.github/internal/configtypes"
 )
 
 // ParseSyncConfig parses sync configuration from YAML or JSON.

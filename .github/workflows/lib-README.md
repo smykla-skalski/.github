@@ -11,7 +11,7 @@ Multi-linter: golangci-lint, yamllint, shellcheck, markdownlint.
 **Outputs:** `lint-passed` (boolean)
 
 ```yaml
-uses: smykla-labs/.github/.github/workflows/lib-lint.yml@abc1234 # v1.0.0
+uses: smykla-skalski/.github/.github/workflows/lib-lint.yml@abc1234 # v1.0.0
 with:
   go-version: "1.25.x"
   enable-golangci-lint: true
@@ -26,7 +26,7 @@ Go test runner with coverage.
 **Outputs:** `coverage-percent`
 
 ```yaml
-uses: smykla-labs/.github/.github/workflows/lib-test.yml@abc1234 # v1.0.0
+uses: smykla-skalski/.github/.github/workflows/lib-test.yml@abc1234 # v1.0.0
 with:
   coverage-threshold: 80
 ```
@@ -40,7 +40,7 @@ Cross-platform Go binary builder.
 **Outputs:** `artifact-name`
 
 ```yaml
-uses: smykla-labs/.github/.github/workflows/lib-build.yml@abc1234 # v1.0.0
+uses: smykla-skalski/.github/.github/workflows/lib-build.yml@abc1234 # v1.0.0
 with:
   build-targets: '["linux/amd64", "darwin/amd64", "windows/amd64"]'
 ```
@@ -54,7 +54,7 @@ Semantic versioning and GitHub releases. Auto-detects version from commits: `fea
 **Outputs:** `version`, `release-url`
 
 ```yaml
-uses: smykla-labs/.github/.github/workflows/lib-release.yml@abc1234 # v1.0.0
+uses: smykla-skalski/.github/.github/workflows/lib-release.yml@abc1234 # v1.0.0
 with:
   version-type: "auto"
 ```
@@ -67,16 +67,16 @@ on: [push, pull_request]
 
 jobs:
   lint:
-    uses: smykla-labs/.github/.github/workflows/lib-lint.yml@abc1234 # v1.0.0
+    uses: smykla-skalski/.github/.github/workflows/lib-lint.yml@abc1234 # v1.0.0
     with:
       enable-golangci-lint: true
 
   test:
-    uses: smykla-labs/.github/.github/workflows/lib-test.yml@abc1234 # v1.0.0
+    uses: smykla-skalski/.github/.github/workflows/lib-test.yml@abc1234 # v1.0.0
     with:
       coverage-threshold: 80
 
   build:
     needs: [lint, test]
-    uses: smykla-labs/.github/.github/workflows/lib-build.yml@abc1234 # v1.0.0
+    uses: smykla-skalski/.github/.github/workflows/lib-build.yml@abc1234 # v1.0.0
 ```

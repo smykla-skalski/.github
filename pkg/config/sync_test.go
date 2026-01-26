@@ -3,7 +3,7 @@ package config
 import (
 	"testing"
 
-	"github.com/smykla-labs/.github/internal/configtypes"
+	"github.com/smykla-skalski/.github/internal/configtypes"
 )
 
 func TestParseSyncConfigJSON(t *testing.T) {

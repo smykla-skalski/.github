@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://raw.githubusercontent.com/smykla-labs/.github/main/schemas/settings.schema.json",
+  "$id": "https://raw.githubusercontent.com/smykla-skalski/.github/main/schemas/settings.schema.json",
   "title": "Repository Settings",
   "description": "Repository settings definition for organization-wide synchronization. Place at .github/settings.yml in your repository.",
   "$ref": "#/$defs/SettingsFile",

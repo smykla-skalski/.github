@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/smykla-labs/.github/pkg/logger"
+	"github.com/smykla-skalski/.github/pkg/logger"
 )
 
 func TestGetToken(t *testing.T) {

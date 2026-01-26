@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://raw.githubusercontent.com/smykla-labs/.github/main/schemas/sync-config.schema.json",
+  "$id": "https://raw.githubusercontent.com/smykla-skalski/.github/main/schemas/sync-config.schema.json",
   "title": "Sync Configuration",
   "description": "Configuration for organization-wide label, file, and smyklot version synchronization. Place at .github/sync-config.yml in your repository.",
   "$ref": "#/$defs/SyncConfig",

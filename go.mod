@@ -1,4 +1,4 @@
-module github.com/smykla-labs/.github
+module github.com/smykla-skalski/.github
 
 go 1.25.5
 

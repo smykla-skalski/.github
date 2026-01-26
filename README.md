@@ -1,6 +1,6 @@
-# smykla-labs/.github
+# smykla-skalski/.github
 
-Organization-wide defaults and synchronization for smykla-labs repositories.
+Organization-wide defaults and synchronization for smykla-skalski repositories.
 
 ## What This Repository Does
 
@@ -13,7 +13,7 @@ Organization-wide defaults and synchronization for smykla-labs repositories.
 
 ### Community Health Files (Native GitHub Feature)
 
-Files in this repository automatically apply to all smykla-labs repositories that don't have their own versions:
+Files in this repository automatically apply to all smykla-skalski repositories that don't have their own versions:
 
 - `CODE_OF_CONDUCT.md`
 - `CONTRIBUTING.md`
@@ -83,13 +83,13 @@ on: [push, pull_request]
 
 jobs:
   lint:
-    uses: smykla-labs/.github/.github/workflows/lib-lint.yml@abc1234 # v1.0.0
+    uses: smykla-skalski/.github/.github/workflows/lib-lint.yml@abc1234 # v1.0.0
     with:
       go-version: "1.25.x"
       enable-golangci-lint: true
 
   test:
-    uses: smykla-labs/.github/.github/workflows/lib-test.yml@abc1234 # v1.0.0
+    uses: smykla-skalski/.github/.github/workflows/lib-test.yml@abc1234 # v1.0.0
     with:
       go-version: "1.25.x"
       coverage-threshold: 80
@@ -208,7 +208,7 @@ You can manually trigger syncs via GitHub Actions:
 **Fix**: Ensure the path includes `.github/` prefix:
 
 ```yaml
-uses: smykla-labs/.github/.github/workflows/lib-lint.yml@abc1234
+uses: smykla-skalski/.github/.github/workflows/lib-lint.yml@abc1234
 ```
 
 ### Version pinning
@@ -220,7 +220,7 @@ uses: smykla-labs/.github/.github/workflows/lib-lint.yml@abc1234
 git rev-parse v1.0.0
 
 # Use in workflow
-uses: smykla-labs/.github/.github/workflows/lib-lint.yml@abc1234 # v1.0.0
+uses: smykla-skalski/.github/.github/workflows/lib-lint.yml@abc1234 # v1.0.0
 ```
 
 **Why**: Commit SHAs are immutable; tags can be moved (security risk)

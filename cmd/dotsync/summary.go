@@ -12,8 +12,8 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/spf13/cobra"
 
-	"github.com/smykla-labs/.github/pkg/github"
-	"github.com/smykla-labs/.github/pkg/logger"
+	"github.com/smykla-skalski/.github/pkg/github"
+	"github.com/smykla-skalski/.github/pkg/logger"
 )
 
 const (

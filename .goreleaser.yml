@@ -57,7 +57,7 @@ dockers_v2:
   - ids:
       - dotsync
     images:
-      - "ghcr.io/smykla-labs/dotsync"
+      - "ghcr.io/smykla-skalski/dotsync"
     tags:
       - "{{ trimprefix .Tag \"dotsync/v\" }}"
       - "{{ index (split (trimprefix .Tag \"dotsync/v\") \".\") 0 }}"
@@ -69,7 +69,7 @@ dockers_v2:
       "org.opencontainers.image.title": "{{.ProjectName}}"
       "org.opencontainers.image.revision": "{{.FullCommit}}"
       "org.opencontainers.image.version": "{{ trimprefix .Tag \"dotsync/v\" }}"
-      "org.opencontainers.image.source": "https://github.com/smykla-labs/.github"
+      "org.opencontainers.image.source": "https://github.com/smykla-skalski/.github"
       "org.opencontainers.image.description": "Organization sync tool for labels, files, and smyklot versions"
       "org.opencontainers.image.licenses": "MIT"
     extra_files:
@@ -77,7 +77,7 @@ dockers_v2:
 
 release:
   github:
-    owner: smykla-labs
+    owner: smykla-skalski
     name: .github
   draft: false
   prerelease: auto
@@ -87,4 +87,4 @@ release:
 
     ## Container Images
 
-    - `ghcr.io/smykla-labs/dotsync:{{ index (split (trimprefix .Tag "dotsync/v") ".") 0 }}.{{ index (split (trimprefix .Tag "dotsync/v") ".") 1 }}`
+    - `ghcr.io/smykla-skalski/dotsync:{{ index (split (trimprefix .Tag "dotsync/v") ".") 0 }}.{{ index (split (trimprefix .Tag "dotsync/v") ".") 1 }}`

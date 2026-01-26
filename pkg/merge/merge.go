@@ -12,7 +12,7 @@ import (
 	"github.com/tidwall/pretty"
 	"go.yaml.in/yaml/v4"
 
-	"github.com/smykla-labs/.github/internal/configtypes"
+	"github.com/smykla-skalski/.github/internal/configtypes"
 )
 
 const (

@@ -3,7 +3,7 @@
 # Usage:
 #   jobs:
 #     build:
-#       uses: smykla-labs/.github/.github/workflows/lib-build.yml@<commit-sha> # v1.0.0
+#       uses: smykla-skalski/.github/.github/workflows/lib-build.yml@<commit-sha> # v1.0.0
 #       with:
 #         go-version: "1.25.x"
 # Note: Pin to commit SHA with semver comment. Get SHA: git rev-parse v1.0.0

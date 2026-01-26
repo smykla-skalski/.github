@@ -1,5 +1,5 @@
 ---
-# yaml-language-server: $schema=https://raw.githubusercontent.com/smykla-labs/.github/main/schemas/sync-config.schema.json
+# yaml-language-server: $schema=https://raw.githubusercontent.com/smykla-skalski/.github/main/schemas/sync-config.schema.json
 # Unified Sync Configuration Schema
 # ==================================
 # Place this file at: .github/sync-config.yml in your repository
@@ -158,7 +158,7 @@
 # sync.settings.merge[].overrides (object, required)
 #   Key-value pairs to override in the org settings. Must match the structure
 #   defined in the settings schema for the specified section. See:
-#   https://raw.githubusercontent.com/smykla-labs/.github/main/schemas/settings.schema.json
+#   https://raw.githubusercontent.com/smykla-skalski/.github/main/schemas/settings.schema.json
 #   Set value to null to explicitly remove a field from the result.
 #   For deep-merge: nested paths merged recursively.
 #   For shallow-merge: top-level keys only.
@@ -317,7 +317,7 @@ sync: {}
 # SCHEMA REFERENCE:
 # The overrides field accepts any valid settings structure. For the complete
 # list of available fields, see the settings schema:
-# https://raw.githubusercontent.com/smykla-labs/.github/main/schemas/settings.schema.json
+# https://raw.githubusercontent.com/smykla-skalski/.github/main/schemas/settings.schema.json
 #
 # Key settings sections and their available fields:
 #

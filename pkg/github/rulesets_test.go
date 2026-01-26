@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/go-github/v80/github"
 
-	"github.com/smykla-labs/.github/internal/configtypes"
+	"github.com/smykla-skalski/.github/internal/configtypes"
 )
 
 func TestBuildRulesetFromConfig(t *testing.T) {

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://raw.githubusercontent.com/smykla-labs/.github/main/schemas/smyklot.schema.json",
+  "$id": "https://raw.githubusercontent.com/smykla-skalski/.github/main/schemas/smyklot.schema.json",
   "title": "Smyklot Configuration",
   "description": "Organization-wide smyklot configuration controlling version sync and workflow installation. Place at .github/smyklot.yml in the .github repository.",
   "$ref": "#/$defs/SmyklotFile",

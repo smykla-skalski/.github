@@ -3,8 +3,8 @@ package merge_test
 import (
 	"testing"
 
-	"github.com/smykla-labs/.github/internal/configtypes"
-	"github.com/smykla-labs/.github/pkg/merge"
+	"github.com/smykla-skalski/.github/internal/configtypes"
+	"github.com/smykla-skalski/.github/pkg/merge"
 )
 
 func TestDeepMerge(t *testing.T) {

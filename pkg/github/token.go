@@ -11,7 +11,7 @@ import (
 	"github.com/cockroachdb/errors"
 	"golang.org/x/term"
 
-	"github.com/smykla-labs/.github/pkg/logger"
+	"github.com/smykla-skalski/.github/pkg/logger"
 )
 
 // GetToken retrieves a GitHub token using the configured cascade:

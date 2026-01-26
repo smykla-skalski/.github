@@ -2,7 +2,7 @@
 
 ## Repository Purpose
 
-Organization-wide defaults and synchronization for smykla-labs repositories. This special `.github` repository provides:
+Organization-wide defaults and synchronization for smykla-skalski repositories. This special `.github` repository provides:
 
 1. **Community Health Files** - Default templates (CODE_OF_CONDUCT, CONTRIBUTING, SECURITY, issue/PR templates)
 2. **Label/File/Settings/Smyklot Sync** - Automated synchronization across all repos via `dotsync` CLI
@@ -31,7 +31,7 @@ templates/                  # Source files for file sync (auto-discovered)
 
 ## Synchronization System
 
-**Architecture**: Go CLI (`dotsync`) → container (`ghcr.io/smykla-labs/dotsync`) → composite action
+**Architecture**: Go CLI (`dotsync`) → container (`ghcr.io/smykla-skalski/dotsync`) → composite action
 
 **Unified Action** (`action.yml` in repository root):
 
@@ -152,7 +152,7 @@ All rules in `.golangci.yml` are strictly enforced. Code WILL NOT pass CI if vio
 
 1. Standard library
 2. External packages
-3. Local (`github.com/smykla-labs/.github`)
+3. Local (`github.com/smykla-skalski/.github`)
 
 **nolint directives** (nolintlint - REQUIRED format):
 

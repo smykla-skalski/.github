@@ -128,9 +128,9 @@ jobs:
           fi
 
           echo "Fetching latest smyklot release..."
-          TAG=$(gh api repos/smykla-labs/smyklot/releases/latest --jq '.tag_name')
+          TAG=$(gh api repos/smykla-skalski/smyklot/releases/latest --jq '.tag_name')
           VERSION="${TAG#v}"
-          SHA=$(gh api "repos/smykla-labs/smyklot/git/ref/tags/${TAG}" --jq '.object.sha')
+          SHA=$(gh api "repos/smykla-skalski/smyklot/git/ref/tags/${TAG}" --jq '.object.sha')
 
           echo "Resolved: version=$VERSION, tag=$TAG, sha=$SHA"
           {
