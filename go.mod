@@ -1,6 +1,6 @@
 module github.com/smykla-skalski/.github
 
-go 1.25.5
+go 1.25.6
 
 require (
 	github.com/cockroachdb/errors v1.12.0
