@@ -1,5 +1,5 @@
 [tools]
-go = "1.25.6"
+go = "1.26.0"
 task = "3.45.5"
 golangci-lint = "2.8.0"
 actionlint = "1.7.10"
