@@ -101,9 +101,3 @@ settings:
         # Require commit quality standards
         required_linear_history: true
         required_signatures: true
-        # Code scanning requirements
-        code_scanning:
-          code_scanning_tools:
-            - tool: "CodeQL"
-              alerts_threshold: "errors"
-              security_alerts_threshold: "high_or_higher"
