@@ -1120,10 +1120,10 @@ func handleMergedPR(
 func buildPRBody(org string, sourceRepo string, stats *FileSyncStats) string {
 	var body strings.Builder
 
-	body.WriteString(fmt.Sprintf(
+	fmt.Fprintf(&body,
 		"Syncs organization files from [`%s/%s`](https://github.com/%s/%s).\n",
 		org, sourceRepo, org, sourceRepo,
-	))
+	)
 
 	// Files merged section (show first since these are customized)
 	if len(stats.MergedFiles) > 0 {
@@ -1139,7 +1139,7 @@ func buildPRBody(org string, sourceRepo string, stats *FileSyncStats) string {
 
 		for _, file := range mergedPaths {
 			strategy := stats.MergedFiles[file]
-			body.WriteString(fmt.Sprintf("- `%s` (%s strategy)\n", file, strategy))
+			fmt.Fprintf(&body, "- `%s` (%s strategy)\n", file, strategy)
 		}
 	}
 
@@ -1149,7 +1149,7 @@ func buildPRBody(org string, sourceRepo string, stats *FileSyncStats) string {
 		body.WriteString("\n## Files Created\n\n")
 
 		for _, file := range createdNonMerged {
-			body.WriteString(fmt.Sprintf("- `%s`\n", file))
+			fmt.Fprintf(&body, "- `%s`\n", file)
 		}
 	}
 
@@ -1159,7 +1159,7 @@ func buildPRBody(org string, sourceRepo string, stats *FileSyncStats) string {
 		body.WriteString("\n## Files Updated\n\n")
 
 		for _, file := range updatedNonMerged {
-			body.WriteString(fmt.Sprintf("- `%s`\n", file))
+			fmt.Fprintf(&body, "- `%s`\n", file)
 		}
 	}
 
@@ -1173,7 +1173,7 @@ func buildPRBody(org string, sourceRepo string, stats *FileSyncStats) string {
 		body.WriteString(">\n")
 
 		for _, file := range stats.DeletedFiles {
-			body.WriteString(fmt.Sprintf("> - `%s`\n", file))
+			fmt.Fprintf(&body, "> - `%s`\n", file)
 		}
 
 		body.WriteString(">\n")

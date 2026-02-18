@@ -874,19 +874,19 @@ func buildSmyklotPRBody(tag string, stats *SmyklotSyncStats) string {
 	switch {
 	case hasVersionChanges:
 		// Version changes present - mention the update
-		body.WriteString(fmt.Sprintf(
+		fmt.Fprintf(&body,
 			"Updates [`smykla-skalski/smyklot`](https://github.com/smykla-skalski/smyklot) "+
 				"to version [`%s`](https://github.com/smykla-skalski/smyklot/releases/tag/%s).\n",
 			tag, tag,
-		))
+		)
 
 	case hasWorkflowChanges:
 		// Workflow-only changes
-		body.WriteString(fmt.Sprintf(
+		fmt.Fprintf(&body,
 			"Syncs smyklot workflow files from "+
 				"[`smykla-skalski/smyklot@%s`](https://github.com/smykla-skalski/smyklot/releases/tag/%s).\n",
 			tag, tag,
-		))
+		)
 
 	default:
 		body.WriteString("Syncs smyklot configuration.\n")
@@ -897,7 +897,7 @@ func buildSmyklotPRBody(tag string, stats *SmyklotSyncStats) string {
 		body.WriteString("\n## Workflows Installed\n\n")
 
 		for _, file := range stats.InstalledFiles {
-			body.WriteString(fmt.Sprintf("- `%s`\n", file))
+			fmt.Fprintf(&body, "- `%s`\n", file)
 		}
 	}
 
@@ -906,7 +906,7 @@ func buildSmyklotPRBody(tag string, stats *SmyklotSyncStats) string {
 		body.WriteString("\n## Workflows Replaced\n\n")
 
 		for _, file := range stats.ReplacedFiles {
-			body.WriteString(fmt.Sprintf("- `%s`\n", file))
+			fmt.Fprintf(&body, "- `%s`\n", file)
 		}
 	}
 
@@ -915,7 +915,7 @@ func buildSmyklotPRBody(tag string, stats *SmyklotSyncStats) string {
 		body.WriteString("\n## Version Updates\n\n")
 
 		for _, file := range stats.VersionOnlyFiles {
-			body.WriteString(fmt.Sprintf("- `%s`\n", file))
+			fmt.Fprintf(&body, "- `%s`\n", file)
 		}
 	}
 

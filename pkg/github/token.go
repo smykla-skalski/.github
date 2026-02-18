@@ -88,8 +88,9 @@ func isGHAvailable() bool {
 }
 
 func isInteractive() bool {
+	//nolint:gosec // G115: Fd() returns uintptr; safe narrowing on all supported platforms
 	return term.IsTerminal(int(os.Stdin.Fd())) &&
-		term.IsTerminal(int(os.Stdout.Fd()))
+		term.IsTerminal(int(os.Stdout.Fd())) //nolint:gosec // G115: same as above
 }
 
 func promptYesNo(question string) bool {
