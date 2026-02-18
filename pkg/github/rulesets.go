@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/cockroachdb/errors"
-	"github.com/google/go-github/v80/github"
+	"github.com/google/go-github/v83/github"
 
 	"github.com/smykla-skalski/.github/internal/configtypes"
 	"github.com/smykla-skalski/.github/pkg/logger"

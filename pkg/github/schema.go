@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/cockroachdb/errors"
-	"github.com/google/go-github/v80/github"
+	"github.com/google/go-github/v83/github"
 )
 
 // VerifyAndCommitSchemaFromContent compares pre-generated schema with committed
