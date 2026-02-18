@@ -122,10 +122,10 @@ func TestBuildRulesetFromConfig(t *testing.T) {
 				Target:      "branch",
 				Enforcement: "active",
 				Rules: &configtypes.RulesetRulesConfig{
-					Deletion:              github.Ptr(true),
-					NonFastForward:        github.Ptr(true),
-					RequiredLinearHistory: github.Ptr(true),
-					RequiredSignatures:    github.Ptr(true),
+					Deletion:              new(true),
+					NonFastForward:        new(true),
+					RequiredLinearHistory: new(true),
+					RequiredSignatures:    new(true),
 				},
 			},
 			existing: nil,
@@ -159,10 +159,10 @@ func TestBuildRulesetFromConfig(t *testing.T) {
 				Enforcement: "active",
 				Rules: &configtypes.RulesetRulesConfig{
 					PullRequest: &configtypes.PullRequestRuleConfig{
-						RequiredApprovingReviewCount: github.Ptr(2),
-						DismissStaleReviewsOnPush:    github.Ptr(true),
-						RequireCodeOwnerReview:       github.Ptr(true),
-						RequireLastPushApproval:      github.Ptr(true),
+						RequiredApprovingReviewCount: new(2),
+						DismissStaleReviewsOnPush:    new(true),
+						RequireCodeOwnerReview:       new(true),
+						RequireLastPushApproval:      new(true),
 						AllowedMergeMethods:          []string{"squash"},
 					},
 				},
@@ -204,7 +204,7 @@ func TestBuildRulesetFromConfig(t *testing.T) {
 				Enforcement: "active",
 				Rules: &configtypes.RulesetRulesConfig{
 					RequiredStatusChecks: &configtypes.StatusChecksRuleConfig{
-						StrictRequiredStatusChecksPolicy: github.Ptr(true),
+						StrictRequiredStatusChecksPolicy: new(true),
 						RequiredStatusChecks: []configtypes.StatusCheckConfig{
 							{Context: "ci/lint"},
 							{Context: "ci/test"},
@@ -297,7 +297,7 @@ func TestGetRequiredReviewCountForRuleset(t *testing.T) {
 		{
 			name: "uses desired count when no existing ruleset",
 			prConfig: &configtypes.PullRequestRuleConfig{
-				RequiredApprovingReviewCount: github.Ptr(1),
+				RequiredApprovingReviewCount: new(1),
 			},
 			existingRules: nil,
 			expectedCount: 1,
@@ -305,7 +305,7 @@ func TestGetRequiredReviewCountForRuleset(t *testing.T) {
 		{
 			name: "uses desired count when existing has no PR rule",
 			prConfig: &configtypes.PullRequestRuleConfig{
-				RequiredApprovingReviewCount: github.Ptr(2),
+				RequiredApprovingReviewCount: new(2),
 			},
 			existingRules: &github.RepositoryRulesetRules{},
 			expectedCount: 2,
@@ -313,7 +313,7 @@ func TestGetRequiredReviewCountForRuleset(t *testing.T) {
 		{
 			name: "uses desired count when higher than existing",
 			prConfig: &configtypes.PullRequestRuleConfig{
-				RequiredApprovingReviewCount: github.Ptr(3),
+				RequiredApprovingReviewCount: new(3),
 			},
 			existingRules: &github.RepositoryRulesetRules{
 				PullRequest: &github.PullRequestRuleParameters{
@@ -325,7 +325,7 @@ func TestGetRequiredReviewCountForRuleset(t *testing.T) {
 		{
 			name: "keeps existing count when higher than desired (no-downgrade)",
 			prConfig: &configtypes.PullRequestRuleConfig{
-				RequiredApprovingReviewCount: github.Ptr(1),
+				RequiredApprovingReviewCount: new(1),
 			},
 			existingRules: &github.RepositoryRulesetRules{
 				PullRequest: &github.PullRequestRuleParameters{
@@ -338,7 +338,7 @@ func TestGetRequiredReviewCountForRuleset(t *testing.T) {
 		{
 			name: "uses zero when config specifies zero",
 			prConfig: &configtypes.PullRequestRuleConfig{
-				RequiredApprovingReviewCount: github.Ptr(0),
+				RequiredApprovingReviewCount: new(0),
 			},
 			existingRules: nil,
 			expectedCount: 0,
@@ -372,7 +372,7 @@ func TestGetRequiredReviewCountForRuleset(t *testing.T) {
 func TestBuildStatusChecksRulePreservesExisting(t *testing.T) {
 	// Test that empty status checks in config preserves existing checks
 	config := &configtypes.StatusChecksRuleConfig{
-		StrictRequiredStatusChecksPolicy: github.Ptr(true),
+		StrictRequiredStatusChecksPolicy: new(true),
 		RequiredStatusChecks:             []configtypes.StatusCheckConfig{}, // Empty
 	}
 
@@ -403,7 +403,7 @@ func TestBuildStatusChecksRulePreservesExisting(t *testing.T) {
 func TestBuildStatusChecksRuleOverridesExisting(t *testing.T) {
 	// Test that explicit status checks in config override existing checks
 	config := &configtypes.StatusChecksRuleConfig{
-		StrictRequiredStatusChecksPolicy: github.Ptr(true),
+		StrictRequiredStatusChecksPolicy: new(true),
 		RequiredStatusChecks: []configtypes.StatusCheckConfig{
 			{Context: "new-check-1"},
 			{Context: "new-check-2"},

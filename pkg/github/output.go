@@ -10,6 +10,9 @@ import (
 	"github.com/cockroachdb/errors"
 )
 
+// githubOutputFilePerms is the file permission mode for GITHUB_OUTPUT file.
+const githubOutputFilePerms = 0o600
+
 // WriteGitHubOutput writes an output variable to GITHUB_OUTPUT file if enabled
 // and running in GitHub Actions environment. This allows Docker container actions
 // to set outputs that can be consumed by subsequent workflow steps.
@@ -30,11 +33,12 @@ func WriteGitHubOutput(enabled bool, key, value string) error {
 		return nil
 	}
 
+	//nolint:gosec // GITHUB_OUTPUT path from trusted GH Actions environment
 	f, err := os.OpenFile(
 		outputFile,
 		os.O_APPEND|os.O_WRONLY,
-		0o600,
-	) //nolint:gosec,mnd,gofumpt,golines // GITHUB_OUTPUT from GH Actions
+		githubOutputFilePerms,
+	)
 	if err != nil {
 		return errors.Wrap(err, "opening GITHUB_OUTPUT file")
 	}

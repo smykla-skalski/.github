@@ -677,7 +677,7 @@ func closeSmyklotPR(
 
 	// Close the PR
 	pr := &github.PullRequest{
-		State: github.Ptr("closed"),
+		State: new("closed"),
 	}
 
 	_, _, err = client.PullRequests.Edit(ctx, org, repo, prNumber, pr)
@@ -687,7 +687,7 @@ func closeSmyklotPR(
 
 	// Add comment
 	prComment := &github.IssueComment{
-		Body: github.Ptr(comment),
+		Body: new(comment),
 	}
 
 	_, _, err = client.Issues.CreateComment(ctx, org, repo, prNumber, prComment)
@@ -781,8 +781,8 @@ func upsertSmyklotPullRequestWithURL(
 		log.Info("updating existing PR", "pr", prNumber)
 
 		pr := &github.PullRequest{
-			Title: github.Ptr(prTitle),
-			Body:  github.Ptr(prBody),
+			Title: &prTitle,
+			Body:  &prBody,
 		}
 
 		_, _, editErr := client.PullRequests.Edit(ctx, org, repo, prNumber, pr)
@@ -797,10 +797,10 @@ func upsertSmyklotPullRequestWithURL(
 	log.Info("creating new PR")
 
 	pr := &github.NewPullRequest{
-		Title: github.Ptr(prTitle),
-		Head:  github.Ptr(branchName),
-		Base:  github.Ptr(defaultBranch),
-		Body:  github.Ptr(prBody),
+		Title: &prTitle,
+		Head:  new(branchName),
+		Base:  new(defaultBranch),
+		Body:  &prBody,
 	}
 
 	createdPR, _, err := client.PullRequests.Create(ctx, org, repo, pr)
@@ -995,10 +995,10 @@ func fetchSmyklotOrgConfig(
 		if isNotFoundError(err) {
 			// Return default config if file doesn't exist
 			return &configtypes.SmyklotFile{
-				SyncVersion: boolPtr(true),
+				SyncVersion: new(true),
 				Workflows: configtypes.SmyklotWorkflowsConfig{
-					PrCommands: boolPtr(true),
-					Poll:       boolPtr(true),
+					PrCommands: new(true),
+					Poll:       new(true),
 				},
 			}, nil
 		}
@@ -1061,9 +1061,4 @@ func shouldSyncWorkflow(
 
 	// Default to true
 	return true
-}
-
-// boolPtr returns a pointer to a bool value.
-func boolPtr(b bool) *bool {
-	return &b
 }

@@ -414,7 +414,7 @@ func computeSecurityDiff(
 
 		if currentStatus != desiredStatus {
 			securityUpdate.SecretScanning = &github.SecretScanning{
-				Status: github.Ptr(desiredStatus),
+				Status: new(desiredStatus),
 			}
 			hasChanges = true
 		}
@@ -428,7 +428,7 @@ func computeSecurityDiff(
 
 		if currentStatus != desiredStatus {
 			securityUpdate.SecretScanningPushProtection = &github.SecretScanningPushProtection{
-				Status: github.Ptr(desiredStatus),
+				Status: new(desiredStatus),
 			}
 			hasChanges = true
 		}
@@ -442,7 +442,7 @@ func computeSecurityDiff(
 
 		if currentStatus != desiredStatus {
 			securityUpdate.DependabotSecurityUpdates = &github.DependabotSecurityUpdates{
-				Status: github.Ptr(desiredStatus),
+				Status: new(desiredStatus),
 			}
 			hasChanges = true
 		}

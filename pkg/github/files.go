@@ -745,7 +745,7 @@ func closeExistingPR(
 
 	// Close the PR
 	pr := &github.PullRequest{
-		State: github.Ptr("closed"),
+		State: new("closed"),
 	}
 
 	if _, _, errEdit := client.PullRequests.Edit(ctx, org, repo, prNumber, pr); errEdit != nil {
@@ -754,7 +754,7 @@ func closeExistingPR(
 
 	// Add comment
 	prComment := &github.IssueComment{
-		Body: github.Ptr(comment),
+		Body: new(comment),
 	}
 
 	_, _, err = client.Issues.CreateComment(ctx, org, repo, prNumber, prComment)
@@ -889,8 +889,8 @@ func createGitCommit(
 		}
 
 		blob := github.Blob{
-			Content:  github.Ptr(base64.StdEncoding.EncodeToString(changes[i].Content)),
-			Encoding: github.Ptr("base64"),
+			Content:  new(base64.StdEncoding.EncodeToString(changes[i].Content)),
+			Encoding: new("base64"),
 		}
 
 		createdBlob, _, blobErr := client.Git.CreateBlob(ctx, org, repo, blob)
@@ -925,10 +925,10 @@ func createGitCommit(
 
 	commitMessage := "chore(sync): sync organization files"
 	commit := github.Commit{
-		Message: github.Ptr(commitMessage),
+		Message: new(commitMessage),
 		Tree:    tree,
 		Parents: []*github.Commit{
-			{SHA: github.Ptr(baseSHA)},
+			{SHA: new(baseSHA)},
 		},
 	}
 
@@ -942,7 +942,7 @@ func createGitCommit(
 
 	updateRef := github.UpdateRef{
 		SHA:   newCommit.GetSHA(),
-		Force: github.Ptr(true),
+		Force: new(true),
 	}
 
 	_, _, err = client.Git.UpdateRef(ctx, org, repo, "heads/"+branchName, updateRef)
@@ -960,17 +960,17 @@ func buildTreeEntries(changes []FileChange) []*github.TreeEntry {
 	for _, change := range changes {
 		if change.Action == "delete" {
 			treeEntries = append(treeEntries, &github.TreeEntry{
-				Path: github.Ptr(change.Path),
-				Mode: github.Ptr("100644"),
-				Type: github.Ptr("blob"),
+				Path: new(change.Path),
+				Mode: new("100644"),
+				Type: new("blob"),
 				SHA:  nil,
 			})
 		} else {
 			treeEntries = append(treeEntries, &github.TreeEntry{
-				Path: github.Ptr(change.Path),
-				Mode: github.Ptr("100644"),
-				Type: github.Ptr("blob"),
-				SHA:  github.Ptr(change.BlobSHA),
+				Path: new(change.Path),
+				Mode: new("100644"),
+				Type: new("blob"),
+				SHA:  new(change.BlobSHA),
 			})
 		}
 	}
@@ -1010,8 +1010,8 @@ func upsertPullRequestWithURL(
 		log.Info("updating existing PR", "pr", prNumber)
 
 		pr := &github.PullRequest{
-			Title: github.Ptr(prTitle),
-			Body:  github.Ptr(prBody),
+			Title: &prTitle,
+			Body:  &prBody,
 		}
 
 		_, _, editErr := client.PullRequests.Edit(ctx, org, repo, prNumber, pr)
@@ -1026,10 +1026,10 @@ func upsertPullRequestWithURL(
 	log.Info("creating new PR")
 
 	pr := &github.NewPullRequest{
-		Title: github.Ptr(prTitle),
-		Head:  github.Ptr(branchName),
-		Base:  github.Ptr(defaultBranch),
-		Body:  github.Ptr(prBody),
+		Title: &prTitle,
+		Head:  new(branchName),
+		Base:  new(defaultBranch),
+		Body:  &prBody,
 	}
 
 	createdPR, _, err := client.PullRequests.Create(ctx, org, repo, pr)

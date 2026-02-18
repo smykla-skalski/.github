@@ -296,9 +296,9 @@ func applyLabelChanges(
 		}
 
 		ghLabel := &github.Label{
-			Name:        github.Ptr(label.Name),
-			Color:       github.Ptr(color),
-			Description: github.Ptr(label.Description),
+			Name:        new(label.Name),
+			Color:       &color,
+			Description: new(label.Description),
 		}
 
 		_, _, err := client.Issues.CreateLabel(ctx, org, repo, ghLabel)
@@ -318,9 +318,9 @@ func applyLabelChanges(
 		}
 
 		ghLabel := &github.Label{
-			Name:        github.Ptr(label.Name),
-			Color:       github.Ptr(color),
-			Description: github.Ptr(label.Description),
+			Name:        new(label.Name),
+			Color:       &color,
+			Description: new(label.Description),
 		}
 
 		_, _, err := client.Issues.EditLabel(ctx, org, repo, label.Name, ghLabel)

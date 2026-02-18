@@ -1,6 +1,4 @@
 // Package configtypes provides minimal type definitions for sync configuration.
-//
-//nolint:golines // struct tags with jsonschema annotations exceed line limits
 package configtypes
 
 // Configuration for controlling organization-wide synchronization of labels, files, smyklot

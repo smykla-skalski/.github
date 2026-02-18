@@ -99,8 +99,8 @@ func VerifyAndCommitSchemaFromContent(
 
 	// Create blob for updated schema
 	blob := github.Blob{
-		Content:  github.Ptr(string(generatedSchema)),
-		Encoding: github.Ptr("utf-8"),
+		Content:  new(string(generatedSchema)),
+		Encoding: new("utf-8"),
 	}
 
 	createdBlob, _, err := client.Git.CreateBlob(ctx, owner, name, blob)
@@ -113,10 +113,10 @@ func VerifyAndCommitSchemaFromContent(
 	// Create new tree with updated schema
 	treeEntries := []*github.TreeEntry{
 		{
-			Path: github.Ptr(schemaFile),
-			Mode: github.Ptr("100644"),
-			Type: github.Ptr("blob"),
-			SHA:  github.Ptr(blobSHA),
+			Path: new(schemaFile),
+			Mode: new("100644"),
+			Type: new("blob"),
+			SHA:  &blobSHA,
 		},
 	}
 
@@ -133,9 +133,9 @@ func VerifyAndCommitSchemaFromContent(
 Schema was out of sync with Go types. Regenerated from SyncConfig struct.`
 
 	newCommit := github.Commit{
-		Message: github.Ptr(commitMessage),
-		Tree:    &github.Tree{SHA: github.Ptr(newTreeSHA)},
-		Parents: []*github.Commit{{SHA: github.Ptr(currentSHA)}},
+		Message: new(commitMessage),
+		Tree:    &github.Tree{SHA: &newTreeSHA},
+		Parents: []*github.Commit{{SHA: new(currentSHA)}},
 	}
 
 	createdCommit, _, err := client.Git.CreateCommit(ctx, owner, name, newCommit, nil)
@@ -148,7 +148,7 @@ Schema was out of sync with Go types. Regenerated from SyncConfig struct.`
 	// Update ref
 	updateRef := github.UpdateRef{
 		SHA:   commitSHA,
-		Force: github.Ptr(false),
+		Force: new(false),
 	}
 
 	if _, _, err := client.Git.UpdateRef(ctx, owner, name, "heads/"+branch, updateRef); err != nil {

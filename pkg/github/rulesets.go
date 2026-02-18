@@ -95,7 +95,7 @@ func fetchExistingRulesets(
 	repo string,
 ) ([]*github.RepositoryRuleset, error) {
 	opts := &github.RepositoryListRulesetsOptions{
-		IncludesParents: github.Ptr(false),
+		IncludesParents: new(false),
 	}
 
 	rulesets, _, err := client.Repositories.GetAllRulesets(ctx, org, repo, opts)
@@ -212,7 +212,7 @@ func buildBypassActors(actorsConfig []configtypes.BypassActorConfig) []*github.B
 		bypassMode := github.BypassMode(actorConfig.BypassMode)
 
 		actor := &github.BypassActor{
-			ActorID:    github.Ptr(actorConfig.ActorID),
+			ActorID:    new(actorConfig.ActorID),
 			ActorType:  &actorType,
 			BypassMode: &bypassMode,
 		}
@@ -360,7 +360,7 @@ func buildStatusChecksRule(
 	// Handle status checks with hybrid approach:
 	// Empty array = inherit repo's existing checks (or skip rule entirely if none exist)
 	if len(statusConfig.RequiredStatusChecks) > 0 {
-		var checks []*github.RuleStatusCheck
+		checks := make([]*github.RuleStatusCheck, 0, len(statusConfig.RequiredStatusChecks))
 
 		for _, checkConfig := range statusConfig.RequiredStatusChecks {
 			check := &github.RuleStatusCheck{
@@ -398,7 +398,7 @@ func buildCodeScanningRule(
 	rule := &github.CodeScanningRuleParameters{}
 
 	if len(csConfig.CodeScanningTools) > 0 {
-		var tools []*github.RuleCodeScanningTool
+		tools := make([]*github.RuleCodeScanningTool, 0, len(csConfig.CodeScanningTools))
 
 		for _, toolConfig := range csConfig.CodeScanningTools {
 			alertsThreshold := github.CodeScanningAlertsThreshold(toolConfig.AlertsThreshold)
