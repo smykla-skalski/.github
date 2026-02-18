@@ -1,8 +1,14 @@
 {
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/smykla-skalski/.github/main/schemas/sync-config.schema.json",
+  "title": "Sync Configuration",
+  "description": "Configuration for organization-wide label, file, and smyklot version synchronization. Place at .github/sync-config.yml in your repository.",
+  "$ref": "#/$defs/SyncConfig",
   "$defs": {
     "BranchProtectionRuleConfig": {
-      "additionalProperties": false,
       "description": "Configures protection rules for branches including required status checks, required reviews, and restrictions on who can push",
+      "type": "object",
+      "required": [ "pattern" ],
       "properties": {
         "allow_deletions": {
           "description": "Allow branch deletion",
@@ -18,8 +24,8 @@
         },
         "pattern": {
           "description": "Branch name pattern",
-          "minLength": 1,
-          "type": "string"
+          "type": "string",
+          "minLength": 1
         },
         "require_linear_history": {
           "description": "Require linear commit history",
@@ -30,54 +36,52 @@
           "type": "boolean"
         },
         "required_reviews": {
-          "$ref": "#/$defs/RequiredReviews",
-          "description": "Required pull request reviews configuration"
+          "description": "Required pull request reviews configuration",
+          "$ref": "#/$defs/RequiredReviews"
         },
         "required_status_checks": {
-          "$ref": "#/$defs/RequiredStatusChecks",
-          "description": "Required status checks configuration"
+          "description": "Required status checks configuration",
+          "$ref": "#/$defs/RequiredStatusChecks"
         },
         "restrictions": {
-          "$ref": "#/$defs/BranchRestrictionsConfig",
-          "description": "Restrict who can push to this branch. Leave unset to allow all users with push access"
+          "description": "Restrict who can push to this branch. Leave unset to allow all users with push access",
+          "$ref": "#/$defs/BranchRestrictionsConfig"
         }
       },
-      "required": [
-        "pattern"
-      ],
-      "type": "object"
+      "additionalProperties": false
     },
     "BranchRestrictionsConfig": {
-      "additionalProperties": false,
       "description": "BranchRestrictionsConfig defines who can push to protected branches.",
+      "type": "object",
       "properties": {
         "apps": {
           "description": "GitHub App slugs allowed to push",
+          "type": "array",
           "items": {
             "type": "string"
-          },
-          "type": "array"
+          }
         },
         "teams": {
           "description": "GitHub team slugs allowed to push",
+          "type": "array",
           "items": {
             "type": "string"
-          },
-          "type": "array"
+          }
         },
         "users": {
           "description": "GitHub usernames allowed to push",
+          "type": "array",
           "items": {
             "type": "string"
-          },
-          "type": "array"
+          }
         }
       },
-      "type": "object"
+      "additionalProperties": false
     },
     "BypassActorConfig": {
-      "additionalProperties": false,
       "description": "Defines an actor (user, team, app, or role) who can bypass ruleset requirements",
+      "type": "object",
+      "required": [ "actor_id", "actor_type", "bypass_mode" ],
       "properties": {
         "actor_id": {
           "description": "Actor ID (user ID, team ID, app ID, or role ID)",
@@ -94,73 +98,61 @@
         },
         "bypass_mode": {
           "description": "Bypass mode (always or pull_request)",
-          "enum": [
-            "always",
-            "pull_request"
-          ]
+          "enum": [ "always", "pull_request" ]
         }
       },
-      "required": [
-        "actor_id",
-        "actor_type",
-        "bypass_mode"
-      ],
-      "type": "object"
+      "additionalProperties": false
     },
     "BypassPullRequestAllowances": {
-      "additionalProperties": false,
       "description": "BypassPullRequestAllowances defines who can bypass pull request requirements.",
+      "type": "object",
       "properties": {
         "apps": {
           "description": "GitHub App slugs that can bypass pull request requirements",
+          "type": "array",
           "items": {
             "type": "string"
-          },
-          "type": "array"
+          }
         },
         "teams": {
           "description": "GitHub team slugs that can bypass pull request requirements",
+          "type": "array",
           "items": {
             "type": "string"
-          },
-          "type": "array"
+          }
         },
         "users": {
           "description": "GitHub usernames that can bypass pull request requirements",
+          "type": "array",
           "items": {
             "type": "string"
-          },
-          "type": "array"
+          }
         }
       },
-      "type": "object"
+      "additionalProperties": false
     },
     "CodeScanningRuleConfig": {
-      "additionalProperties": false,
       "description": "Configures code scanning tool requirements and alert thresholds",
+      "type": "object",
       "properties": {
         "code_scanning_tools": {
           "description": "Code scanning tools and their thresholds",
+          "type": "array",
           "items": {
             "$ref": "#/$defs/CodeScanningToolConfig"
-          },
-          "type": "array"
+          }
         }
       },
-      "type": "object"
+      "additionalProperties": false
     },
     "CodeScanningToolConfig": {
-      "additionalProperties": false,
       "description": "Defines a code scanning tool with alert thresholds",
+      "type": "object",
+      "required": [ "tool", "alerts_threshold", "security_alerts_threshold" ],
       "properties": {
         "alerts_threshold": {
           "description": "Alert threshold level (none, errors, errors_and_warnings, all)",
-          "enum": [
-            "none",
-            "errors",
-            "errors_and_warnings",
-            "all"
-          ]
+          "enum": [ "none", "errors", "errors_and_warnings", "all" ]
         },
         "security_alerts_threshold": {
           "description": "Security alert threshold level (none, critical, high_or_higher, medium_or_higher, all)",
@@ -174,20 +166,15 @@
         },
         "tool": {
           "description": "Tool name (e.g., \"CodeQL\")",
-          "minLength": 1,
-          "type": "string"
+          "type": "string",
+          "minLength": 1
         }
       },
-      "required": [
-        "tool",
-        "alerts_threshold",
-        "security_alerts_threshold"
-      ],
-      "type": "object"
+      "additionalProperties": false
     },
     "FeaturesConfig": {
-      "additionalProperties": false,
       "description": "Controls which GitHub features are enabled for the repository (Issues, Wiki, Projects, Discussions)",
+      "type": "object",
       "properties": {
         "has_discussions": {
           "description": "Enable GitHub Discussions",
@@ -206,22 +193,23 @@
           "type": "boolean"
         }
       },
-      "type": "object"
+      "additionalProperties": false
     },
     "FileMergeConfig": {
-      "additionalProperties": false,
       "description": "Configures merge behavior for specific files, allowing repo-specific customization of fields while inheriting org defaults",
+      "type": "object",
+      "required": [ "path" ],
       "properties": {
         "arrayStrategies": {
+          "description": "Per-path array merge strategies. Maps JSONPath expressions (exact match only, e.g., \"$.packageRules\") to merge strategy (append/prepend/replace). Only applies to arrays in the merged result. If not specified, arrays are replaced (RFC 7396 default behavior). NOTE: Key pattern validation (JSONPath format) is not enforced at the schema level, only at runtime.",
+          "type": "object",
           "additionalProperties": {
             "type": "string"
-          },
-          "description": "Per-path array merge strategies. Maps JSONPath expressions (exact match only, e.g., \"$.packageRules\") to merge strategy (append/prepend/replace). Only applies to arrays in the merged result. If not specified, arrays are replaced (RFC 7396 default behavior). NOTE: Key pattern validation (JSONPath format) is not enforced at the schema level, only at runtime.",
-          "type": "object"
+          }
         },
         "deduplicateArrays": {
-          "default": false,
           "description": "When true, removes duplicate elements from arrays after merging using array strategies. Uses deep equality comparison for objects. Has no effect if arrayStrategies is not configured since arrays are replaced by default (RFC 7396).",
+          "default": false,
           "type": "boolean"
         },
         "overrides": {
@@ -230,121 +218,98 @@
         },
         "path": {
           "description": "File path (relative to repo root) to merge. Supports JSON, YAML, and Markdown files",
-          "examples": [
-            "renovate.json",
-            ".github/dependabot.yml"
-          ],
-          "minLength": 1,
+          "examples": [ "renovate.json", ".github/dependabot.yml" ],
+          "type": "string",
           "pattern": "^[^/].*$",
-          "type": "string"
+          "minLength": 1
         },
         "sections": {
           "description": "Section operations for markdown merge strategy. Each section defines an action to perform on a heading-based section of the document. Sections are applied sequentially",
+          "type": "array",
           "items": {
             "$ref": "#/$defs/MarkdownSection"
-          },
-          "type": "array"
+          }
         },
         "strategy": {
-          "default": "deep-merge",
           "description": "Merge strategy to use. deep-merge (default) recursively merges nested objects; shallow-merge only merges top-level keys; markdown uses heading-based section operations for .md files",
-          "enum": [
-            "deep-merge",
-            "shallow-merge",
-            "overlay",
-            "markdown"
-          ]
+          "default": "deep-merge",
+          "enum": [ "deep-merge", "shallow-merge", "overlay", "markdown" ]
         }
       },
-      "required": [
-        "path"
-      ],
-      "type": "object"
+      "additionalProperties": false
     },
     "FilesConfig": {
-      "additionalProperties": false,
       "description": "Controls which organization template files (CODE_OF_CONDUCT.md, CONTRIBUTING.md, etc.) are synced to this repository, with options to exclude specific files or remove unmanaged files",
+      "type": "object",
       "properties": {
         "allow_removal": {
-          "default": false,
           "description": "DANGEROUS: When true, files in this repo that are NOT in the central sync config will be DELETED. This can cause data loss. Strongly recommend keeping this false",
+          "default": false,
           "type": "boolean"
         },
         "exclude": {
           "description": "File paths (relative to repo root) to exclude from sync. These files will NOT be created/updated in this repository. Existing files at these paths are preserved but not managed",
           "examples": [
-            [
-              "CONTRIBUTING.md",
-              "CODE_OF_CONDUCT.md"
-            ],
-            [
-              ".github/PULL_REQUEST_TEMPLATE.md",
-              "SECURITY.md"
-            ]
+            [ "CONTRIBUTING.md", "CODE_OF_CONDUCT.md" ],
+            [ ".github/PULL_REQUEST_TEMPLATE.md", "SECURITY.md" ]
           ],
-          "items": {
-            "minLength": 1,
-            "pattern": "^[^/].*$",
-            "type": "string"
-          },
           "type": "array",
-          "uniqueItems": true
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[^/].*$",
+            "minLength": 1
+          }
         },
         "merge": {
           "description": "Files to merge with repo-specific overrides instead of replacing. Allows customizing specific fields while inheriting org defaults",
+          "type": "array",
           "items": {
             "$ref": "#/$defs/FileMergeConfig"
-          },
-          "type": "array"
+          }
         },
         "skip": {
-          "default": false,
           "description": "Skip file synchronization only. Label sync still runs unless sync.skip or sync.labels.skip is true",
+          "default": false,
           "type": "boolean"
         }
       },
-      "type": "object"
+      "additionalProperties": false
     },
     "LabelsConfig": {
-      "additionalProperties": false,
       "description": "Manages which GitHub labels are synced from central configuration, with options to exclude specific labels or remove labels not in the central config",
+      "type": "object",
       "properties": {
         "allow_removal": {
-          "default": false,
           "description": "When true, labels in this repo that are NOT in the central config will be DELETED. Use with caution - this removes custom labels",
+          "default": false,
           "type": "boolean"
         },
         "exclude": {
           "description": "Label names to exclude from synchronization. These labels will NOT be created/updated in this repository. Existing labels with these names are preserved but not managed",
           "examples": [
-            [
-              "ci/skip-tests",
-              "ci/force-full"
-            ],
-            [
-              "release/major",
-              "release/minor",
-              "release/patch"
-            ]
+            [ "ci/skip-tests", "ci/force-full" ],
+            [ "release/major", "release/minor", "release/patch" ]
           ],
-          "items": {
-            "minLength": 1,
-            "type": "string"
-          },
           "type": "array",
-          "uniqueItems": true
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
         },
         "skip": {
-          "default": false,
           "description": "Skip label synchronization only. File sync still runs unless sync.skip or sync.files.skip is true",
+          "default": false,
           "type": "boolean"
         }
       },
-      "type": "object"
+      "additionalProperties": false
     },
     "MarkdownSection": {
-      "additionalProperties": false,
       "description": "Defines a section operation for markdown file merging, specifying what action to take on a heading-based section of the document",
+      "type": "object",
+      "required": [ "action" ],
       "properties": {
         "action": {
           "description": "Operation to perform: after, before, replace, delete, append, prepend",
@@ -366,26 +331,19 @@
           "type": "string"
         }
       },
-      "required": [
-        "action"
-      ],
-      "type": "object"
+      "additionalProperties": false
     },
     "PullRequestRuleConfig": {
-      "additionalProperties": false,
       "description": "Configures pull request requirements including reviews, code owners, and merge strategies",
+      "type": "object",
       "properties": {
         "allowed_merge_methods": {
           "description": "Allowed merge methods (squash, merge, rebase)",
-          "items": {
-            "enum": [
-              "squash",
-              "merge",
-              "rebase"
-            ]
-          },
           "type": "array",
-          "uniqueItems": true
+          "uniqueItems": true,
+          "items": {
+            "enum": [ "squash", "merge", "rebase" ]
+          }
         },
         "dismiss_stale_reviews_on_push": {
           "description": "Dismiss stale reviews when new commits are pushed",
@@ -401,47 +359,47 @@
         },
         "required_approving_review_count": {
           "description": "Number of required approving reviews (0-6)",
+          "type": "integer",
           "maximum": 6,
-          "minimum": 0,
-          "type": "integer"
+          "minimum": 0
         },
         "required_review_thread_resolution": {
           "description": "Require all conversations to be resolved before merging",
           "type": "boolean"
         }
       },
-      "type": "object"
+      "additionalProperties": false
     },
     "RefNameCondition": {
-      "additionalProperties": false,
       "description": "Specifies include/exclude patterns for ref names (branches or tags)",
+      "type": "object",
       "properties": {
         "exclude": {
           "description": "Ref patterns to exclude",
-          "items": {
-            "minLength": 1,
-            "pattern": "^refs/",
-            "type": "string"
-          },
           "type": "array",
-          "uniqueItems": true
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^refs/",
+            "minLength": 1
+          }
         },
         "include": {
           "description": "Ref patterns to include (e.g., \"refs/heads/main\", \"refs/heads/release/*\")",
-          "items": {
-            "minLength": 1,
-            "pattern": "^refs/",
-            "type": "string"
-          },
           "type": "array",
-          "uniqueItems": true
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^refs/",
+            "minLength": 1
+          }
         }
       },
-      "type": "object"
+      "additionalProperties": false
     },
     "RepositorySettingsConfig": {
-      "additionalProperties": false,
       "description": "Configures merge strategies and branch cleanup behavior for pull requests",
+      "type": "object",
       "properties": {
         "allow_auto_merge": {
           "description": "Allow auto-merge for pull requests",
@@ -469,35 +427,28 @@
         },
         "squash_merge_commit_message": {
           "description": "Message format for squash merge commits (PR_BODY, COMMIT_MESSAGES, or BLANK)",
-          "enum": [
-            "PR_BODY",
-            "COMMIT_MESSAGES",
-            "BLANK"
-          ]
+          "enum": [ "PR_BODY", "COMMIT_MESSAGES", "BLANK" ]
         },
         "squash_merge_commit_title": {
           "description": "Title format for squash merge commits (COMMIT_OR_PR_TITLE or PR_TITLE)",
-          "enum": [
-            "COMMIT_OR_PR_TITLE",
-            "PR_TITLE"
-          ]
+          "enum": [ "COMMIT_OR_PR_TITLE", "PR_TITLE" ]
         }
       },
-      "type": "object"
+      "additionalProperties": false
     },
     "RequiredReviews": {
-      "additionalProperties": false,
       "description": "Configures pull request review requirements including approval count, code owner reviews, and who can bypass requirements",
+      "type": "object",
       "properties": {
         "bypass_pull_request_allowances": {
-          "$ref": "#/$defs/BypassPullRequestAllowances",
-          "description": "Allow specified users, teams, or apps to bypass pull request requirements"
+          "description": "Allow specified users, teams, or apps to bypass pull request requirements",
+          "$ref": "#/$defs/BypassPullRequestAllowances"
         },
         "count": {
           "description": "Number of required approving reviews",
+          "type": "integer",
           "maximum": 6,
-          "minimum": 0,
-          "type": "integer"
+          "minimum": 0
         },
         "dismiss_stale": {
           "description": "Dismiss stale pull request approvals when new commits are pushed",
@@ -512,92 +463,80 @@
           "type": "boolean"
         }
       },
-      "type": "object"
+      "additionalProperties": false
     },
     "RequiredStatusChecks": {
-      "additionalProperties": false,
       "description": "Specifies CI/CD checks that must pass before merging, with option to require branches be up-to-date",
+      "type": "object",
       "properties": {
         "contexts": {
           "description": "Required status check contexts. Empty array inherits repo's existing checks (hybrid approach)",
+          "type": "array",
           "items": {
             "type": "string"
-          },
-          "type": "array"
+          }
         },
         "strict": {
           "description": "Require branches to be up to date before merging",
           "type": "boolean"
         }
       },
-      "type": "object"
+      "additionalProperties": false
     },
     "RulesetConditionsConfig": {
-      "additionalProperties": false,
       "description": "Defines conditions for when a ruleset applies, primarily using ref name patterns",
+      "type": "object",
       "properties": {
         "ref_name": {
-          "$ref": "#/$defs/RefNameCondition",
-          "description": "Ref name patterns (branch/tag names)"
+          "description": "Ref name patterns (branch/tag names)",
+          "$ref": "#/$defs/RefNameCondition"
         }
       },
-      "type": "object"
+      "additionalProperties": false
     },
     "RulesetConfig": {
-      "additionalProperties": false,
       "description": "Configures GitHub Rulesets (modern replacement for branch protection) with more granular targeting, additional rule types, better bypass management, and enforcement modes",
+      "type": "object",
+      "required": [ "name", "target", "enforcement" ],
       "properties": {
         "bypass_actors": {
           "description": "Actors who can bypass this ruleset",
+          "type": "array",
           "items": {
             "$ref": "#/$defs/BypassActorConfig"
-          },
-          "type": "array"
+          }
         },
         "conditions": {
-          "$ref": "#/$defs/RulesetConditionsConfig",
-          "description": "Conditions for when ruleset applies"
+          "description": "Conditions for when ruleset applies",
+          "$ref": "#/$defs/RulesetConditionsConfig"
         },
         "enforcement": {
           "description": "Enforcement level (active, disabled, or evaluate)",
-          "enum": [
-            "active",
-            "disabled",
-            "evaluate"
-          ]
+          "enum": [ "active", "disabled", "evaluate" ]
         },
         "name": {
           "description": "Ruleset name (unique per repository)",
-          "minLength": 1,
-          "type": "string"
+          "type": "string",
+          "minLength": 1
         },
         "rules": {
-          "$ref": "#/$defs/RulesetRulesConfig",
-          "description": "Rules to enforce"
+          "description": "Rules to enforce",
+          "$ref": "#/$defs/RulesetRulesConfig"
         },
         "target": {
           "description": "Target type (branch, tag, or push)",
-          "enum": [
-            "branch",
-            "tag",
-            "push"
-          ]
+          "enum": [ "branch", "tag", "push" ]
         }
       },
-      "required": [
-        "name",
-        "target",
-        "enforcement"
-      ],
-      "type": "object"
+      "additionalProperties": false
     },
     "RulesetRulesConfig": {
-      "additionalProperties": false,
       "description": "Contains all rule types that can be enforced by a ruleset",
+      "type": "object",
       "properties": {
         "code_scanning": {
-          "$ref": "#/$defs/CodeScanningRuleConfig",
-          "description": "Code scanning requirements"
+          "description": "Code scanning requirements",
+          "$ref": "#/$defs/CodeScanningRuleConfig"
         },
         "creation": {
           "description": "Prevent branch/tag creation",
@@ -612,8 +551,8 @@
           "type": "boolean"
         },
         "pull_request": {
-          "$ref": "#/$defs/PullRequestRuleConfig",
-          "description": "Pull request rules (reviews, dismissal, code owners)"
+          "description": "Pull request rules (reviews, dismissal, code owners)",
+          "$ref": "#/$defs/PullRequestRuleConfig"
         },
         "required_linear_history": {
           "description": "Require linear commit history (no merge commits)",
@@ -624,77 +563,70 @@
           "type": "boolean"
         },
         "required_status_checks": {
-          "$ref": "#/$defs/StatusChecksRuleConfig",
-          "description": "Required status checks that must pass"
+          "description": "Required status checks that must pass",
+          "$ref": "#/$defs/StatusChecksRuleConfig"
         },
         "update": {
           "description": "Restrict updates to refs",
           "type": "boolean"
         }
       },
-      "type": "object"
+      "additionalProperties": false
     },
     "SecurityConfig": {
-      "additionalProperties": false,
       "description": "Configures GitHub Advanced Security features including secret scanning and Dependabot security updates",
+      "type": "object",
       "properties": {
         "dependabot_security_updates": {
           "description": "Enable Dependabot security updates",
-          "enum": [
-            "enabled",
-            "disabled"
-          ]
+          "enum": [ "enabled", "disabled" ]
         },
         "secret_scanning": {
           "description": "Enable secret scanning (requires GitHub Advanced Security)",
-          "enum": [
-            "enabled",
-            "disabled"
-          ]
+          "enum": [ "enabled", "disabled" ]
         },
         "secret_scanning_push_protection": {
           "description": "Enable secret scanning push protection (requires GitHub Advanced Security and secret scanning enabled)",
-          "enum": [
-            "enabled",
-            "disabled"
-          ]
+          "enum": [ "enabled", "disabled" ]
         }
       },
-      "type": "object"
+      "additionalProperties": false
     },
     "SettingsConfig": {
-      "additionalProperties": false,
       "description": "Controls synchronization of GitHub repository settings like merge strategies, branch protection, security features, and access controls",
+      "type": "object",
       "properties": {
         "exclude": {
           "description": "Specific settings sections or fields to exclude from sync",
-          "items": {
-            "minLength": 1,
-            "type": "string"
-          },
           "type": "array",
-          "uniqueItems": true
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
         },
         "merge": {
           "description": "Settings sections to merge with repo-specific overrides instead of replacing. Allows customizing specific fields while inheriting org defaults",
+          "type": "array",
           "items": {
             "$ref": "#/$defs/SettingsMergeConfig"
-          },
-          "type": "array"
+          }
         },
         "skip": {
-          "default": false,
           "description": "Skip repository settings synchronization. Other sync operations still run unless their respective skip flags are set",
+          "default": false,
           "type": "boolean"
         }
       },
-      "type": "object"
+      "additionalProperties": false
     },
     "SettingsMergeConfig": {
-      "additionalProperties": false,
       "description": "Configures merge behavior for specific settings sections, allowing repo-specific customization of fields while inheriting org defaults.",
+      "type": "object",
+      "required": [ "section", "overrides" ],
       "properties": {
         "overrides": {
+          "description": "Override values to merge with org settings. Structure should match the section type (repository, features, security, branch protection rule, or ruleset). Only specified fields will override org defaults.",
           "anyOf": [
             {
               "$ref": "#/$defs/SettingsOverride_RepositorySettingsConfig"
@@ -715,8 +647,7 @@
               "description": "Custom override object for advanced use cases",
               "type": "object"
             }
-          ],
-          "description": "Override values to merge with org settings. Structure should match the section type (repository, features, security, branch protection rule, or ruleset). Only specified fields will override org defaults."
+          ]
         },
         "section": {
           "description": "Section identifier to merge. Use \"repository\", \"features\", or \"security\" for top-level sections. For branch protection rules, use the pattern (e.g., \"main\", \"release/*\"). For rulesets, use the ruleset name",
@@ -727,28 +658,20 @@
             "main",
             "release/*"
           ],
-          "minLength": 1,
-          "type": "string"
+          "type": "string",
+          "minLength": 1
         },
         "strategy": {
-          "default": "deep-merge",
           "description": "Merge strategy to use. deep-merge (default) recursively merges nested objects; shallow-merge only merges top-level keys",
-          "enum": [
-            "deep-merge",
-            "shallow-merge",
-            "overlay"
-          ]
+          "default": "deep-merge",
+          "enum": [ "deep-merge", "shallow-merge", "overlay" ]
         }
       },
-      "required": [
-        "section",
-        "overrides"
-      ],
-      "type": "object"
+      "additionalProperties": false
     },
     "SettingsOverride_BranchProtectionRuleConfig": {
-      "additionalProperties": false,
       "description": "Partial BranchProtectionRuleConfig for merge overrides. Only specified fields will override org defaults.",
+      "type": "object",
       "properties": {
         "allow_deletions": {
           "description": "Allow branch deletion",
@@ -764,8 +687,8 @@
         },
         "pattern": {
           "description": "Branch name pattern",
-          "minLength": 1,
-          "type": "string"
+          "type": "string",
+          "minLength": 1
         },
         "require_linear_history": {
           "description": "Require linear commit history",
@@ -776,23 +699,23 @@
           "type": "boolean"
         },
         "required_reviews": {
-          "$ref": "#/$defs/RequiredReviews",
-          "description": "Required pull request reviews configuration"
+          "description": "Required pull request reviews configuration",
+          "$ref": "#/$defs/RequiredReviews"
         },
         "required_status_checks": {
-          "$ref": "#/$defs/RequiredStatusChecks",
-          "description": "Required status checks configuration"
+          "description": "Required status checks configuration",
+          "$ref": "#/$defs/RequiredStatusChecks"
         },
         "restrictions": {
-          "$ref": "#/$defs/BranchRestrictionsConfig",
-          "description": "Restrict who can push to this branch. Leave unset to allow all users with push access"
+          "description": "Restrict who can push to this branch. Leave unset to allow all users with push access",
+          "$ref": "#/$defs/BranchRestrictionsConfig"
         }
       },
-      "type": "object"
+      "additionalProperties": false
     },
     "SettingsOverride_FeaturesConfig": {
-      "additionalProperties": false,
       "description": "Partial FeaturesConfig for merge overrides. Only specified fields will override org defaults.",
+      "type": "object",
       "properties": {
         "has_discussions": {
           "description": "Enable GitHub Discussions",
@@ -811,11 +734,11 @@
           "type": "boolean"
         }
       },
-      "type": "object"
+      "additionalProperties": false
     },
     "SettingsOverride_RepositorySettingsConfig": {
-      "additionalProperties": false,
       "description": "Partial RepositorySettingsConfig for merge overrides. Only specified fields will override org defaults.",
+      "type": "object",
       "properties": {
         "allow_auto_merge": {
           "description": "Allow auto-merge for pull requests",
@@ -843,164 +766,138 @@
         },
         "squash_merge_commit_message": {
           "description": "Message format for squash merge commits (PR_BODY, COMMIT_MESSAGES, or BLANK)",
-          "enum": [
-            "PR_BODY",
-            "COMMIT_MESSAGES",
-            "BLANK"
-          ]
+          "enum": [ "PR_BODY", "COMMIT_MESSAGES", "BLANK" ]
         },
         "squash_merge_commit_title": {
           "description": "Title format for squash merge commits (COMMIT_OR_PR_TITLE or PR_TITLE)",
-          "enum": [
-            "COMMIT_OR_PR_TITLE",
-            "PR_TITLE"
-          ]
+          "enum": [ "COMMIT_OR_PR_TITLE", "PR_TITLE" ]
         }
       },
-      "type": "object"
+      "additionalProperties": false
     },
     "SettingsOverride_RulesetConfig": {
-      "additionalProperties": false,
       "description": "Partial RulesetConfig for merge overrides. Only specified fields will override org defaults.",
+      "type": "object",
       "properties": {
         "bypass_actors": {
           "description": "Actors who can bypass this ruleset",
+          "type": "array",
           "items": {
             "$ref": "#/$defs/BypassActorConfig"
-          },
-          "type": "array"
+          }
         },
         "conditions": {
-          "$ref": "#/$defs/RulesetConditionsConfig",
-          "description": "Conditions for when ruleset applies"
+          "description": "Conditions for when ruleset applies",
+          "$ref": "#/$defs/RulesetConditionsConfig"
         },
         "enforcement": {
           "description": "Enforcement level (active, disabled, or evaluate)",
-          "enum": [
-            "active",
-            "disabled",
-            "evaluate"
-          ]
+          "enum": [ "active", "disabled", "evaluate" ]
         },
         "name": {
           "description": "Ruleset name (unique per repository)",
-          "minLength": 1,
-          "type": "string"
+          "type": "string",
+          "minLength": 1
         },
         "rules": {
-          "$ref": "#/$defs/RulesetRulesConfig",
-          "description": "Rules to enforce"
+          "description": "Rules to enforce",
+          "$ref": "#/$defs/RulesetRulesConfig"
         },
         "target": {
           "description": "Target type (branch, tag, or push)",
-          "enum": [
-            "branch",
-            "tag",
-            "push"
-          ]
+          "enum": [ "branch", "tag", "push" ]
         }
       },
-      "type": "object"
+      "additionalProperties": false
     },
     "SettingsOverride_SecurityConfig": {
-      "additionalProperties": false,
       "description": "Partial SecurityConfig for merge overrides. Only specified fields will override org defaults.",
+      "type": "object",
       "properties": {
         "dependabot_security_updates": {
           "description": "Enable Dependabot security updates",
-          "enum": [
-            "enabled",
-            "disabled"
-          ]
+          "enum": [ "enabled", "disabled" ]
         },
         "secret_scanning": {
           "description": "Enable secret scanning (requires GitHub Advanced Security)",
-          "enum": [
-            "enabled",
-            "disabled"
-          ]
+          "enum": [ "enabled", "disabled" ]
         },
         "secret_scanning_push_protection": {
           "description": "Enable secret scanning push protection (requires GitHub Advanced Security and secret scanning enabled)",
-          "enum": [
-            "enabled",
-            "disabled"
-          ]
+          "enum": [ "enabled", "disabled" ]
         }
       },
-      "type": "object"
+      "additionalProperties": false
     },
     "SmyklotConfig": {
-      "additionalProperties": false,
       "description": "Controls automatic updates of smyklot version references in workflow files when new versions are released, and which workflows to install/sync",
+      "type": "object",
       "properties": {
         "skip": {
-          "default": false,
           "description": "Skip ALL smyklot synchronization (both workflows and version updates). Label and file sync still run unless their respective skip flags are set. Use this for repos that don't use smyklot at all",
+          "default": false,
           "type": "boolean"
         },
         "version": {
-          "$ref": "#/$defs/SmyklotVersionConfig",
-          "description": "Version synchronization configuration"
+          "description": "Version synchronization configuration",
+          "$ref": "#/$defs/SmyklotVersionConfig"
         },
         "workflows": {
-          "$ref": "#/$defs/SmyklotWorkflowsConfig",
-          "description": "Which smyklot workflows to sync to this repository. Allows per-repo control over workflow installation"
+          "description": "Which smyklot workflows to sync to this repository. Allows per-repo control over workflow installation",
+          "$ref": "#/$defs/SmyklotWorkflowsConfig"
         }
       },
-      "type": "object"
+      "additionalProperties": false
     },
     "SmyklotVersionConfig": {
-      "additionalProperties": false,
       "description": "Controls version-only updates in non-managed workflow files",
+      "type": "object",
       "properties": {
         "skip": {
-          "default": false,
           "description": "Skip version-only updates in workflow files. Managed workflows (smyklot-pr-commands, smyklot-poll) are still synced unless their respective workflow flags are disabled",
+          "default": false,
           "type": "boolean"
         }
       },
-      "type": "object"
+      "additionalProperties": false
     },
     "SmyklotWorkflowsConfig": {
-      "additionalProperties": false,
       "description": "Controls which smyklot workflows are synced to a repository",
+      "type": "object",
       "properties": {
         "poll": {
-          "default": true,
           "description": "Sync smyklot-poll workflow. Default: true",
+          "default": true,
           "type": "boolean"
         },
         "pr_commands": {
-          "default": true,
           "description": "Sync smyklot-pr-commands workflow. Default: true",
+          "default": true,
           "type": "boolean"
         }
       },
-      "type": "object"
+      "additionalProperties": false
     },
     "StatusCheckConfig": {
-      "additionalProperties": false,
       "description": "Defines a single required status check with context name and optional integration ID",
+      "type": "object",
+      "required": [ "context" ],
       "properties": {
         "context": {
           "description": "Status check context name",
-          "minLength": 1,
-          "type": "string"
+          "type": "string",
+          "minLength": 1
         },
         "integration_id": {
           "description": "Integration ID for GitHub App status checks (optional)",
           "type": "integer"
         }
       },
-      "required": [
-        "context"
-      ],
-      "type": "object"
+      "additionalProperties": false
     },
     "StatusChecksRuleConfig": {
-      "additionalProperties": false,
       "description": "Specifies CI/CD status checks that must pass, with option to require strict updates",
+      "type": "object",
       "properties": {
         "do_not_enforce_on_create": {
           "description": "When true, do not enforce status check requirements on branches created from protected branches. New branches can temporarily bypass checks when first created",
@@ -1008,61 +905,56 @@
         },
         "required_status_checks": {
           "description": "Required status checks. Empty array = skip setting checks (inherit repo's existing)",
+          "type": "array",
           "items": {
             "$ref": "#/$defs/StatusCheckConfig"
-          },
-          "type": "array"
+          }
         },
         "strict_required_status_checks_policy": {
           "description": "Require branches to be up to date before merging (strict mode)",
           "type": "boolean"
         }
       },
-      "type": "object"
+      "additionalProperties": false
     },
     "SyncConfig": {
-      "additionalProperties": false,
       "description": "Configuration for controlling organization-wide synchronization of labels, files, smyklot versions, and repository settings across all repositories",
+      "type": "object",
       "properties": {
         "sync": {
-          "$ref": "#/$defs/SyncSettings",
-          "description": "Top-level sync configuration controlling label, file, and smyklot version synchronization behavior"
+          "description": "Top-level sync configuration controlling label, file, and smyklot version synchronization behavior",
+          "$ref": "#/$defs/SyncSettings"
         }
       },
-      "type": "object"
+      "additionalProperties": false
     },
     "SyncSettings": {
-      "additionalProperties": false,
       "description": "Centralized control for all synchronization operations including labels, files, smyklot versions, and repository settings",
+      "type": "object",
       "properties": {
         "files": {
-          "$ref": "#/$defs/FilesConfig",
-          "description": "File synchronization configuration"
+          "description": "File synchronization configuration",
+          "$ref": "#/$defs/FilesConfig"
         },
         "labels": {
-          "$ref": "#/$defs/LabelsConfig",
-          "description": "Label synchronization configuration"
+          "description": "Label synchronization configuration",
+          "$ref": "#/$defs/LabelsConfig"
         },
         "settings": {
-          "$ref": "#/$defs/SettingsConfig",
-          "description": "Repository settings synchronization configuration"
+          "description": "Repository settings synchronization configuration",
+          "$ref": "#/$defs/SettingsConfig"
         },
         "skip": {
-          "default": false,
           "description": "Skip ALL syncs for this repository. Equivalent to setting labels.skip, files.skip, smyklot.skip, and settings.skip to true",
+          "default": false,
           "type": "boolean"
         },
         "smyklot": {
-          "$ref": "#/$defs/SmyklotConfig",
-          "description": "Smyklot version synchronization configuration"
+          "description": "Smyklot version synchronization configuration",
+          "$ref": "#/$defs/SmyklotConfig"
         }
       },
-      "type": "object"
+      "additionalProperties": false
     }
-  },
-  "$id": "https://raw.githubusercontent.com/smykla-skalski/.github/main/schemas/sync-config.schema.json",
-  "$ref": "#/$defs/SyncConfig",
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "description": "Configuration for organization-wide label, file, and smyklot version synchronization. Place at .github/sync-config.yml in your repository.",
-  "title": "Sync Configuration"
+  }
 }
