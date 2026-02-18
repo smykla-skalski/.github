@@ -6,7 +6,7 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/gofri/go-github-ratelimit/v2/github_ratelimit"
-	"github.com/google/go-github/v80/github"
+	"github.com/google/go-github/v83/github"
 
 	"github.com/smykla-skalski/.github/pkg/logger"
 )
