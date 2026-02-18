@@ -59,7 +59,15 @@ func SyncRulesets(
 			continue
 		}
 
-		if err := createOrUpdateRuleset(ctx, log, client, org, repo, rulesetConfig, existing); err != nil {
+		if err := createOrUpdateRuleset(
+			ctx,
+			log,
+			client,
+			org,
+			repo,
+			rulesetConfig,
+			existing,
+		); err != nil {
 			return errors.Wrapf(err, "syncing ruleset %q", rulesetConfig.Name)
 		}
 

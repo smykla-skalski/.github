@@ -218,7 +218,14 @@ func applyAllSettingsChanges(
 	}
 
 	if hasBranchProtectionChanges {
-		if err := syncBranchProtection(ctx, log, client, org, repo, branchProtectionRules); err != nil {
+		if err := syncBranchProtection(
+			ctx,
+			log,
+			client,
+			org,
+			repo,
+			branchProtectionRules,
+		); err != nil {
 			return errors.Wrap(err, "syncing branch protection")
 		}
 
@@ -640,7 +647,15 @@ func syncBranchProtection(
 
 		// Apply protection to each matching branch
 		for _, branch := range matchingBranches {
-			if err := applyBranchProtection(ctx, log, client, org, repo, branch, &rule); err != nil {
+			if err := applyBranchProtection(
+				ctx,
+				log,
+				client,
+				org,
+				repo,
+				branch,
+				&rule,
+			); err != nil {
 				return errors.Wrapf(err, "applying protection to branch %q", branch)
 			}
 

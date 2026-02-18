@@ -720,7 +720,16 @@ func createSmyklotPRWithResult(
 	}
 
 	// Create Git commit
-	if err := createGitCommit(ctx, log, client, org, repo, branchName, baseSHA, changes); err != nil {
+	if err := createGitCommit(
+		ctx,
+		log,
+		client,
+		org,
+		repo,
+		branchName,
+		baseSHA,
+		changes,
+	); err != nil {
 		return 0, "", errors.Wrap(err, "creating Git commit")
 	}
 

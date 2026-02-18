@@ -30,7 +30,11 @@ func WriteGitHubOutput(enabled bool, key, value string) error {
 		return nil
 	}
 
-	f, err := os.OpenFile(outputFile, os.O_APPEND|os.O_WRONLY, 0600) //nolint:gosec,mnd,gofumpt,golines // GITHUB_OUTPUT from GH Actions
+	f, err := os.OpenFile(
+		outputFile,
+		os.O_APPEND|os.O_WRONLY,
+		0o600,
+	) //nolint:gosec,mnd,gofumpt,golines // GITHUB_OUTPUT from GH Actions
 	if err != nil {
 		return errors.Wrap(err, "opening GITHUB_OUTPUT file")
 	}

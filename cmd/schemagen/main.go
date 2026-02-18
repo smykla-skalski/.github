@@ -28,9 +28,24 @@ func main() {
 		schemaType  string
 	)
 
-	flag.BoolVar(&generateAll, "all", false, "Generate all schemas (sync-config, settings, smyklot)")
-	flag.StringVar(&outputDir, "output-dir", "", "Output directory for generated schemas (required with --all)")
-	flag.StringVar(&schemaType, "type", "sync-config", "Schema type to generate: sync-config, settings, or smyklot")
+	flag.BoolVar(
+		&generateAll,
+		"all",
+		false,
+		"Generate all schemas (sync-config, settings, smyklot)",
+	)
+	flag.StringVar(
+		&outputDir,
+		"output-dir",
+		"",
+		"Output directory for generated schemas (required with --all)",
+	)
+	flag.StringVar(
+		&schemaType,
+		"type",
+		"sync-config",
+		"Schema type to generate: sync-config, settings, or smyklot",
+	)
 	flag.Parse()
 
 	if generateAll {

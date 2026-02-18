@@ -86,7 +86,10 @@ func getStringFlagWithEnvFallback(cmd *cobra.Command, flagName, githubEnvFallbac
 // Priority: 1) explicit flag value, 2) INPUT_* env var, 3) GitHub standard env var.
 //
 //nolint:unparam // flagName parameter kept generic for potential future use with other persistent flags
-func getPersistentStringFlagWithEnvFallback(cmd *cobra.Command, flagName, githubEnvFallback string) string {
+func getPersistentStringFlagWithEnvFallback(
+	cmd *cobra.Command,
+	flagName, githubEnvFallback string,
+) string {
 	// Check explicit flag value
 	val, _ := cmd.Root().PersistentFlags().GetString(flagName)
 	if val != "" {
@@ -257,11 +260,15 @@ func getSyncParams(cmd *cobra.Command, configFlag string) (syncParams, error) {
 
 	// Validate required fields
 	if org == "" {
-		return syncParams{}, errors.New("org is required (set via --org flag, INPUT_ORG, or GITHUB_REPOSITORY_OWNER)")
+		return syncParams{}, errors.New(
+			"org is required (set via --org flag, INPUT_ORG, or GITHUB_REPOSITORY_OWNER)",
+		)
 	}
 
 	if repo == "" {
-		return syncParams{}, errors.New("repo is required (set via --repo flag, INPUT_REPO, or GITHUB_REPOSITORY)")
+		return syncParams{}, errors.New(
+			"repo is required (set via --repo flag, INPUT_REPO, or GITHUB_REPOSITORY)",
+		)
 	}
 
 	if configFile == "" {
@@ -392,7 +399,14 @@ func createSyncCommand[T any](
 				return err
 			}
 
-			syncConfig, err := fetchSyncConfig(ctx, log, client, params.org, params.repo, params.configJSON)
+			syncConfig, err := fetchSyncConfig(
+				ctx,
+				log,
+				client,
+				params.org,
+				params.repo,
+				params.configJSON,
+			)
 			if err != nil {
 				return err
 			}
@@ -469,15 +483,21 @@ var filesSyncCmd = &cobra.Command{
 
 		// Validate required fields
 		if org == "" {
-			return errors.New("org is required (set via --org flag, INPUT_ORG, or GITHUB_REPOSITORY_OWNER)")
+			return errors.New(
+				"org is required (set via --org flag, INPUT_ORG, or GITHUB_REPOSITORY_OWNER)",
+			)
 		}
 
 		if repo == "" {
-			return errors.New("repo is required (set via --repo flag, INPUT_REPO, or GITHUB_REPOSITORY)")
+			return errors.New(
+				"repo is required (set via --repo flag, INPUT_REPO, or GITHUB_REPOSITORY)",
+			)
 		}
 
 		if filesConfig == "" {
-			return errors.New("files-config is required (set via --files-config flag or INPUT_FILES_CONFIG)")
+			return errors.New(
+				"files-config is required (set via --files-config flag or INPUT_FILES_CONFIG)",
+			)
 		}
 
 		log.Info("starting file sync",
@@ -634,11 +654,15 @@ var smyklotSyncCmd = &cobra.Command{
 
 		// Validate required fields
 		if org == "" {
-			return errors.New("org is required (set via --org flag, INPUT_ORG, or GITHUB_REPOSITORY_OWNER)")
+			return errors.New(
+				"org is required (set via --org flag, INPUT_ORG, or GITHUB_REPOSITORY_OWNER)",
+			)
 		}
 
 		if repo == "" {
-			return errors.New("repo is required (set via --repo flag, INPUT_REPO, or GITHUB_REPOSITORY)")
+			return errors.New(
+				"repo is required (set via --repo flag, INPUT_REPO, or GITHUB_REPOSITORY)",
+			)
 		}
 
 		if smyklotVersion == "" {
@@ -741,7 +765,9 @@ var reposListCmd = &cobra.Command{
 		format := getStringFlagWithEnvFallback(cmd, "format", "")
 
 		if org == "" {
-			return errors.New("org is required (set via --org flag, INPUT_ORG, or GITHUB_REPOSITORY_OWNER)")
+			return errors.New(
+				"org is required (set via --org flag, INPUT_ORG, or GITHUB_REPOSITORY_OWNER)",
+			)
 		}
 
 		token, err := github.GetToken(ctx, log, useGHAuth)
@@ -837,15 +863,21 @@ var configVerifyFileCmd = &cobra.Command{
 
 		// Validate required fields
 		if repo == "" {
-			return errors.New("repo is required (set via --repo flag, INPUT_REPO, or GITHUB_REPOSITORY)")
+			return errors.New(
+				"repo is required (set via --repo flag, INPUT_REPO, or GITHUB_REPOSITORY)",
+			)
 		}
 
 		if branch == "" {
-			return errors.New("branch is required (set via --branch flag, INPUT_BRANCH, or GITHUB_REF_NAME)")
+			return errors.New(
+				"branch is required (set via --branch flag, INPUT_BRANCH, or GITHUB_REF_NAME)",
+			)
 		}
 
 		if generatedSchemaFile == "" {
-			return errors.New("generated-schema is required (path to externally generated schema file)")
+			return errors.New(
+				"generated-schema is required (path to externally generated schema file)",
+			)
 		}
 
 		log.Info("verifying schema from external file",
@@ -906,7 +938,8 @@ func init() {
 	rootCmd.PersistentFlags().String("log-level", "info", "Log level (trace|debug|info|warn|error)")
 	rootCmd.PersistentFlags().Bool("use-gh-auth", false, "Use 'gh auth token' for authentication")
 	rootCmd.PersistentFlags().Bool("dry-run", false, "Preview changes without applying them")
-	rootCmd.PersistentFlags().Bool("github-output", false, "Write outputs to GITHUB_OUTPUT for GitHub Actions")
+	rootCmd.PersistentFlags().
+		Bool("github-output", false, "Write outputs to GITHUB_OUTPUT for GitHub Actions")
 	rootCmd.PersistentFlags().String("org", "", "GitHub organization")
 
 	// Configure label sync command flags
@@ -952,8 +985,10 @@ func init() {
 	// Configure config verify-file command flags
 	configVerifyFileCmd.Flags().String("repo", "", "Repository (owner/name)")
 	configVerifyFileCmd.Flags().String("branch", "", "Branch name")
-	configVerifyFileCmd.Flags().String("schema-file", "schemas/sync-config.schema.json", "Path to committed schema file")
-	configVerifyFileCmd.Flags().String("generated-schema", "", "Path to externally generated schema file")
+	configVerifyFileCmd.Flags().
+		String("schema-file", "schemas/sync-config.schema.json", "Path to committed schema file")
+	configVerifyFileCmd.Flags().
+		String("generated-schema", "", "Path to externally generated schema file")
 
 	// Build command tree
 	labelsCmd.AddCommand(labelsSyncCmd)
