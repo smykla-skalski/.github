@@ -28,8 +28,12 @@
 #     allow_removal: bool        # Delete non-central files (default: false)
 #     merge:                     # File merge configuration
 #       - path: string           # File path to merge
-#         strategy: string       # Merge strategy: "deep-merge" or "shallow-merge"
-#         overrides: object      # Override values to merge with org template
+#         strategy: string       # Merge strategy: "deep-merge", "shallow-merge", or "markdown"
+#         overrides: object      # Override values (JSON/YAML strategies only)
+#         sections:              # Section operations (markdown strategy only)
+#           - action: string     # after, before, replace, delete, append, prepend
+#             heading: string    # Heading text to match (required for after/before/replace/delete)
+#             content: string    # Content to insert/replace (required except for delete)
 #
 #   smyklot:                     # Smyklot synchronization configuration
 #     skip: bool                 # Skip ALL smyklot sync (default: false)
@@ -94,20 +98,42 @@
 #
 # sync.files.merge[].path (string, required)
 #   File path (relative to repo root) to merge.
-#   Must be a JSON (.json) or YAML (.yml, .yaml) file.
-#   Example: "renovate.json"
+#   Supports JSON (.json), YAML (.yml, .yaml), and Markdown (.md, .markdown) files.
+#   Example: "renovate.json", "CONTRIBUTING.md"
 #
 # sync.files.merge[].strategy (string, default: "deep-merge")
 #   Merge strategy to use:
 #   - "deep-merge": Recursively merge objects (configured overrides win at leaf level)
 #   - "shallow-merge": Only merge top-level keys (nested objects replaced)
 #   - "overlay": Alias for "deep-merge"
+#   - "markdown": Heading-based section operations for .md files
 #
-# sync.files.merge[].overrides (object, required)
+# sync.files.merge[].overrides (object, optional for JSON/YAML strategies)
 #   Key-value pairs to override in the org template.
 #   Set value to null to explicitly remove a field from the result.
 #   For deep-merge: nested paths are merged recursively.
 #   For shallow-merge: top-level keys only.
+#   Not used for markdown strategy.
+#
+# sync.files.merge[].sections (array of objects, for markdown strategy)
+#   Section operations for markdown merge. Each defines an action on a heading-based section.
+#   Sections are applied sequentially; the document is re-parsed between operations.
+#
+# sync.files.merge[].sections[].action (string, required)
+#   Operation to perform:
+#   - "after": Insert content after the matched section (including subsections)
+#   - "before": Insert content before the matched section's heading line
+#   - "replace": Replace entire section (heading + content + subsections)
+#   - "delete": Remove entire section (heading + content + subsections)
+#   - "append": Append content at end of document (no heading required)
+#   - "prepend": Insert content at start of document (no heading required)
+#
+# sync.files.merge[].sections[].heading (string, conditional)
+#   Heading text to match. Required for after/before/replace/delete actions.
+#   Matching is case-insensitive, trailing # marks stripped, first match wins.
+#
+# sync.files.merge[].sections[].content (string, conditional)
+#   Content to insert or replace with. Required for all actions except delete.
 #
 # sync.smyklot.skip (boolean, default: false)
 #   When true, skips ALL smyklot synchronization (both workflows and version updates).
@@ -492,3 +518,63 @@ sync: {}
 #           ignorePaths:
 #             - "**/*.test.js"
 #             - "**/fixtures/**"
+
+# ---------------------------------------------------------------------------
+# MARKDOWN SECTION MERGE EXAMPLES
+# ---------------------------------------------------------------------------
+# Markdown merge uses heading-based section operations to customize .md files
+# while inheriting org template updates. Sections are identified by their
+# heading text (case-insensitive, first match wins). A section includes its
+# heading line, content, and all subsections until the next heading of equal
+# or higher level (or EOF).
+
+# Example 24: Insert custom section after a heading
+# sync:
+#   files:
+#     merge:
+#       - path: "CONTRIBUTING.md"
+#         strategy: "markdown"
+#         sections:
+#           - action: "after"
+#             heading: "Prerequisites"
+#             content: |
+#               ### Project-Specific Setup
+#
+#               For this project specifically:
+#               - Install additional dependencies: `npm install`
+#               - Configure environment: `cp .env.example .env`
+
+# Example 25: Multiple markdown operations (after + replace + delete)
+# sync:
+#   files:
+#     merge:
+#       - path: "CONTRIBUTING.md"
+#         strategy: "markdown"
+#         sections:
+#           - action: "after"
+#             heading: "Prerequisites"
+#             content: |
+#               ### Monorepo Structure
+#
+#               Each plugin is in its own top-level directory.
+#           - action: "replace"
+#             heading: "Code Style"
+#             content: |
+#               ## Code Style
+#
+#               This project uses custom linting rules. Run `task lint` to check.
+#           - action: "delete"
+#             heading: "Legacy Section"
+
+# Example 26: Append custom section at end of document
+# sync:
+#   files:
+#     merge:
+#       - path: "CONTRIBUTING.md"
+#         strategy: "markdown"
+#         sections:
+#           - action: "append"
+#             content: |
+#               ## Project-Specific Notes
+#
+#               Additional information specific to this repository.

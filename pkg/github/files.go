@@ -450,9 +450,59 @@ func applyMerge(
 	path string,
 	mergeConfig *configtypes.FileMergeConfig,
 ) ([]byte, error) {
-	// Detect file type based on extension
-	ext := filepath.Ext(path)
+	ext := strings.ToLower(filepath.Ext(path))
 
+	// Handle markdown files
+	if ext == ".md" || ext == ".markdown" {
+		return applyMarkdownMerge(log, sourceContent, path, mergeConfig)
+	}
+
+	// Reject markdown strategy for non-markdown files
+	if mergeConfig.Strategy == configtypes.MergeStrategyMarkdown {
+		return nil, errors.Wrapf(
+			merge.ErrMergeUnknownStrategy,
+			"strategy %q is only valid for markdown files, not %s",
+			mergeConfig.Strategy, ext,
+		)
+	}
+
+	return applyStructuredMerge(log, sourceContent, path, ext, mergeConfig)
+}
+
+// applyMarkdownMerge applies markdown section merge to file content.
+func applyMarkdownMerge(
+	log *logger.Logger,
+	sourceContent []byte,
+	path string,
+	mergeConfig *configtypes.FileMergeConfig,
+) ([]byte, error) {
+	// For markdown files, only "markdown" or empty strategy is valid
+	if mergeConfig.Strategy != "" && mergeConfig.Strategy != configtypes.MergeStrategyMarkdown {
+		return nil, errors.Wrapf(
+			merge.ErrMergeUnknownStrategy,
+			"markdown files only support %q strategy, got %q",
+			configtypes.MergeStrategyMarkdown, mergeConfig.Strategy,
+		)
+	}
+
+	result, err := merge.MergeMarkdown(sourceContent, mergeConfig.Sections)
+	if err != nil {
+		return nil, errors.Wrapf(err, "merging markdown file %s", path)
+	}
+
+	log.Debug("applied markdown merge", "file", path, "sections", len(mergeConfig.Sections))
+
+	return result, nil
+}
+
+// applyStructuredMerge applies JSON/YAML merge to file content.
+func applyStructuredMerge(
+	log *logger.Logger,
+	sourceContent []byte,
+	path string,
+	ext string,
+	mergeConfig *configtypes.FileMergeConfig,
+) ([]byte, error) {
 	var (
 		parseFunc   func([]byte) (map[string]any, error)
 		marshalFunc func(map[string]any) ([]byte, error)
@@ -460,7 +510,7 @@ func applyMerge(
 		isJSON      bool
 	)
 
-	switch strings.ToLower(ext) {
+	switch ext {
 	case ".json":
 		parseFunc = merge.ParseJSON
 		marshalFunc = merge.MarshalJSON
@@ -747,7 +797,16 @@ func createOrUpdatePRWithResult(
 	}
 
 	// Create Git commit
-	if err := createGitCommit(ctx, log, client, org, repo, branchName, baseSHA, changes); err != nil {
+	if err := createGitCommit(
+		ctx,
+		log,
+		client,
+		org,
+		repo,
+		branchName,
+		baseSHA,
+		changes,
+	); err != nil {
 		return 0, "", errors.Wrap(err, "creating Git commit")
 	}
 

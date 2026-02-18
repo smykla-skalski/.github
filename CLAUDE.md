@@ -76,6 +76,14 @@ sync:
         deduplicateArrays: true    # Remove duplicate items
         overrides:
           packageRules: [{...}]
+      - path: "CONTRIBUTING.md"
+        strategy: "markdown"
+        sections:
+          - action: "after"
+            heading: "Prerequisites"
+            content: |
+              ### Project Setup
+              Custom setup instructions here.
   settings:
     skip: false
     exclude: ["branch_protection", "security.secret_scanning"]
@@ -90,6 +98,7 @@ sync:
 - **Hybrid status checks**: Empty `contexts: []` inherits existing; explicit overrides
 - **Smart renovate.json**: Detects manual modifications, excludes from sync, shows alert
 - **Array merge strategies**: Control per-path array merging (append/prepend/replace) with optional deduplication. Default: arrays replaced per RFC 7396. JSONPath exact match only (no wildcards).
+- **Markdown section merge**: Heading-based section operations (after/before/replace/delete/append/prepend) for `.md` files. Case-insensitive heading match, code-fence aware, first match wins. Sections applied sequentially with re-parse between operations.
 - **Matrix pattern**: `dotsync repos list --format json` returns `[{name, full_name, ...}]`
 
 ## Common Tasks

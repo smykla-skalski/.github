@@ -72,11 +72,11 @@ type FilesConfig struct {
 //
 //nolint:staticcheck // ST1021: Descriptive comment preferred over struct name prefix
 type FileMergeConfig struct {
-	// File path (relative to repo root) to merge. Must be a JSON or YAML file
+	// File path (relative to repo root) to merge. Supports JSON, YAML, and Markdown files
 	Path string `json:"path" jsonschema:"minLength=1,pattern=^[^/].*$,required" yaml:"path"`
 	// Merge strategy to use. deep-merge (default) recursively merges nested objects; shallow-merge
-	// only merges top-level keys
-	Strategy MergeStrategy `json:"strategy" jsonschema:"enum=deep-merge,enum=shallow-merge,enum=overlay,default=deep-merge" yaml:"strategy"`
+	// only merges top-level keys; markdown uses heading-based section operations for .md files
+	Strategy MergeStrategy `json:"strategy" jsonschema:"enum=deep-merge,enum=shallow-merge,enum=overlay,enum=markdown,default=deep-merge" yaml:"strategy"`
 	// Per-path array merge strategies. Maps JSONPath expressions (exact match only, e.g.,
 	// "$.packageRules") to merge strategy (append/prepend/replace). Only applies to arrays in the
 	// merged result. If not specified, arrays are replaced (RFC 7396 default behavior).
@@ -87,8 +87,12 @@ type FileMergeConfig struct {
 	// since arrays are replaced by default (RFC 7396).
 	DeduplicateArrays bool `json:"deduplicateArrays,omitempty" jsonschema:"default=false" yaml:"deduplicateArrays,omitempty"`
 	// Static override values to merge with the org template. These values take precedence over org
-	// defaults. Use null to explicitly remove a field from the result
-	Overrides map[string]any `json:"overrides" jsonschema:"required" yaml:"overrides"`
+	// defaults. Use null to explicitly remove a field from the result. Required for JSON/YAML
+	// strategies, not used for markdown strategy
+	Overrides map[string]any `json:"overrides,omitempty" yaml:"overrides,omitempty"`
+	// Section operations for markdown merge strategy. Each section defines an action to perform
+	// on a heading-based section of the document. Sections are applied sequentially
+	Sections []MarkdownSection `json:"sections,omitempty" yaml:"sections,omitempty"`
 }
 
 // MergeStrategy defines how organization and repository file contents are merged
@@ -103,6 +107,8 @@ const (
 	MergeStrategyShallow MergeStrategy = "shallow-merge"
 	// MergeStrategyOverlay is an alias for deep-merge
 	MergeStrategyOverlay MergeStrategy = "overlay"
+	// MergeStrategyMarkdown merges markdown files using heading-based section operations
+	MergeStrategyMarkdown MergeStrategy = "markdown"
 )
 
 // ArrayStrategy defines how arrays are merged when using array merge strategies
@@ -116,6 +122,38 @@ const (
 	// ArrayStrategyPrepend prepends override array elements before base array elements
 	ArrayStrategyPrepend ArrayStrategy = "prepend"
 )
+
+// MarkdownSectionAction defines the operation to perform on a markdown section
+type MarkdownSectionAction string
+
+const (
+	// MarkdownActionAfter inserts content after the matched section (including subsections)
+	MarkdownActionAfter MarkdownSectionAction = "after"
+	// MarkdownActionBefore inserts content before the matched section's heading line
+	MarkdownActionBefore MarkdownSectionAction = "before"
+	// MarkdownActionReplace replaces the entire matched section (heading + content + subsections)
+	MarkdownActionReplace MarkdownSectionAction = "replace"
+	// MarkdownActionDelete removes the entire matched section (heading + content + subsections)
+	MarkdownActionDelete MarkdownSectionAction = "delete"
+	// MarkdownActionAppend appends content at the end of the document
+	MarkdownActionAppend MarkdownSectionAction = "append"
+	// MarkdownActionPrepend inserts content at the start of the document
+	MarkdownActionPrepend MarkdownSectionAction = "prepend"
+)
+
+// Defines a section operation for markdown file merging, specifying what action to take on a
+// heading-based section of the document
+//
+//nolint:staticcheck // ST1021: Descriptive comment preferred over struct name prefix
+type MarkdownSection struct {
+	// Operation to perform: after, before, replace, delete, append, prepend
+	Action MarkdownSectionAction `json:"action" jsonschema:"enum=after,enum=before,enum=replace,enum=delete,enum=append,enum=prepend,required" yaml:"action"`
+	// Heading text to match (required for after/before/replace/delete). Case-insensitive,
+	// trailing # marks stripped. First match wins for duplicate headings
+	Heading string `json:"heading,omitempty" yaml:"heading,omitempty"`
+	// Content to insert/replace (required for all actions except delete)
+	Content string `json:"content,omitempty" yaml:"content,omitempty"`
+}
 
 // Controls automatic updates of smyklot version references in workflow files when new versions
 // are released, and which workflows to install/sync
