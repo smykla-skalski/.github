@@ -1,5 +1,33 @@
 # Changelog
 
+## [1.14.0](https://github.com/smykla-skalski/.github/compare/dotsync/v1.13.0...dotsync/v1.14.0) (2026-02-18)
+
+### Features
+
+* **sync:** add markdown section merge ([ba88a20](https://github.com/smykla-skalski/.github/commit/ba88a203089ab9c76ebc35196253b08d269decc7))
+
+### Bug Fixes
+
+* **deps:** update module go.yaml.in/yaml/v4 to v4.0.0-rc.4 ([#62](https://github.com/smykla-skalski/.github/issues/62)) ([8a2feb8](https://github.com/smykla-skalski/.github/commit/8a2feb81e2b554a101f167ea6417a8f9316f23a8))
+* **deps:** update module golang.org/x/term to v0.39.0 ([#56](https://github.com/smykla-skalski/.github/issues/56)) ([3f34b02](https://github.com/smykla-skalski/.github/commit/3f34b0268a239811d1d1e8e904ae98e0bd34155a))
+* **deps:** update module golang.org/x/term to v0.40.0 ([#71](https://github.com/smykla-skalski/.github/issues/71)) ([b87b554](https://github.com/smykla-skalski/.github/commit/b87b55412e316568e313815df45b1820f37b9b27))
+* **lint:** pin golangci-lint 2.10.1, fix issues ([9f04575](https://github.com/smykla-skalski/.github/commit/9f04575a51dad6e8e75939ec14b97516b9014c0b))
+* **lint:** resolve all golangci-lint issues ([a9d6455](https://github.com/smykla-skalski/.github/commit/a9d64556b4a7eb0c4338e88b4e8a05c3ae109fde))
+
+### Dependencies
+
+* **deps:** update alpine:latest docker digest to 2510918 ([#65](https://github.com/smykla-skalski/.github/issues/65)) ([bbe55b0](https://github.com/smykla-skalski/.github/commit/bbe55b0cced9d1d3a67b52703c687e9b81784ed0))
+* **deps:** update alpine:latest docker digest to 865b95f ([#51](https://github.com/smykla-skalski/.github/issues/51)) ([44f93ec](https://github.com/smykla-skalski/.github/commit/44f93eccfd7bde9f6bca428fee339c716687c3b5))
+* **deps:** update dependency actionlint to v1.7.10 ([#53](https://github.com/smykla-skalski/.github/issues/53)) ([ca42130](https://github.com/smykla-skalski/.github/commit/ca42130079e4e653274f956e08e10f3f38fa2852))
+* **deps:** update dependency actionlint to v1.7.11 ([#74](https://github.com/smykla-skalski/.github/issues/74)) ([20a1d40](https://github.com/smykla-skalski/.github/commit/20a1d40c27c81357968387aa88ec389c8a3e69ab))
+* **deps:** update dependency go to v1.25.6 ([#58](https://github.com/smykla-skalski/.github/issues/58)) ([302b4eb](https://github.com/smykla-skalski/.github/commit/302b4eb4a351a4ca89007f9fec8484241e8a422b))
+* **deps:** update dependency go to v1.25.6 ([#59](https://github.com/smykla-skalski/.github/issues/59)) ([034feed](https://github.com/smykla-skalski/.github/commit/034feed40a1e4f2a85cd0935afa5770cce2ff05e))
+* **deps:** update dependency go to v1.26.0 ([#69](https://github.com/smykla-skalski/.github/issues/69)) ([d379e19](https://github.com/smykla-skalski/.github/commit/d379e190d7cc8cf7bfaf98b955a3f67baed8b91a))
+* **deps:** update dependency go to v1.26.0 ([#70](https://github.com/smykla-skalski/.github/issues/70)) ([4a5d27f](https://github.com/smykla-skalski/.github/commit/4a5d27ff7c6d285c476ea89ec57c6d95dce3f9a7))
+* **deps:** update dependency golangci-lint to v2.8.0 ([#55](https://github.com/smykla-skalski/.github/issues/55)) ([216708b](https://github.com/smykla-skalski/.github/commit/216708b345c45a1aa6e5fe32b759e07b011c04c0))
+* **deps:** update dependency golangci-lint to v2.9.0 ([#73](https://github.com/smykla-skalski/.github/issues/73)) ([7bffe5c](https://github.com/smykla-skalski/.github/commit/7bffe5c7f9a486cb5696a03da9451ca97be22d91))
+* **deps:** update dependency markdownlint-cli2 to v0.21.0 ([#75](https://github.com/smykla-skalski/.github/issues/75)) ([cc1d91b](https://github.com/smykla-skalski/.github/commit/cc1d91b27a5829e6679caf3c0710ca8f62911df7))
+
 ## [1.13.0](https://github.com/smykla-skalski/.github/compare/dotsync/v1.12.1...dotsync/v1.13.0) (2025-12-12)
 
 ### Features
