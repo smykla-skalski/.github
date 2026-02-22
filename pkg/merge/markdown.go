@@ -326,9 +326,13 @@ func splitLines(content string) []string {
 	return strings.Split(content, "\n")
 }
 
-// joinLines joins lines back into a single string.
+// joinLines joins lines back into a single string with a trailing newline.
 func joinLines(lines []string) string {
-	return strings.Join(lines, "\n")
+	if len(lines) == 0 {
+		return ""
+	}
+
+	return strings.Join(lines, "\n") + "\n"
 }
 
 // insertWithSpacing inserts contentLines at the given position with blank line separation.

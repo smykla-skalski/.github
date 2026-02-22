@@ -29,7 +29,7 @@ func TestMergeMarkdown_After(t *testing.T) {
 					Content: "### Custom Section\n\nCustom content here.",
 				},
 			},
-			want: "# Title\n\nIntro text.\n\n## Prerequisites\n\nInstall Go.\n\n### Custom Section\n\nCustom content here.\n\n## Getting Started\n\nStart here.",
+			want: "# Title\n\nIntro text.\n\n## Prerequisites\n\nInstall Go.\n\n### Custom Section\n\nCustom content here.\n\n## Getting Started\n\nStart here.\n",
 		},
 		{
 			name: "insert after section with subsections",
@@ -41,7 +41,7 @@ func TestMergeMarkdown_After(t *testing.T) {
 					Content: "## Inserted Section\n\nInserted content.",
 				},
 			},
-			want: "# Title\n\n## Section A\n\nContent A.\n\n### Subsection A1\n\nSub content.\n\n## Inserted Section\n\nInserted content.\n\n## Section B\n\nContent B.",
+			want: "# Title\n\n## Section A\n\nContent A.\n\n### Subsection A1\n\nSub content.\n\n## Inserted Section\n\nInserted content.\n\n## Section B\n\nContent B.\n",
 		},
 		{
 			name: "insert after last section",
@@ -53,7 +53,7 @@ func TestMergeMarkdown_After(t *testing.T) {
 					Content: "## Appended\n\nNew content.",
 				},
 			},
-			want: "# Title\n\n## Last Section\n\nLast content.\n\n## Appended\n\nNew content.",
+			want: "# Title\n\n## Last Section\n\nLast content.\n\n## Appended\n\nNew content.\n",
 		},
 	}
 
@@ -90,7 +90,7 @@ func TestMergeMarkdown_Before(t *testing.T) {
 		t.Fatalf("MergeMarkdown() error = %v", err)
 	}
 
-	want := "# Title\n\n## Section A\n\nContent A.\n\n## Inserted Ahead\n\nPreceding content.\n\n## Section B\n\nContent B."
+	want := "# Title\n\n## Section A\n\nContent A.\n\n## Inserted Ahead\n\nPreceding content.\n\n## Section B\n\nContent B.\n"
 	if string(got) != want {
 		t.Errorf("MergeMarkdown() =\n%s\nwant:\n%s", string(got), want)
 	}
@@ -113,7 +113,7 @@ func TestMergeMarkdown_Replace(t *testing.T) {
 		t.Fatalf("MergeMarkdown() error = %v", err)
 	}
 
-	want := "# Title\n\n## New Section\n\nNew content.\n\n## Next Section\n\nNext content."
+	want := "# Title\n\n## New Section\n\nNew content.\n\n## Next Section\n\nNext content.\n"
 	if string(got) != want {
 		t.Errorf("MergeMarkdown() =\n%s\nwant:\n%s", string(got), want)
 	}
@@ -134,7 +134,7 @@ func TestMergeMarkdown_Delete(t *testing.T) {
 			sections: []configtypes.MarkdownSection{
 				{Action: configtypes.MarkdownActionDelete, Heading: "Remove Me"},
 			},
-			want: "# Title\n\n## Retained\n\nStays here.\n\n## Also Retained\n\nAlso stays.",
+			want: "# Title\n\n## Retained\n\nStays here.\n\n## Also Retained\n\nAlso stays.\n",
 		},
 		{
 			name: "delete last section",
@@ -142,7 +142,7 @@ func TestMergeMarkdown_Delete(t *testing.T) {
 			sections: []configtypes.MarkdownSection{
 				{Action: configtypes.MarkdownActionDelete, Heading: "Remove This"},
 			},
-			want: "# Title\n\n## Stays\n\nPersistent content.",
+			want: "# Title\n\n## Stays\n\nPersistent content.\n",
 		},
 	}
 
@@ -177,7 +177,7 @@ func TestMergeMarkdown_Append(t *testing.T) {
 			sections: []configtypes.MarkdownSection{
 				{Action: configtypes.MarkdownActionAppend, Content: "## Closing\n\nEnd matter."},
 			},
-			want: "# Title\n\nContent.\n\n## Closing\n\nEnd matter.",
+			want: "# Title\n\nContent.\n\n## Closing\n\nEnd matter.\n",
 		},
 		{
 			name: "append to empty document",
@@ -188,7 +188,7 @@ func TestMergeMarkdown_Append(t *testing.T) {
 					Content: "## Fresh Section\n\nStarting content.",
 				},
 			},
-			want: "## Fresh Section\n\nStarting content.",
+			want: "## Fresh Section\n\nStarting content.\n",
 		},
 	}
 
@@ -224,7 +224,7 @@ func TestMergeMarkdown_Prepend(t *testing.T) {
 		t.Fatalf("MergeMarkdown() error = %v", err)
 	}
 
-	want := "> **Note**: This is a custom notice.\n\n# Title\n\nContent."
+	want := "> **Note**: This is a custom notice.\n\n# Title\n\nContent.\n"
 	if string(got) != want {
 		t.Errorf("MergeMarkdown() =\n%s\nwant:\n%s", string(got), want)
 	}
