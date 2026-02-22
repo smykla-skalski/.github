@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.14.2](https://github.com/smykla-skalski/.github/compare/dotsync/v1.14.1...dotsync/v1.14.2) (2026-02-22)
+
+### Bug Fixes
+
+* **merge:** add trailing newline to merge output ([6b5c96f](https://github.com/smykla-skalski/.github/commit/6b5c96fd5f150044490e2e6f606f5c410b991ff0))
+
 ## [1.14.1](https://github.com/smykla-skalski/.github/compare/dotsync/v1.14.0...dotsync/v1.14.1) (2026-02-18)
 
 ### Bug Fixes
