@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.15.0](https://github.com/smykla-skalski/.github/compare/dotsync/v1.14.2...dotsync/v1.15.0) (2026-02-22)
+
+### Features
+
+* **merge:** add markdown patch action ([ba23e09](https://github.com/smykla-skalski/.github/commit/ba23e092aebad7e1edab5d063e6079298819cb71))
+
 ## [1.14.2](https://github.com/smykla-skalski/.github/compare/dotsync/v1.14.1...dotsync/v1.14.2) (2026-02-22)
 
 ### Bug Fixes
