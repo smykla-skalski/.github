@@ -230,6 +230,220 @@ func TestMergeMarkdown_Prepend(t *testing.T) {
 	}
 }
 
+func TestMergeMarkdown_Patch(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name     string
+		base     string
+		sections []configtypes.MarkdownSection
+		want     string
+	}{
+		{
+			name: "single substitution",
+			base: "# Title\n\n## Setup\n\nRun `make build` to compile.\n\n## Usage\n\nSee docs.",
+			sections: []configtypes.MarkdownSection{
+				{
+					Action:  configtypes.MarkdownActionPatch,
+					Heading: "Setup",
+					Patches: []configtypes.MarkdownPatch{
+						{Find: "make build", Replace: "task build"},
+					},
+				},
+			},
+			want: "# Title\n\n## Setup\n\nRun `task build` to compile.\n\n## Usage\n\nSee docs.\n",
+		},
+		{
+			name: "multiple patches",
+			base: "# Title\n\n## Setup\n\nRun `make build` and `make test`.\n\n## Other\n\nStuff.",
+			sections: []configtypes.MarkdownSection{
+				{
+					Action:  configtypes.MarkdownActionPatch,
+					Heading: "Setup",
+					Patches: []configtypes.MarkdownPatch{
+						{Find: "make build", Replace: "task build"},
+						{Find: "make test", Replace: "task test"},
+					},
+				},
+			},
+			want: "# Title\n\n## Setup\n\nRun `task build` and `task test`.\n\n## Other\n\nStuff.\n",
+		},
+		{
+			name: "all occurrences replaced",
+			base: "# Title\n\n## Commands\n\nUse make. Also make is great. make!\n\n## End\n\nDone.",
+			sections: []configtypes.MarkdownSection{
+				{
+					Action:  configtypes.MarkdownActionPatch,
+					Heading: "Commands",
+					Patches: []configtypes.MarkdownPatch{
+						{Find: "make", Replace: "task"},
+					},
+				},
+			},
+			want: "# Title\n\n## Commands\n\nUse task. Also task is great. task!\n\n## End\n\nDone.\n",
+		},
+		{
+			name: "delete text with empty replace",
+			base: "# Title\n\n## Notes\n\nKeep this. Remove this part. Keep rest.\n\n## End\n\nDone.",
+			sections: []configtypes.MarkdownSection{
+				{
+					Action:  configtypes.MarkdownActionPatch,
+					Heading: "Notes",
+					Patches: []configtypes.MarkdownPatch{
+						{Find: " Remove this part.", Replace: ""},
+					},
+				},
+			},
+			want: "# Title\n\n## Notes\n\nKeep this. Keep rest.\n\n## End\n\nDone.\n",
+		},
+		{
+			name: "scoped to section",
+			base: "# Title\n\n## A\n\nRun make build.\n\n## B\n\nRun make build.\n\n## C\n\nEnd.",
+			sections: []configtypes.MarkdownSection{
+				{
+					Action:  configtypes.MarkdownActionPatch,
+					Heading: "A",
+					Patches: []configtypes.MarkdownPatch{
+						{Find: "make build", Replace: "task build"},
+					},
+				},
+			},
+			want: "# Title\n\n## A\n\nRun task build.\n\n## B\n\nRun make build.\n\n## C\n\nEnd.\n",
+		},
+		{
+			name: "patch inside code block in section",
+			base: "# Title\n\n## Setup\n\n```bash\nmake check  # or task check\n```\n\n## End\n\nDone.",
+			sections: []configtypes.MarkdownSection{
+				{
+					Action:  configtypes.MarkdownActionPatch,
+					Heading: "Setup",
+					Patches: []configtypes.MarkdownPatch{
+						{Find: "make check  # or task check", Replace: "mise run check"},
+					},
+				},
+			},
+			want: "# Title\n\n## Setup\n\n```bash\nmise run check\n```\n\n## End\n\nDone.\n",
+		},
+		{
+			name: "sequential patch dependency",
+			base: "# Title\n\n## Build\n\nRun make.\n\n## End\n\nDone.",
+			sections: []configtypes.MarkdownSection{
+				{
+					Action:  configtypes.MarkdownActionPatch,
+					Heading: "Build",
+					Patches: []configtypes.MarkdownPatch{
+						{Find: "make", Replace: "task build"},
+						{Find: "task build", Replace: "mise run build"},
+					},
+				},
+			},
+			want: "# Title\n\n## Build\n\nRun mise run build.\n\n## End\n\nDone.\n",
+		},
+		{
+			name: "combined with other actions",
+			base: "# Title\n\n## Setup\n\nRun make build.\n\n## Usage\n\nUse it.",
+			sections: []configtypes.MarkdownSection{
+				{
+					Action:  configtypes.MarkdownActionPatch,
+					Heading: "Setup",
+					Patches: []configtypes.MarkdownPatch{
+						{Find: "make build", Replace: "task build"},
+					},
+				},
+				{
+					Action:  configtypes.MarkdownActionAfter,
+					Heading: "Setup",
+					Content: "### Added\n\nMore content.",
+				},
+			},
+			want: "# Title\n\n## Setup\n\nRun task build.\n\n### Added\n\nMore content.\n\n## Usage\n\nUse it.\n",
+		},
+		{
+			name: "real-world contributing make to mise",
+			base: "# Contributing\n\n## Making Changes\n\n1. Create a branch\n2. Make your changes\n3. Run checks:\n\n```bash\nmake check  # or task check\nmake test\n```\n\n4. Commit and push\n\n## Review\n\nSubmit a PR.",
+			sections: []configtypes.MarkdownSection{
+				{
+					Action:  configtypes.MarkdownActionPatch,
+					Heading: "Making Changes",
+					Patches: []configtypes.MarkdownPatch{
+						{Find: "make check  # or task check", Replace: "mise run check"},
+						{Find: "make test", Replace: "mise run test"},
+					},
+				},
+			},
+			want: "# Contributing\n\n## Making Changes\n\n1. Create a branch\n2. Make your changes\n3. Run checks:\n\n```bash\nmise run check\nmise run test\n```\n\n4. Commit and push\n\n## Review\n\nSubmit a PR.\n",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			got, err := merge.MergeMarkdown([]byte(tt.base), tt.sections)
+			if err != nil {
+				t.Fatalf("MergeMarkdown() error = %v", err)
+			}
+
+			if string(got) != tt.want {
+				t.Errorf("MergeMarkdown() =\n%s\nwant:\n%s", string(got), tt.want)
+			}
+		})
+	}
+}
+
+func TestMergeMarkdown_PatchErrors(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		base    string
+		section configtypes.MarkdownSection
+		wantErr error
+	}{
+		{
+			name: "find text not in section",
+			base: "# Title\n\n## Setup\n\nContent here.",
+			section: configtypes.MarkdownSection{
+				Action:  configtypes.MarkdownActionPatch,
+				Heading: "Setup",
+				Patches: []configtypes.MarkdownPatch{
+					{Find: "nonexistent text", Replace: "whatever"},
+				},
+			},
+			wantErr: merge.ErrMarkdownPatchNotFound,
+		},
+		{
+			name: "heading not found",
+			base: "# Title\n\n## Setup\n\nContent.",
+			section: configtypes.MarkdownSection{
+				Action:  configtypes.MarkdownActionPatch,
+				Heading: "Nonexistent",
+				Patches: []configtypes.MarkdownPatch{
+					{Find: "Content", Replace: "New"},
+				},
+			},
+			wantErr: merge.ErrMarkdownSectionNotFound,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			sections := []configtypes.MarkdownSection{tt.section}
+
+			_, err := merge.MergeMarkdown([]byte(tt.base), sections)
+			if err == nil {
+				t.Fatal("expected error")
+			}
+
+			if !errors.Is(err, tt.wantErr) {
+				t.Errorf("expected %v, got %v", tt.wantErr, err)
+			}
+		})
+	}
+}
+
 func TestMergeMarkdown_SectionNotFound(t *testing.T) {
 	t.Parallel()
 
@@ -452,6 +666,45 @@ func TestValidateMarkdownSections(t *testing.T) {
 			name: "valid prepend",
 			sections: []configtypes.MarkdownSection{
 				{Action: configtypes.MarkdownActionPrepend, Content: "content"},
+			},
+			wantErr: false,
+		},
+		{
+			name: "patch missing heading",
+			sections: []configtypes.MarkdownSection{
+				{
+					Action:  configtypes.MarkdownActionPatch,
+					Patches: []configtypes.MarkdownPatch{{Find: "a", Replace: "b"}},
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "patch empty patches list",
+			sections: []configtypes.MarkdownSection{
+				{Action: configtypes.MarkdownActionPatch, Heading: "Section"},
+			},
+			wantErr: true,
+		},
+		{
+			name: "patch empty find string",
+			sections: []configtypes.MarkdownSection{
+				{
+					Action:  configtypes.MarkdownActionPatch,
+					Heading: "Section",
+					Patches: []configtypes.MarkdownPatch{{Find: "", Replace: "b"}},
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "valid patch",
+			sections: []configtypes.MarkdownSection{
+				{
+					Action:  configtypes.MarkdownActionPatch,
+					Heading: "Section",
+					Patches: []configtypes.MarkdownPatch{{Find: "a", Replace: "b"}},
+				},
 			},
 			wantErr: false,
 		},

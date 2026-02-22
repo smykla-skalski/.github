@@ -1,14 +1,8 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://raw.githubusercontent.com/smykla-skalski/.github/main/schemas/settings.schema.json",
-  "title": "Repository Settings",
-  "description": "Repository settings definition for organization-wide synchronization. Place at .github/settings.yml in your repository.",
-  "$ref": "#/$defs/SettingsFile",
   "$defs": {
     "BranchProtectionRuleConfig": {
+      "additionalProperties": false,
       "description": "Configures protection rules for branches including required status checks, required reviews, and restrictions on who can push",
-      "type": "object",
-      "required": [ "pattern" ],
       "properties": {
         "allow_deletions": {
           "description": "Allow branch deletion",
@@ -24,8 +18,8 @@
         },
         "pattern": {
           "description": "Branch name pattern",
-          "type": "string",
-          "minLength": 1
+          "minLength": 1,
+          "type": "string"
         },
         "require_linear_history": {
           "description": "Require linear commit history",
@@ -36,52 +30,54 @@
           "type": "boolean"
         },
         "required_reviews": {
-          "description": "Required pull request reviews configuration",
-          "$ref": "#/$defs/RequiredReviews"
+          "$ref": "#/$defs/RequiredReviews",
+          "description": "Required pull request reviews configuration"
         },
         "required_status_checks": {
-          "description": "Required status checks configuration",
-          "$ref": "#/$defs/RequiredStatusChecks"
+          "$ref": "#/$defs/RequiredStatusChecks",
+          "description": "Required status checks configuration"
         },
         "restrictions": {
-          "description": "Restrict who can push to this branch. Leave unset to allow all users with push access",
-          "$ref": "#/$defs/BranchRestrictionsConfig"
+          "$ref": "#/$defs/BranchRestrictionsConfig",
+          "description": "Restrict who can push to this branch. Leave unset to allow all users with push access"
         }
       },
-      "additionalProperties": false
+      "required": [
+        "pattern"
+      ],
+      "type": "object"
     },
     "BranchRestrictionsConfig": {
+      "additionalProperties": false,
       "description": "BranchRestrictionsConfig defines who can push to protected branches.",
-      "type": "object",
       "properties": {
         "apps": {
           "description": "GitHub App slugs allowed to push",
-          "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "type": "array"
         },
         "teams": {
           "description": "GitHub team slugs allowed to push",
-          "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "type": "array"
         },
         "users": {
           "description": "GitHub usernames allowed to push",
-          "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "type": "array"
         }
       },
-      "additionalProperties": false
+      "type": "object"
     },
     "BypassActorConfig": {
+      "additionalProperties": false,
       "description": "Defines an actor (user, team, app, or role) who can bypass ruleset requirements",
-      "type": "object",
-      "required": [ "actor_id", "actor_type", "bypass_mode" ],
       "properties": {
         "actor_id": {
           "description": "Actor ID (user ID, team ID, app ID, or role ID)",
@@ -98,61 +94,73 @@
         },
         "bypass_mode": {
           "description": "Bypass mode (always or pull_request)",
-          "enum": [ "always", "pull_request" ]
+          "enum": [
+            "always",
+            "pull_request"
+          ]
         }
       },
-      "additionalProperties": false
+      "required": [
+        "actor_id",
+        "actor_type",
+        "bypass_mode"
+      ],
+      "type": "object"
     },
     "BypassPullRequestAllowances": {
+      "additionalProperties": false,
       "description": "BypassPullRequestAllowances defines who can bypass pull request requirements.",
-      "type": "object",
       "properties": {
         "apps": {
           "description": "GitHub App slugs that can bypass pull request requirements",
-          "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "type": "array"
         },
         "teams": {
           "description": "GitHub team slugs that can bypass pull request requirements",
-          "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "type": "array"
         },
         "users": {
           "description": "GitHub usernames that can bypass pull request requirements",
-          "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "type": "array"
         }
       },
-      "additionalProperties": false
+      "type": "object"
     },
     "CodeScanningRuleConfig": {
+      "additionalProperties": false,
       "description": "Configures code scanning tool requirements and alert thresholds",
-      "type": "object",
       "properties": {
         "code_scanning_tools": {
           "description": "Code scanning tools and their thresholds",
-          "type": "array",
           "items": {
             "$ref": "#/$defs/CodeScanningToolConfig"
-          }
+          },
+          "type": "array"
         }
       },
-      "additionalProperties": false
+      "type": "object"
     },
     "CodeScanningToolConfig": {
+      "additionalProperties": false,
       "description": "Defines a code scanning tool with alert thresholds",
-      "type": "object",
-      "required": [ "tool", "alerts_threshold", "security_alerts_threshold" ],
       "properties": {
         "alerts_threshold": {
           "description": "Alert threshold level (none, errors, errors_and_warnings, all)",
-          "enum": [ "none", "errors", "errors_and_warnings", "all" ]
+          "enum": [
+            "none",
+            "errors",
+            "errors_and_warnings",
+            "all"
+          ]
         },
         "security_alerts_threshold": {
           "description": "Security alert threshold level (none, critical, high_or_higher, medium_or_higher, all)",
@@ -166,15 +174,20 @@
         },
         "tool": {
           "description": "Tool name (e.g., \"CodeQL\")",
-          "type": "string",
-          "minLength": 1
+          "minLength": 1,
+          "type": "string"
         }
       },
-      "additionalProperties": false
+      "required": [
+        "tool",
+        "alerts_threshold",
+        "security_alerts_threshold"
+      ],
+      "type": "object"
     },
     "FeaturesConfig": {
+      "additionalProperties": false,
       "description": "Controls which GitHub features are enabled for the repository (Issues, Wiki, Projects, Discussions)",
-      "type": "object",
       "properties": {
         "has_discussions": {
           "description": "Enable GitHub Discussions",
@@ -193,19 +206,23 @@
           "type": "boolean"
         }
       },
-      "additionalProperties": false
+      "type": "object"
     },
     "PullRequestRuleConfig": {
+      "additionalProperties": false,
       "description": "Configures pull request requirements including reviews, code owners, and merge strategies",
-      "type": "object",
       "properties": {
         "allowed_merge_methods": {
           "description": "Allowed merge methods (squash, merge, rebase)",
-          "type": "array",
-          "uniqueItems": true,
           "items": {
-            "enum": [ "squash", "merge", "rebase" ]
-          }
+            "enum": [
+              "squash",
+              "merge",
+              "rebase"
+            ]
+          },
+          "type": "array",
+          "uniqueItems": true
         },
         "dismiss_stale_reviews_on_push": {
           "description": "Dismiss stale reviews when new commits are pushed",
@@ -221,47 +238,47 @@
         },
         "required_approving_review_count": {
           "description": "Number of required approving reviews (0-6)",
-          "type": "integer",
           "maximum": 6,
-          "minimum": 0
+          "minimum": 0,
+          "type": "integer"
         },
         "required_review_thread_resolution": {
           "description": "Require all conversations to be resolved before merging",
           "type": "boolean"
         }
       },
-      "additionalProperties": false
+      "type": "object"
     },
     "RefNameCondition": {
+      "additionalProperties": false,
       "description": "Specifies include/exclude patterns for ref names (branches or tags)",
-      "type": "object",
       "properties": {
         "exclude": {
           "description": "Ref patterns to exclude",
-          "type": "array",
-          "uniqueItems": true,
           "items": {
-            "type": "string",
+            "minLength": 1,
             "pattern": "^refs/",
-            "minLength": 1
-          }
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
         },
         "include": {
           "description": "Ref patterns to include (e.g., \"refs/heads/main\", \"refs/heads/release/*\")",
-          "type": "array",
-          "uniqueItems": true,
           "items": {
-            "type": "string",
+            "minLength": 1,
             "pattern": "^refs/",
-            "minLength": 1
-          }
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
         }
       },
-      "additionalProperties": false
+      "type": "object"
     },
     "RepositorySettingsConfig": {
+      "additionalProperties": false,
       "description": "Configures merge strategies and branch cleanup behavior for pull requests",
-      "type": "object",
       "properties": {
         "allow_auto_merge": {
           "description": "Allow auto-merge for pull requests",
@@ -289,28 +306,35 @@
         },
         "squash_merge_commit_message": {
           "description": "Message format for squash merge commits (PR_BODY, COMMIT_MESSAGES, or BLANK)",
-          "enum": [ "PR_BODY", "COMMIT_MESSAGES", "BLANK" ]
+          "enum": [
+            "PR_BODY",
+            "COMMIT_MESSAGES",
+            "BLANK"
+          ]
         },
         "squash_merge_commit_title": {
           "description": "Title format for squash merge commits (COMMIT_OR_PR_TITLE or PR_TITLE)",
-          "enum": [ "COMMIT_OR_PR_TITLE", "PR_TITLE" ]
+          "enum": [
+            "COMMIT_OR_PR_TITLE",
+            "PR_TITLE"
+          ]
         }
       },
-      "additionalProperties": false
+      "type": "object"
     },
     "RequiredReviews": {
+      "additionalProperties": false,
       "description": "Configures pull request review requirements including approval count, code owner reviews, and who can bypass requirements",
-      "type": "object",
       "properties": {
         "bypass_pull_request_allowances": {
-          "description": "Allow specified users, teams, or apps to bypass pull request requirements",
-          "$ref": "#/$defs/BypassPullRequestAllowances"
+          "$ref": "#/$defs/BypassPullRequestAllowances",
+          "description": "Allow specified users, teams, or apps to bypass pull request requirements"
         },
         "count": {
           "description": "Number of required approving reviews",
-          "type": "integer",
           "maximum": 6,
-          "minimum": 0
+          "minimum": 0,
+          "type": "integer"
         },
         "dismiss_stale": {
           "description": "Dismiss stale pull request approvals when new commits are pushed",
@@ -325,80 +349,92 @@
           "type": "boolean"
         }
       },
-      "additionalProperties": false
+      "type": "object"
     },
     "RequiredStatusChecks": {
+      "additionalProperties": false,
       "description": "Specifies CI/CD checks that must pass before merging, with option to require branches be up-to-date",
-      "type": "object",
       "properties": {
         "contexts": {
           "description": "Required status check contexts. Empty array inherits repo's existing checks (hybrid approach)",
-          "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "type": "array"
         },
         "strict": {
           "description": "Require branches to be up to date before merging",
           "type": "boolean"
         }
       },
-      "additionalProperties": false
+      "type": "object"
     },
     "RulesetConditionsConfig": {
+      "additionalProperties": false,
       "description": "Defines conditions for when a ruleset applies, primarily using ref name patterns",
-      "type": "object",
       "properties": {
         "ref_name": {
-          "description": "Ref name patterns (branch/tag names)",
-          "$ref": "#/$defs/RefNameCondition"
+          "$ref": "#/$defs/RefNameCondition",
+          "description": "Ref name patterns (branch/tag names)"
         }
       },
-      "additionalProperties": false
+      "type": "object"
     },
     "RulesetConfig": {
+      "additionalProperties": false,
       "description": "Configures GitHub Rulesets (modern replacement for branch protection) with more granular targeting, additional rule types, better bypass management, and enforcement modes",
-      "type": "object",
-      "required": [ "name", "target", "enforcement" ],
       "properties": {
         "bypass_actors": {
           "description": "Actors who can bypass this ruleset",
-          "type": "array",
           "items": {
             "$ref": "#/$defs/BypassActorConfig"
-          }
+          },
+          "type": "array"
         },
         "conditions": {
-          "description": "Conditions for when ruleset applies",
-          "$ref": "#/$defs/RulesetConditionsConfig"
+          "$ref": "#/$defs/RulesetConditionsConfig",
+          "description": "Conditions for when ruleset applies"
         },
         "enforcement": {
           "description": "Enforcement level (active, disabled, or evaluate)",
-          "enum": [ "active", "disabled", "evaluate" ]
+          "enum": [
+            "active",
+            "disabled",
+            "evaluate"
+          ]
         },
         "name": {
           "description": "Ruleset name (unique per repository)",
-          "type": "string",
-          "minLength": 1
+          "minLength": 1,
+          "type": "string"
         },
         "rules": {
-          "description": "Rules to enforce",
-          "$ref": "#/$defs/RulesetRulesConfig"
+          "$ref": "#/$defs/RulesetRulesConfig",
+          "description": "Rules to enforce"
         },
         "target": {
           "description": "Target type (branch, tag, or push)",
-          "enum": [ "branch", "tag", "push" ]
+          "enum": [
+            "branch",
+            "tag",
+            "push"
+          ]
         }
       },
-      "additionalProperties": false
+      "required": [
+        "name",
+        "target",
+        "enforcement"
+      ],
+      "type": "object"
     },
     "RulesetRulesConfig": {
+      "additionalProperties": false,
       "description": "Contains all rule types that can be enforced by a ruleset",
-      "type": "object",
       "properties": {
         "code_scanning": {
-          "description": "Code scanning requirements",
-          "$ref": "#/$defs/CodeScanningRuleConfig"
+          "$ref": "#/$defs/CodeScanningRuleConfig",
+          "description": "Code scanning requirements"
         },
         "creation": {
           "description": "Prevent branch/tag creation",
@@ -413,8 +449,8 @@
           "type": "boolean"
         },
         "pull_request": {
-          "description": "Pull request rules (reviews, dismissal, code owners)",
-          "$ref": "#/$defs/PullRequestRuleConfig"
+          "$ref": "#/$defs/PullRequestRuleConfig",
+          "description": "Pull request rules (reviews, dismissal, code owners)"
         },
         "required_linear_history": {
           "description": "Require linear commit history (no merge commits)",
@@ -425,44 +461,53 @@
           "type": "boolean"
         },
         "required_status_checks": {
-          "description": "Required status checks that must pass",
-          "$ref": "#/$defs/StatusChecksRuleConfig"
+          "$ref": "#/$defs/StatusChecksRuleConfig",
+          "description": "Required status checks that must pass"
         },
         "update": {
           "description": "Restrict updates to refs",
           "type": "boolean"
         }
       },
-      "additionalProperties": false
+      "type": "object"
     },
     "SecurityConfig": {
+      "additionalProperties": false,
       "description": "Configures GitHub Advanced Security features including secret scanning and Dependabot security updates",
-      "type": "object",
       "properties": {
         "dependabot_security_updates": {
           "description": "Enable Dependabot security updates",
-          "enum": [ "enabled", "disabled" ]
+          "enum": [
+            "enabled",
+            "disabled"
+          ]
         },
         "secret_scanning": {
           "description": "Enable secret scanning (requires GitHub Advanced Security)",
-          "enum": [ "enabled", "disabled" ]
+          "enum": [
+            "enabled",
+            "disabled"
+          ]
         },
         "secret_scanning_push_protection": {
           "description": "Enable secret scanning push protection (requires GitHub Advanced Security and secret scanning enabled)",
-          "enum": [ "enabled", "disabled" ]
+          "enum": [
+            "enabled",
+            "disabled"
+          ]
         }
       },
-      "additionalProperties": false
+      "type": "object"
     },
     "SettingsDefinition": {
+      "additionalProperties": false,
       "description": "SettingsDefinition contains all repository settings to sync.",
-      "type": "object",
       "properties": {
         "BranchProtection": {
-          "type": "array",
           "items": {
             "$ref": "#/$defs/BranchProtectionRuleConfig"
-          }
+          },
+          "type": "array"
         },
         "Features": {
           "$ref": "#/$defs/FeaturesConfig"
@@ -471,47 +516,49 @@
           "$ref": "#/$defs/RepositorySettingsConfig"
         },
         "Rulesets": {
-          "type": "array",
           "items": {
             "$ref": "#/$defs/RulesetConfig"
-          }
+          },
+          "type": "array"
         },
         "Security": {
           "$ref": "#/$defs/SecurityConfig"
         }
       },
-      "additionalProperties": false
+      "type": "object"
     },
     "SettingsFile": {
+      "additionalProperties": false,
       "description": "SettingsFile represents the structure of a settings YAML file.",
-      "type": "object",
       "properties": {
         "Settings": {
           "$ref": "#/$defs/SettingsDefinition"
         }
       },
-      "additionalProperties": false
+      "type": "object"
     },
     "StatusCheckConfig": {
+      "additionalProperties": false,
       "description": "Defines a single required status check with context name and optional integration ID",
-      "type": "object",
-      "required": [ "context" ],
       "properties": {
         "context": {
           "description": "Status check context name",
-          "type": "string",
-          "minLength": 1
+          "minLength": 1,
+          "type": "string"
         },
         "integration_id": {
           "description": "Integration ID for GitHub App status checks (optional)",
           "type": "integer"
         }
       },
-      "additionalProperties": false
+      "required": [
+        "context"
+      ],
+      "type": "object"
     },
     "StatusChecksRuleConfig": {
+      "additionalProperties": false,
       "description": "Specifies CI/CD status checks that must pass, with option to require strict updates",
-      "type": "object",
       "properties": {
         "do_not_enforce_on_create": {
           "description": "When true, do not enforce status check requirements on branches created from protected branches. New branches can temporarily bypass checks when first created",
@@ -519,17 +566,22 @@
         },
         "required_status_checks": {
           "description": "Required status checks. Empty array = skip setting checks (inherit repo's existing)",
-          "type": "array",
           "items": {
             "$ref": "#/$defs/StatusCheckConfig"
-          }
+          },
+          "type": "array"
         },
         "strict_required_status_checks_policy": {
           "description": "Require branches to be up to date before merging (strict mode)",
           "type": "boolean"
         }
       },
-      "additionalProperties": false
+      "type": "object"
     }
-  }
+  },
+  "$id": "https://raw.githubusercontent.com/smykla-skalski/.github/main/schemas/settings.schema.json",
+  "$ref": "#/$defs/SettingsFile",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Repository settings definition for organization-wide synchronization. Place at .github/settings.yml in your repository.",
+  "title": "Repository Settings"
 }

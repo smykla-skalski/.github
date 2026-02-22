@@ -137,20 +137,33 @@ const (
 	MarkdownActionAppend MarkdownSectionAction = "append"
 	// MarkdownActionPrepend inserts content at the start of the document
 	MarkdownActionPrepend MarkdownSectionAction = "prepend"
+	// MarkdownActionPatch applies text substitutions within the matched section
+	MarkdownActionPatch MarkdownSectionAction = "patch"
 )
+
+// MarkdownPatch defines a text substitution within a markdown section
+type MarkdownPatch struct {
+	// Literal text to find within the section. All occurrences are replaced
+	Find string `json:"find" jsonschema:"required,minLength=1" yaml:"find"`
+	// Replacement text. Empty string deletes the matched text
+	Replace string `json:"replace" yaml:"replace"`
+}
 
 // Defines a section operation for markdown file merging, specifying what action to take on a
 // heading-based section of the document
 //
 //nolint:staticcheck // ST1021: Descriptive comment preferred over struct name prefix
 type MarkdownSection struct {
-	// Operation to perform: after, before, replace, delete, append, prepend
-	Action MarkdownSectionAction `json:"action" jsonschema:"enum=after,enum=before,enum=replace,enum=delete,enum=append,enum=prepend,required" yaml:"action"`
-	// Heading text to match (required for after/before/replace/delete). Case-insensitive,
+	// Operation to perform: after, before, replace, delete, append, prepend, patch
+	Action MarkdownSectionAction `json:"action" jsonschema:"enum=after,enum=before,enum=replace,enum=delete,enum=append,enum=prepend,enum=patch,required" yaml:"action"`
+	// Heading text to match (required for after/before/replace/delete/patch). Case-insensitive,
 	// trailing # marks stripped. First match wins for duplicate headings
 	Heading string `json:"heading,omitempty" yaml:"heading,omitempty"`
-	// Content to insert/replace (required for all actions except delete)
+	// Content to insert/replace (required for all actions except delete and patch)
 	Content string `json:"content,omitempty" yaml:"content,omitempty"`
+	// Text substitutions within the matched section (required for patch action).
+	// Applied sequentially
+	Patches []MarkdownPatch `json:"patches,omitempty" yaml:"patches,omitempty"`
 }
 
 // Controls automatic updates of smyklot version references in workflow files when new versions

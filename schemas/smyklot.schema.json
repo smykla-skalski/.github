@@ -1,42 +1,42 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://raw.githubusercontent.com/smykla-skalski/.github/main/schemas/smyklot.schema.json",
-  "title": "Smyklot Configuration",
-  "description": "Organization-wide smyklot configuration controlling version sync and workflow installation. Place at .github/smyklot.yml in the .github repository.",
-  "$ref": "#/$defs/SmyklotFile",
   "$defs": {
     "SmyklotFile": {
+      "additionalProperties": false,
       "description": "Organization-wide smyklot configuration file controlling version sync and workflow installation across all repositories",
-      "type": "object",
       "properties": {
         "sync_version": {
-          "description": "Whether to sync version references in existing workflows. Default: true",
           "default": true,
+          "description": "Whether to sync version references in existing workflows. Default: true",
           "type": "boolean"
         },
         "workflows": {
-          "description": "Which workflows to sync to all repositories by default",
-          "$ref": "#/$defs/SmyklotWorkflowsConfig"
+          "$ref": "#/$defs/SmyklotWorkflowsConfig",
+          "description": "Which workflows to sync to all repositories by default"
         }
       },
-      "additionalProperties": false
+      "type": "object"
     },
     "SmyklotWorkflowsConfig": {
+      "additionalProperties": false,
       "description": "Controls which smyklot workflows are synced to a repository",
-      "type": "object",
       "properties": {
         "poll": {
-          "description": "Sync smyklot-poll workflow. Default: true",
           "default": true,
+          "description": "Sync smyklot-poll workflow. Default: true",
           "type": "boolean"
         },
         "pr_commands": {
-          "description": "Sync smyklot-pr-commands workflow. Default: true",
           "default": true,
+          "description": "Sync smyklot-pr-commands workflow. Default: true",
           "type": "boolean"
         }
       },
-      "additionalProperties": false
+      "type": "object"
     }
-  }
+  },
+  "$id": "https://raw.githubusercontent.com/smykla-skalski/.github/main/schemas/smyklot.schema.json",
+  "$ref": "#/$defs/SmyklotFile",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Organization-wide smyklot configuration controlling version sync and workflow installation. Place at .github/smyklot.yml in the .github repository.",
+  "title": "Smyklot Configuration"
 }

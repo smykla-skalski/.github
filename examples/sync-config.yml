@@ -31,9 +31,12 @@
 #         strategy: string       # Merge strategy: "deep-merge", "shallow-merge", or "markdown"
 #         overrides: object      # Override values (JSON/YAML strategies only)
 #         sections:              # Section operations (markdown strategy only)
-#           - action: string     # after, before, replace, delete, append, prepend
-#             heading: string    # Heading text to match (required for after/before/replace/delete)
-#             content: string    # Content to insert/replace (required except for delete)
+#           - action: string     # after, before, replace, delete, append, prepend, patch
+#             heading: string    # Heading text to match (required for after/before/replace/delete/patch)
+#             content: string    # Content to insert/replace (required except for delete and patch)
+#             patches:           # Text substitutions (required for patch action)
+#               - find: string   # Literal text to find (all occurrences replaced)
+#                 replace: string  # Replacement text (empty string deletes matched text)
 #
 #   smyklot:                     # Smyklot synchronization configuration
 #     skip: bool                 # Skip ALL smyklot sync (default: false)
@@ -127,13 +130,19 @@
 #   - "delete": Remove entire section (heading + content + subsections)
 #   - "append": Append content at end of document (no heading required)
 #   - "prepend": Insert content at start of document (no heading required)
+#   - "patch": Apply text substitutions within the matched section (requires patches)
 #
 # sync.files.merge[].sections[].heading (string, conditional)
 #   Heading text to match. Required for after/before/replace/delete actions.
 #   Matching is case-insensitive, trailing # marks stripped, first match wins.
 #
 # sync.files.merge[].sections[].content (string, conditional)
-#   Content to insert or replace with. Required for all actions except delete.
+#   Content to insert or replace with. Required for all actions except delete and patch.
+#
+# sync.files.merge[].sections[].patches (array of objects, for patch action)
+#   Text substitutions to apply within the matched section. Required for patch action.
+#   Each patch has a find string (literal, all occurrences) and a replace string.
+#   Empty replace deletes matched text. Patches are applied sequentially.
 #
 # sync.smyklot.skip (boolean, default: false)
 #   When true, skips ALL smyklot synchronization (both workflows and version updates).
@@ -332,6 +341,23 @@ sync: {}
 #         strategy: "shallow-merge"
 #         overrides:
 #           MD013: false  # Disable line length rule
+
+# Example 13a: Patch markdown section (targeted find/replace within a section)
+# Instead of replacing an entire 30-line section to change one line, use patch
+# to do targeted substitutions scoped to a single heading.
+# sync:
+#   files:
+#     merge:
+#       - path: "CONTRIBUTING.md"
+#         strategy: "markdown"
+#         sections:
+#           - action: "patch"
+#             heading: "Making Changes"
+#             patches:
+#               - find: "make check  # or task check"
+#                 replace: "mise run check"
+#               - find: "make test"
+#                 replace: "mise run test"
 
 # ---------------------------------------------------------------------------
 # SETTINGS MERGE EXAMPLES
@@ -578,3 +604,20 @@ sync: {}
 #               ## Project-Specific Notes
 #
 #               Additional information specific to this repository.
+
+# Example 27: Patch section (targeted find/replace without duplicating content)
+# Instead of replacing an entire section just to change one command, use patch
+# to do targeted text substitutions scoped to a single heading.
+# sync:
+#   files:
+#     merge:
+#       - path: "CONTRIBUTING.md"
+#         strategy: "markdown"
+#         sections:
+#           - action: "patch"
+#             heading: "Making Changes"
+#             patches:
+#               - find: "make check  # or task check"
+#                 replace: "mise run check"
+#               - find: "make test"
+#                 replace: "mise run test"

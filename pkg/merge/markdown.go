@@ -83,6 +83,24 @@ func validateSingleSection(s configtypes.MarkdownSection, idx int) error {
 				"section %d: action %q requires heading", idx, s.Action)
 		}
 
+	case configtypes.MarkdownActionPatch:
+		if s.Heading == "" {
+			return errors.Wrapf(ErrMarkdownInvalidAction,
+				"section %d: action %q requires heading", idx, s.Action)
+		}
+
+		if len(s.Patches) == 0 {
+			return errors.Wrapf(ErrMarkdownInvalidAction,
+				"section %d: action %q requires at least one patch", idx, s.Action)
+		}
+
+		for j, p := range s.Patches {
+			if p.Find == "" {
+				return errors.Wrapf(ErrMarkdownInvalidAction,
+					"section %d: patch %d has empty find string", idx, j)
+			}
+		}
+
 	case configtypes.MarkdownActionAppend, configtypes.MarkdownActionPrepend:
 		if s.Content == "" {
 			return errors.Wrapf(ErrMarkdownInvalidAction,
@@ -112,6 +130,8 @@ func applySection(lines []string, section configtypes.MarkdownSection) ([]string
 		return applyAppend(lines, section), nil
 	case configtypes.MarkdownActionPrepend:
 		return applyPrepend(lines, section), nil
+	case configtypes.MarkdownActionPatch:
+		return applyPatch(lines, section)
 	default:
 		return nil, errors.Wrapf(ErrMarkdownInvalidAction, "unknown action %q", section.Action)
 	}
@@ -209,6 +229,38 @@ func applyPrepend(lines []string, section configtypes.MarkdownSection) []string 
 	result = append(result, lines...)
 
 	return trimExcessBlanks(result)
+}
+
+// applyPatch applies text substitutions within the matched section.
+func applyPatch(lines []string, section configtypes.MarkdownSection) ([]string, error) {
+	sections := parseMarkdownSections(lines)
+
+	idx := findSectionByHeading(sections, section.Heading)
+	if idx < 0 {
+		return nil, errors.Wrapf(ErrMarkdownSectionNotFound, "heading %q", section.Heading)
+	}
+
+	startLine := sections[idx].lineIndex
+	endLine := sectionEnd(sections, idx, len(lines))
+	sectionText := strings.Join(lines[startLine:endLine], "\n")
+
+	for i, p := range section.Patches {
+		if !strings.Contains(sectionText, p.Find) {
+			return nil, errors.Wrapf(ErrMarkdownPatchNotFound,
+				"patch %d: %q not found in section %q", i, p.Find, section.Heading)
+		}
+
+		sectionText = strings.ReplaceAll(sectionText, p.Find, p.Replace)
+	}
+
+	patchedLines := splitLines(sectionText)
+
+	result := make([]string, 0, len(lines)-endLine+startLine+len(patchedLines))
+	result = append(result, lines[:startLine]...)
+	result = append(result, patchedLines...)
+	result = append(result, lines[endLine:]...)
+
+	return result, nil
 }
 
 // parseMarkdownSections parses all ATX headings from the document, respecting code fences.

@@ -13,4 +13,6 @@ var (
 	ErrMarkdownSectionNotFound = errors.New("markdown section heading not found")
 	// ErrMarkdownInvalidAction indicates an invalid action or missing required fields
 	ErrMarkdownInvalidAction = errors.New("invalid markdown section action")
+	// ErrMarkdownPatchNotFound indicates the find text was not present in the section
+	ErrMarkdownPatchNotFound = errors.New("markdown patch text not found in section")
 )
