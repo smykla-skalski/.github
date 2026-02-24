@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   validate:
-    runs-on: ubuntu-24.04
+    runs-on: ${{ vars.RUNNER_LABEL || 'ubuntu-24.04' }}
     outputs:
       repo: ${{ steps.validate.outputs.repo }}
       sync_labels: ${{ steps.validate.outputs.sync_labels }}
@@ -114,7 +114,7 @@ jobs:
   summary:
     needs: [validate, sync-labels, sync-files, sync-settings, sync-smyklot]
     if: always() && needs.validate.result == 'success'
-    runs-on: ubuntu-24.04
+    runs-on: ${{ vars.RUNNER_LABEL || 'ubuntu-24.04' }}
     steps:
       - name: Generate summary
         env:

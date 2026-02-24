@@ -40,7 +40,7 @@ jobs:
   # Check if workflow should proceed
   check:
     name: Check Conditions
-    runs-on: ubuntu-24.04
+    runs-on: ${{ vars.RUNNER_LABEL || 'ubuntu-24.04' }}
     if: |
       (github.event_name == 'push') ||
       (github.event_name == 'schedule') ||
@@ -59,7 +59,7 @@ jobs:
   prepare:
     needs: check
     name: Prepare for Release
-    runs-on: ubuntu-24.04
+    runs-on: ${{ vars.RUNNER_LABEL || 'ubuntu-24.04' }}
     permissions:
       actions: write
       contents: read
@@ -151,7 +151,7 @@ jobs:
   validate:
     needs: prepare
     name: ${{ matrix.name }}
-    runs-on: ubuntu-24.04
+    runs-on: ${{ vars.RUNNER_LABEL || 'ubuntu-24.04' }}
     permissions:
       contents: read
     env:
@@ -180,7 +180,7 @@ jobs:
   lint-go:
     needs: prepare
     name: Lint Go
-    runs-on: ubuntu-24.04
+    runs-on: ${{ vars.RUNNER_LABEL || 'ubuntu-24.04' }}
     permissions:
       contents: read
     steps:
@@ -195,7 +195,7 @@ jobs:
   # Determine if a release should be created
   release:
     name: Semantic Release
-    runs-on: ubuntu-24.04
+    runs-on: ${{ vars.RUNNER_LABEL || 'ubuntu-24.04' }}
     needs: [validate, lint-go]
     permissions:
       contents: write
@@ -300,7 +300,7 @@ jobs:
   # Build and release binaries with GoReleaser
   goreleaser:
     name: GoReleaser
-    runs-on: ubuntu-24.04
+    runs-on: ${{ vars.RUNNER_LABEL || 'ubuntu-24.04' }}
     needs: release
     if: needs.release.outputs.new_release_published == 'true'
     permissions:
@@ -349,7 +349,7 @@ jobs:
   # Don't re-enable if release was published but goreleaser failed (needs manual intervention)
   cleanup:
     name: Re-enable Sync Workflows
-    runs-on: ubuntu-24.04
+    runs-on: ${{ vars.RUNNER_LABEL || 'ubuntu-24.04' }}
     needs: [prepare, release, goreleaser]
     if: |
       always() &&

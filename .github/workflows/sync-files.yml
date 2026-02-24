@@ -35,7 +35,7 @@ permissions: {}
 
 jobs:
   prepare:
-    runs-on: ubuntu-24.04
+    runs-on: ${{ vars.RUNNER_LABEL || 'ubuntu-24.04' }}
     outputs:
       repos: ${{ steps.repos.outputs.repos }}
       files_config: ${{ steps.files.outputs.config }}
@@ -69,7 +69,7 @@ jobs:
 
   sync-files:
     needs: prepare
-    runs-on: ubuntu-24.04
+    runs-on: ${{ vars.RUNNER_LABEL || 'ubuntu-24.04' }}
     strategy:
       fail-fast: false
       matrix:
@@ -112,7 +112,7 @@ jobs:
   summary:
     needs: sync-files
     if: always()
-    runs-on: ubuntu-24.04
+    runs-on: ${{ vars.RUNNER_LABEL || 'ubuntu-24.04' }}
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2

@@ -35,7 +35,7 @@ permissions: {}
 
 jobs:
   get-repos:
-    runs-on: ubuntu-24.04
+    runs-on: ${{ vars.RUNNER_LABEL || 'ubuntu-24.04' }}
     outputs:
       repos: ${{ steps.repos.outputs.repos }}
     steps:
@@ -60,7 +60,7 @@ jobs:
 
   sync-labels:
     needs: get-repos
-    runs-on: ubuntu-24.04
+    runs-on: ${{ vars.RUNNER_LABEL || 'ubuntu-24.04' }}
     concurrency:
       group: sync-labels-${{ matrix.repo.name }}
       cancel-in-progress: false
@@ -103,7 +103,7 @@ jobs:
   summary:
     needs: sync-labels
     if: always()
-    runs-on: ubuntu-24.04
+    runs-on: ${{ vars.RUNNER_LABEL || 'ubuntu-24.04' }}
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
