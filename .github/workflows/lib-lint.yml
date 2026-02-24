@@ -74,7 +74,7 @@ permissions:
 jobs:
   golangci-lint:
     if: inputs.enable-golangci-lint && !inputs.skip-all && !inputs.skip-lint
-    runs-on: ${{ inputs.runner || vars.RUNNER_LABEL || 'ubuntu-24.04' }}
+    runs-on: ${{ inputs.runner || fromJSON(vars.RUNNER_LABEL || '["ubuntu-24.04"]') }}
     outputs:
       passed: ${{ steps.lint.outcome == 'success' }}
     steps:
@@ -96,7 +96,7 @@ jobs:
 
   yamllint:
     if: inputs.enable-yamllint && !inputs.skip-all && !inputs.skip-lint
-    runs-on: ${{ inputs.runner || vars.RUNNER_LABEL || 'ubuntu-24.04' }}
+    runs-on: ${{ inputs.runner || fromJSON(vars.RUNNER_LABEL || '["ubuntu-24.04"]') }}
     outputs:
       passed: ${{ steps.lint.outcome == 'success' }}
     steps:
@@ -111,7 +111,7 @@ jobs:
 
   shellcheck:
     if: inputs.enable-shellcheck && !inputs.skip-all && !inputs.skip-lint
-    runs-on: ${{ inputs.runner || vars.RUNNER_LABEL || 'ubuntu-24.04' }}
+    runs-on: ${{ inputs.runner || fromJSON(vars.RUNNER_LABEL || '["ubuntu-24.04"]') }}
     outputs:
       passed: ${{ steps.lint.outcome == 'success' }}
     steps:
@@ -125,7 +125,7 @@ jobs:
 
   markdownlint:
     if: inputs.enable-markdownlint && !inputs.skip-all && !inputs.skip-lint
-    runs-on: ${{ inputs.runner || vars.RUNNER_LABEL || 'ubuntu-24.04' }}
+    runs-on: ${{ inputs.runner || fromJSON(vars.RUNNER_LABEL || '["ubuntu-24.04"]') }}
     outputs:
       passed: ${{ steps.lint.outcome == 'success' }}
     steps:
@@ -139,7 +139,7 @@ jobs:
           markdownlint '**/*.md' --ignore node_modules
 
   aggregate:
-    runs-on: ${{ inputs.runner || vars.RUNNER_LABEL || 'ubuntu-24.04' }}
+    runs-on: ${{ inputs.runner || fromJSON(vars.RUNNER_LABEL || '["ubuntu-24.04"]') }}
     needs: [golangci-lint, yamllint, shellcheck, markdownlint]
     if: always()
     outputs:

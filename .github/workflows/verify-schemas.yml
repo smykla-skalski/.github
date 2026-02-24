@@ -27,7 +27,7 @@ permissions:
 
 jobs:
   verify-schemas:
-    runs-on: ${{ vars.RUNNER_LABEL || 'ubuntu-24.04' }}
+    runs-on: ${{ fromJSON(vars.RUNNER_LABEL || '["ubuntu-24.04"]') }}
     # Only run for PRs from the same repository (not forks)
     if: github.event.pull_request.head.repo.full_name == github.repository
     steps:

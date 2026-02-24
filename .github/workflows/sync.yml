@@ -34,7 +34,7 @@ permissions: {}
 
 jobs:
   trigger-syncs:
-    runs-on: ${{ vars.RUNNER_LABEL || 'ubuntu-24.04' }}
+    runs-on: ${{ fromJSON(vars.RUNNER_LABEL || '["ubuntu-24.04"]') }}
     outputs:
       triggered_runs: ${{ steps.trigger.outputs.runs }}
       disabled_count: ${{ steps.trigger.outputs.disabled_count }}
@@ -128,7 +128,7 @@ jobs:
           echo "dry_run=$DRY_RUN" >> "$GITHUB_OUTPUT"
 
   wait-and-summarize:
-    runs-on: ${{ vars.RUNNER_LABEL || 'ubuntu-24.04' }}
+    runs-on: ${{ fromJSON(vars.RUNNER_LABEL || '["ubuntu-24.04"]') }}
     needs: trigger-syncs
     if: needs.trigger-syncs.outputs.triggered_runs != ''
     steps:
