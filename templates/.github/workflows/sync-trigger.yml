@@ -29,7 +29,8 @@ on:
       # Sync config
       - ".github/sync-config.yml"
 
-permissions: {}
+permissions:
+  contents: read
 
 jobs:
   detect-and-trigger:
