@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.15.1](https://github.com/smykla-skalski/.github/compare/dotsync/v1.15.0...dotsync/v1.15.1) (2026-02-25)
+
+### Bug Fixes
+
+* **sync:** grant contents read for checkout ([d71e4e2](https://github.com/smykla-skalski/.github/commit/d71e4e265d680518afa06a7a1967667875b92315))
+
 ## [1.15.0](https://github.com/smykla-skalski/.github/compare/dotsync/v1.14.2...dotsync/v1.15.0) (2026-02-22)
 
 ### Features
