@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.15.3](https://github.com/smykla-skalski/.github/compare/dotsync/v1.15.2...dotsync/v1.15.3) (2026-03-13)
+
+### Bug Fixes
+
+* **deps:** update module github.com/google/go-github/v83 to v84 ([#82](https://github.com/smykla-skalski/.github/issues/82)) ([2603e68](https://github.com/smykla-skalski/.github/commit/2603e68ac426b1bfdf5010a7408e71bc9cae0578))
+
 ## [1.15.2](https://github.com/smykla-skalski/.github/compare/dotsync/v1.15.1...dotsync/v1.15.2) (2026-03-13)
 
 ### Bug Fixes
