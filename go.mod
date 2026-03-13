@@ -8,6 +8,7 @@ require (
 	github.com/gofri/go-github-ratelimit/v2 v2.0.2
 	github.com/google/go-cmp v0.7.0
 	github.com/google/go-github/v83 v83.0.0
+	github.com/google/go-github/v84 v84.0.0
 	github.com/invopop/jsonschema v0.13.0
 	github.com/spf13/cobra v1.10.2
 	github.com/tidwall/pretty v1.2.1
