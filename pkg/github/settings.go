@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/cockroachdb/errors"
-	"github.com/google/go-github/v83/github"
+	"github.com/google/go-github/v84/github"
 	"go.yaml.in/yaml/v4"
 
 	"github.com/smykla-skalski/.github/internal/configtypes"
