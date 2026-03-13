@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.15.2](https://github.com/smykla-skalski/.github/compare/dotsync/v1.15.1...dotsync/v1.15.2) (2026-03-13)
+
+### Bug Fixes
+
+* **deps:** update module golang.org/x/term to v0.41.0 ([#90](https://github.com/smykla-skalski/.github/issues/90)) ([8e1b5ad](https://github.com/smykla-skalski/.github/commit/8e1b5adb936828a2c9b0928e7414e77bdcb2c4d4))
+
+### Dependencies
+
+* **deps:** update dependency go to v1.26.1 ([#87](https://github.com/smykla-skalski/.github/issues/87)) ([52ed277](https://github.com/smykla-skalski/.github/commit/52ed2773ff063b67dd127bc08f942ed45bc0fb9e))
+* **deps:** update dependency go to v1.26.1 ([#88](https://github.com/smykla-skalski/.github/issues/88)) ([f558663](https://github.com/smykla-skalski/.github/commit/f558663e5fc8d9cf2d20db2d5f8e998f84aaabb5))
+
 ## [1.15.1](https://github.com/smykla-skalski/.github/compare/dotsync/v1.15.0...dotsync/v1.15.1) (2026-02-25)
 
 ### Bug Fixes
