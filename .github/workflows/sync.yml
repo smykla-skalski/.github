@@ -84,13 +84,13 @@ jobs:
 
             if [[ "$should_sync" != "true" ]]; then
               echo "$name: skipped (disabled by user)"
-              ((skipped_count++))
+              ((skipped_count++)) || true
               return
             fi
 
             if ! is_workflow_enabled "$workflow_file"; then
               echo "$name: skipped (workflow disabled)"
-              ((disabled_count++))
+              ((disabled_count++)) || true
               return
             fi
 
