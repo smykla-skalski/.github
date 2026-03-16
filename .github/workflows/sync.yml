@@ -106,7 +106,7 @@ jobs:
               sleep 1
               run_id=$(gh run list --workflow="$workflow_file" --repo "$REPO" --limit 1 --json databaseId --jq '.[0].databaseId' 2>/dev/null || echo "0")
               if [[ "$run_id" != "$before_run_id" && "$run_id" != "0" ]]; then
-                triggered_runs="${triggered_runs}${type}:${run_id}:${name} "
+                triggered_runs="${triggered_runs}${type}:${run_id}:${name// /_} "
                 echo "$name: triggered (run: $run_id)"
                 return
               fi
