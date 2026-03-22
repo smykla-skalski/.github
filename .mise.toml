@@ -5,7 +5,7 @@ golangci-lint = "2.11.3"
 actionlint = "1.7.11"
 goreleaser = "2.13.0"
 jsonschema = "12.10.1"
-markdownlint-cli2 = "0.21.0"
+markdownlint-cli2 = "0.22.0"
 
 [env]
 GO111MODULE = "on"
