@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.15.4](https://github.com/smykla-skalski/.github/compare/dotsync/v1.15.3...dotsync/v1.15.4) (2026-04-13)
+
+### Bug Fixes
+
+* **deps:** update module golang.org/x/term to v0.42.0 ([#111](https://github.com/smykla-skalski/.github/issues/111)) ([b00db00](https://github.com/smykla-skalski/.github/commit/b00db00848a9a88645ef958a2ac3cfc2437acf8d))
+
+### Dependencies
+
+* **deps:** update dependency actionlint to v1.7.12 ([#106](https://github.com/smykla-skalski/.github/issues/106)) ([d91b4b5](https://github.com/smykla-skalski/.github/commit/d91b4b57ed41dbb57cbb391d57e953c75d096af2))
+* **deps:** update dependency go to v1.26.2 ([#109](https://github.com/smykla-skalski/.github/issues/109)) ([161dd42](https://github.com/smykla-skalski/.github/commit/161dd42c481e3e933ff4ca1d566565301a6ac8f8))
+* **deps:** update dependency go to v1.26.2 ([#110](https://github.com/smykla-skalski/.github/issues/110)) ([68643ea](https://github.com/smykla-skalski/.github/commit/68643ea5982f023697530b9c9bda54bcd438dbf2))
+* **deps:** update dependency markdownlint-cli2 to v0.22.0 ([#101](https://github.com/smykla-skalski/.github/issues/101)) ([9f77215](https://github.com/smykla-skalski/.github/commit/9f772157c37469882a27f45eb555f52ed887ce9d))
+* **deps:** update docker/dockerfile:1 docker digest to 2780b5c ([#108](https://github.com/smykla-skalski/.github/issues/108)) ([b14ba81](https://github.com/smykla-skalski/.github/commit/b14ba816fb1ba79e9fbf08d68d53899cb8957ecd))
+* **deps:** update docker/dockerfile:1 docker digest to 4a43a54 ([#99](https://github.com/smykla-skalski/.github/issues/99)) ([4166621](https://github.com/smykla-skalski/.github/commit/4166621a774d26e33872182d4dc62998db50f13d))
+* **deps:** update module github.com/buger/jsonparser to v1.1.2 [security] ([#104](https://github.com/smykla-skalski/.github/issues/104)) ([f842b23](https://github.com/smykla-skalski/.github/commit/f842b2327dd553d5c0337bccbaf33859d4504623))
+
 ## [1.15.3](https://github.com/smykla-skalski/.github/compare/dotsync/v1.15.2...dotsync/v1.15.3) (2026-03-13)
 
 ### Bug Fixes
