@@ -252,7 +252,7 @@ jobs:
       - name: Commit release assets (signed)
         if: steps.semantic.outputs.new_release_published == 'true'
         id: bot-commit
-        uses: iarekylew00t/verified-bot-commit@4aeee0954ea68e4e91e5fd326e9a0827ebc5b19a # v2.2.2
+        uses: iarekylew00t/verified-bot-commit@126a6a11889ab05bcff72ec2403c326cd249b84c # v2.3.0
         with:
           token: ${{ steps.app-token.outputs.token }}
           ref: refs/heads/main
