@@ -7,13 +7,13 @@ require (
 	github.com/evanphx/json-patch/v5 v5.9.11
 	github.com/gofri/go-github-ratelimit/v2 v2.0.2
 	github.com/google/go-cmp v0.7.0
-	github.com/google/go-github/v88 v88.0.0
+	github.com/google/go-github/v84 v84.0.0
 	github.com/google/go-github/v88 v88.0.0
 	github.com/invopop/jsonschema v0.14.0
 	github.com/spf13/cobra v1.10.2
 	github.com/tidwall/pretty v1.2.1
 	go.yaml.in/yaml/v4 v4.0.0-rc.4
-	golang.org/x/term v0.43.0
+	golang.org/x/term v0.44.0
 )
 
 require (
@@ -33,7 +33,7 @@ require (
 	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	github.com/spf13/pflag v1.0.9 // indirect
 	github.com/wk8/go-ordered-map/v2 v2.1.8 // indirect
-	golang.org/x/sys v0.44.0 // indirect
+	golang.org/x/sys v0.46.0 // indirect
 	golang.org/x/text v0.31.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
