@@ -1,13 +1,13 @@
 module github.com/smykla-skalski/.github
 
-go 1.26.3
+go 1.26.4
 
 require (
 	github.com/cockroachdb/errors v1.13.0
 	github.com/evanphx/json-patch/v5 v5.9.11
 	github.com/gofri/go-github-ratelimit/v2 v2.0.2
 	github.com/google/go-cmp v0.7.0
-	github.com/google/go-github/v88 v88.0.0
+	github.com/google/go-github/v84 v84.0.0
 	github.com/google/go-github/v88 v88.0.0
 	github.com/invopop/jsonschema v0.14.0
 	github.com/spf13/cobra v1.10.2
