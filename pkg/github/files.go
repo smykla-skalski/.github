@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	"github.com/cockroachdb/errors"
-	"github.com/google/go-github/v84/github"
+	"github.com/google/go-github/v88/github"
 
 	"github.com/smykla-skalski/.github/internal/configtypes"
 	"github.com/smykla-skalski/.github/pkg/config"
@@ -22,6 +22,11 @@ import (
 const (
 	httpStatusNotFound    = 404
 	commitsPerPageForFile = 20
+
+	fileActionCreate     = "create"
+	fileActionUpdate     = "update"
+	fileActionDelete     = "delete"
+	pullRequestStateOpen = "open"
 )
 
 // FileMapping represents a source to destination file mapping.
@@ -34,7 +39,7 @@ type FileMapping struct {
 type FileChange struct {
 	Path    string
 	Content []byte
-	Action  string // "create", "update", "delete"
+	Action  string // fileActionCreate, fileActionUpdate, fileActionDelete
 	BlobSHA string // For blobs created
 }
 
@@ -352,7 +357,7 @@ func processExistingFile(
 	return append(changes, FileChange{
 		Path:    mapping.Dest,
 		Content: sourceContent,
-		Action:  "update",
+		Action:  fileActionUpdate,
 	})
 }
 
@@ -377,7 +382,7 @@ func processNewFile(
 	return append(changes, FileChange{
 		Path:    mapping.Dest,
 		Content: sourceContent,
-		Action:  "create",
+		Action:  fileActionCreate,
 	})
 }
 
@@ -675,7 +680,7 @@ func checkNonStandardRenovateConfigs(
 
 			changes = append(changes, FileChange{
 				Path:   path,
-				Action: "delete",
+				Action: fileActionDelete,
 			})
 		}
 	}
@@ -729,7 +734,7 @@ func closeExistingPR(
 
 	// List open PRs for the branch
 	prs, _, err := client.PullRequests.List(ctx, org, repo, &github.PullRequestListOptions{
-		State: "open",
+		State: pullRequestStateOpen,
 		Head:  org + ":" + branchName,
 	})
 	if err != nil {
@@ -884,7 +889,7 @@ func createGitCommit(
 	log.Debug("creating blobs", "count", len(changes))
 
 	for i := range changes {
-		if changes[i].Action == "delete" {
+		if changes[i].Action == fileActionDelete {
 			continue
 		}
 
@@ -958,7 +963,7 @@ func buildTreeEntries(changes []FileChange) []*github.TreeEntry {
 	treeEntries := make([]*github.TreeEntry, 0, len(changes))
 
 	for _, change := range changes {
-		if change.Action == "delete" {
+		if change.Action == fileActionDelete {
 			treeEntries = append(treeEntries, &github.TreeEntry{
 				Path: new(change.Path),
 				Mode: new("100644"),
@@ -995,7 +1000,7 @@ func upsertPullRequestWithURL(
 
 	// Check for existing PR
 	prs, _, err := client.PullRequests.List(ctx, org, repo, &github.PullRequestListOptions{
-		State: "open",
+		State: pullRequestStateOpen,
 		Head:  org + ":" + branchName,
 	})
 	if err != nil {
@@ -1232,14 +1237,14 @@ mutation($prId: ID!) {
 		Variables: variables,
 	}
 
-	req, err := client.NewRequest("POST", "graphql", input)
+	req, err := client.NewRequest(ctx, "POST", "graphql", input)
 	if err != nil {
 		return errors.Wrap(err, "creating GraphQL request")
 	}
 
 	var result any
 
-	_, err = client.Do(ctx, req, &result)
+	_, err = client.Do(req, &result)
 	if err != nil {
 		return errors.Wrap(err, "executing GraphQL mutation")
 	}

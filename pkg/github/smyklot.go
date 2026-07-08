@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/cockroachdb/errors"
-	"github.com/google/go-github/v84/github"
+	"github.com/google/go-github/v88/github"
 	"go.yaml.in/yaml/v4"
 
 	"github.com/smykla-skalski/.github/internal/configtypes"
@@ -339,7 +339,7 @@ func handleNewWorkflow(
 	return []FileChange{{
 		Path:    targetPath,
 		Content: expectedContent,
-		Action:  "create",
+		Action:  fileActionCreate,
 	}}
 }
 
@@ -396,12 +396,12 @@ func handleLegacyWorkflow(
 	return []FileChange{
 		{
 			Path:   legacyPath,
-			Action: "delete",
+			Action: fileActionDelete,
 		},
 		{
 			Path:    targetPath,
 			Content: expectedContent,
-			Action:  "create",
+			Action:  fileActionCreate,
 		},
 	}, nil
 }
@@ -467,8 +467,8 @@ func handleExtensionNormalization(
 	stats.ReplacedFiles = append(stats.ReplacedFiles, targetPath)
 
 	return []FileChange{
-		{Path: existingPath, Action: "delete"},
-		{Path: targetPath, Content: expectedContent, Action: "create"},
+		{Path: existingPath, Action: fileActionDelete},
+		{Path: targetPath, Content: expectedContent, Action: fileActionCreate},
 	}
 }
 
@@ -488,7 +488,7 @@ func handleContentUpdate(
 	return []FileChange{{
 		Path:    targetPath,
 		Content: expectedContent,
-		Action:  "update",
+		Action:  fileActionUpdate,
 	}}
 }
 
@@ -625,7 +625,7 @@ func processWorkflowFile(
 	return FileChange{
 		Path:    workflowPath,
 		Content: []byte(updatedContent),
-		Action:  "update",
+		Action:  fileActionUpdate,
 	}, true, nil
 }
 
@@ -661,7 +661,7 @@ func closeSmyklotPR(
 
 	// List open PRs for the branch
 	prs, _, err := client.PullRequests.List(ctx, org, repo, &github.PullRequestListOptions{
-		State: "open",
+		State: pullRequestStateOpen,
 		Head:  org + ":" + branchName,
 	})
 	if err != nil {
@@ -766,7 +766,7 @@ func upsertSmyklotPullRequestWithURL(
 
 	// Check for existing PR
 	prs, _, err := client.PullRequests.List(ctx, org, repo, &github.PullRequestListOptions{
-		State: "open",
+		State: pullRequestStateOpen,
 		Head:  org + ":" + branchName,
 	})
 	if err != nil {

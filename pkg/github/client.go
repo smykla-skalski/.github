@@ -6,7 +6,7 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/gofri/go-github-ratelimit/v2/github_ratelimit"
-	"github.com/google/go-github/v84/github"
+	"github.com/google/go-github/v88/github"
 
 	"github.com/smykla-skalski/.github/pkg/logger"
 )
@@ -25,7 +25,13 @@ func NewClient(ctx context.Context, log *logger.Logger, token string) (*Client, 
 
 	rateLimiter := github_ratelimit.NewClient(nil)
 
-	client := github.NewClient(rateLimiter).WithAuthToken(token)
+	client, err := github.NewClient(
+		github.WithHTTPClient(rateLimiter),
+		github.WithAuthToken(token),
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "creating GitHub client")
+	}
 
 	if err := validateToken(ctx, client); err != nil {
 		return nil, errors.Wrap(err, "validating token")
