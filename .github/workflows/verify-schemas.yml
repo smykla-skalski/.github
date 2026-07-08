@@ -73,9 +73,9 @@ jobs:
           go run ./cmd/schemagen --all --output-dir schemas
           jsonschema fmt schemas/*.schema.json
 
-      - name: Lint schemas
+      - name: Validate schemas
         if: steps.check-bot.outputs.skip != 'true'
-        run: jsonschema lint --strict schemas/*.schema.json
+        run: jsonschema metaschema schemas/*.schema.json
 
       - name: Check for schema changes
         if: steps.check-bot.outputs.skip != 'true'
