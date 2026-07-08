@@ -123,7 +123,7 @@ sync:
 
 All workflows use **smyklot** GitHub App:
 
-- `vars.SMYKLOT_APP_ID` + `secrets.SMYKLOT_PRIVATE_KEY`
+- `vars.SMYKLOT_CLIENT_ID` (optional) + `secrets.SMYKLOT_APP_PRIVATE_KEY`
 
 ## Go Code
 

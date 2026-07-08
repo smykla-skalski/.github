@@ -152,8 +152,11 @@ Workflows use the **smyklot** GitHub App for authentication. The app must be ins
 
 Required org-level configuration:
 
-- `vars.SMYKLOT_APP_ID` - GitHub App ID
-- `secrets.SMYKLOT_PRIVATE_KEY` - GitHub App private key
+- `secrets.SMYKLOT_APP_PRIVATE_KEY` - GitHub App private key
+
+Optional org-level configuration:
+
+- `vars.SMYKLOT_CLIENT_ID` - GitHub App client ID. Workflows default to the public Smyklot client ID when unset.
 
 ## Manual Sync
 
