@@ -3,6 +3,8 @@ package github
 import (
 	"bytes"
 	"testing"
+
+	"github.com/smykla-skalski/.github/internal/configtypes"
 )
 
 func TestRenderFileTemplate(t *testing.T) {
@@ -74,6 +76,56 @@ func TestRenderFileTemplate(t *testing.T) {
 
 			if !bytes.Equal(got, tt.want) {
 				t.Errorf("renderFileTemplate() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestEffectiveMergeStrategy(t *testing.T) {
+	tests := []struct {
+		name        string
+		path        string
+		mergeConfig *configtypes.FileMergeConfig
+		want        configtypes.MergeStrategy
+	}{
+		{
+			name: "nil config has no merge strategy",
+			path: "renovate.json",
+			want: "",
+		},
+		{
+			name:        "default JSON strategy is deep merge",
+			path:        "renovate.json",
+			mergeConfig: &configtypes.FileMergeConfig{},
+			want:        configtypes.MergeStrategyDeep,
+		},
+		{
+			name:        "default YAML strategy is deep merge",
+			path:        ".github/settings.yml",
+			mergeConfig: &configtypes.FileMergeConfig{},
+			want:        configtypes.MergeStrategyDeep,
+		},
+		{
+			name:        "default Markdown strategy is markdown",
+			path:        "CONTRIBUTING.md",
+			mergeConfig: &configtypes.FileMergeConfig{},
+			want:        configtypes.MergeStrategyMarkdown,
+		},
+		{
+			name: "explicit strategy wins",
+			path: "renovate.json",
+			mergeConfig: &configtypes.FileMergeConfig{
+				Strategy: configtypes.MergeStrategyShallow,
+			},
+			want: configtypes.MergeStrategyShallow,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := effectiveMergeStrategy(tt.path, tt.mergeConfig)
+			if got != tt.want {
+				t.Errorf("effectiveMergeStrategy() = %q, want %q", got, tt.want)
 			}
 		})
 	}

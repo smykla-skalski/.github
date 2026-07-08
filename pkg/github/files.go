@@ -271,10 +271,12 @@ func processFileMapping(
 	var mergeStrategy configtypes.MergeStrategy
 
 	if mergeConfig != nil {
+		effectiveStrategy := effectiveMergeStrategy(mapping.Dest, mergeConfig)
+
 		log.Info(
 			"found merge config for file",
 			"file", mapping.Dest,
-			"strategy", mergeConfig.Strategy,
+			"strategy", effectiveStrategy,
 		)
 
 		// Apply merge
@@ -287,7 +289,7 @@ func processFileMapping(
 		} else {
 			// Use merged content
 			sourceContent = mergedContent
-			mergeStrategy = mergeConfig.Strategy
+			mergeStrategy = effectiveStrategy
 		}
 	}
 
@@ -379,6 +381,23 @@ func processNewFile(
 		Content: sourceContent,
 		Action:  "create",
 	})
+}
+
+func effectiveMergeStrategy(path string, mergeConfig *configtypes.FileMergeConfig) configtypes.MergeStrategy {
+	if mergeConfig == nil {
+		return ""
+	}
+
+	if mergeConfig.Strategy != "" {
+		return mergeConfig.Strategy
+	}
+
+	ext := strings.ToLower(filepath.Ext(path))
+	if ext == ".md" || ext == ".markdown" {
+		return configtypes.MergeStrategyMarkdown
+	}
+
+	return configtypes.MergeStrategyDeep
 }
 
 // shouldSkipRenovateJSON checks if renovate.json should be skipped due to manual modifications.
