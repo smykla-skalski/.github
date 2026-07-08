@@ -27,6 +27,7 @@ const (
 	fileActionUpdate     = "update"
 	fileActionDelete     = "delete"
 	pullRequestStateOpen = "open"
+	renovateConfigPath   = "renovate.json"
 )
 
 // FileMapping represents a source to destination file mapping.
@@ -257,7 +258,7 @@ func processFileMapping(
 	var changes []FileChange
 
 	// Special case: renovate.json - check for non-standard locations to delete
-	if mapping.Dest == "renovate.json" {
+	if mapping.Dest == renovateConfigPath {
 		deleteChanges := checkNonStandardRenovateConfigs(ctx, log, client, org, repo, stats)
 		changes = append(changes, deleteChanges...)
 	}
@@ -341,7 +342,7 @@ func processExistingFile(
 	}
 
 	// Special case: renovate.json - check for manual modifications (only if not merged)
-	if mapping.Dest == "renovate.json" && mergeStrategy == "" {
+	if mapping.Dest == renovateConfigPath && mergeStrategy == "" {
 		if shouldSkipRenovateJSON(ctx, log, client, org, repo, mapping.Dest, stats) {
 			return changes
 		}
@@ -388,7 +389,10 @@ func processNewFile(
 	})
 }
 
-func effectiveMergeStrategy(path string, mergeConfig *configtypes.FileMergeConfig) configtypes.MergeStrategy {
+func effectiveMergeStrategy(
+	path string,
+	mergeConfig *configtypes.FileMergeConfig,
+) configtypes.MergeStrategy {
 	if mergeConfig == nil {
 		return ""
 	}
@@ -1193,7 +1197,11 @@ func buildPRBody(org string, sourceRepo string, stats *FileSyncStats) string {
 		body.WriteString("> **Files are being deleted in this sync.**\n")
 		body.WriteString(">\n")
 		body.WriteString("> The following non-standard Renovate config files are being removed\n")
-		body.WriteString("> in favor of the organization standard `renovate.json` in root:\n")
+		fmt.Fprintf(
+			&body,
+			"> in favor of the organization standard `%s` in root:\n",
+			renovateConfigPath,
+		)
 		body.WriteString(">\n")
 
 		for _, file := range stats.DeletedFiles {
