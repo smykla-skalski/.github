@@ -1,5 +1,7 @@
 # Changelog
 
+## [1.15.5](https://github.com/smykla-skalski/.github/compare/dotsync%2Fv1.15.4...dotsync%2Fv1.15.5) (2026-07-08)
+
 ## [1.15.4](https://github.com/smykla-skalski/.github/compare/dotsync/v1.15.3...dotsync/v1.15.4) (2026-04-13)
 
 ### Bug Fixes
