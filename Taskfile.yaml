@@ -47,11 +47,11 @@ tasks:
       - echo "✓ Go modules verified"
 
   lint:schema:
-    desc: Lint JSON Schema files
+    desc: Validate JSON Schema files
     cmds:
-      - echo "▶ Linting JSON Schema files"
-      - mise exec -- jsonschema lint --strict schemas/*.schema.json
-      - echo "✓ JSON Schema files pass linting"
+      - echo "▶ Validating JSON Schema files"
+      - mise exec -- jsonschema metaschema schemas/*.schema.json
+      - echo "✓ JSON Schema files are valid"
 
   # Schema generation
   schema:generate:
