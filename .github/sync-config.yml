@@ -7,19 +7,9 @@ sync:
     merge:
       - path: "renovate.json"
         strategy: "deep-merge"
-        arrayStrategies:
-          "$.packageRules": "append"
         overrides:
           # Extend github-actions manager to scan smyklot workflow templates
           # These patterns are ADDITIVE to defaults per Renovate docs
           github-actions:
             managerFilePatterns:
               - "/smyklot-templates/.+\\.ya?ml$/"
-          packageRules:
-            - description: "Group Charm TUI Go modules"
-              groupName: "Charm TUI modules"
-              matchManagers: ["gomod"]
-              matchPackageNames:
-                - "charm.land/bubbles/v2"
-                - "charm.land/bubbletea/v2"
-                - "charm.land/lipgloss/v2"
