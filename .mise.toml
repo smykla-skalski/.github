@@ -4,7 +4,7 @@ task = "3.51.1"
 golangci-lint = "2.12.2"
 actionlint = "1.7.12"
 goreleaser = "2.17.0"
-jsonschema = "15.6.3"
+jsonschema = "16.0.0"
 markdownlint-cli2 = "0.23.0"
 
 [env]
