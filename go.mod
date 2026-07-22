@@ -31,5 +31,5 @@ require (
 	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	github.com/spf13/pflag v1.0.9 // indirect
 	golang.org/x/sys v0.46.0 // indirect
-	golang.org/x/text v0.32.0 // indirect
+	golang.org/x/text v0.39.0 // indirect
 )
