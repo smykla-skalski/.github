@@ -128,7 +128,7 @@ outputs:
 
 runs:
   using: docker
-  image: docker://ghcr.io/smykla-skalski/dotsync:1.15.9
+  image: docker://ghcr.io/smykla-skalski/dotsync:1.15.10
   args:
     - ${{ inputs.command }}
     - ${{ inputs.subcommand }}
