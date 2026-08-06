@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/cockroachdb/errors"
-	"github.com/google/go-github/v89/github"
+	"github.com/google/go-github/v90/github"
 	"go.yaml.in/yaml/v4"
 
 	"github.com/smykla-skalski/.github/internal/configtypes"
@@ -796,10 +796,10 @@ func upsertSmyklotPullRequestWithURL(
 	// Create new PR
 	log.Info("creating new PR")
 
-	pr := &github.NewPullRequest{
+	pr := github.CreatePullRequest{
 		Title: &prTitle,
-		Head:  new(branchName),
-		Base:  new(defaultBranch),
+		Head:  branchName,
+		Base:  defaultBranch,
 		Body:  &prBody,
 	}
 
