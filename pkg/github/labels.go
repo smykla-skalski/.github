@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/cockroachdb/errors"
-	"github.com/google/go-github/v89/github"
+	"github.com/google/go-github/v90/github"
 	"go.yaml.in/yaml/v4"
 
 	"github.com/smykla-skalski/.github/internal/configtypes"
@@ -295,8 +295,8 @@ func applyLabelChanges(
 			color = color[1:]
 		}
 
-		ghLabel := &github.Label{
-			Name:        new(label.Name),
+		ghLabel := github.CreateIssueLabelRequest{
+			Name:        label.Name,
 			Color:       &color,
 			Description: new(label.Description),
 		}
@@ -317,13 +317,12 @@ func applyLabelChanges(
 			color = color[1:]
 		}
 
-		ghLabel := &github.Label{
-			Name:        new(label.Name),
+		ghLabel := github.UpdateIssueLabelRequest{
 			Color:       &color,
 			Description: new(label.Description),
 		}
 
-		_, _, err := client.Issues.EditLabel(ctx, org, repo, label.Name, ghLabel)
+		_, _, err := client.Issues.UpdateLabel(ctx, org, repo, label.Name, ghLabel)
 		if err != nil {
 			return errors.Wrapf(err, "updating label %q", label.Name)
 		}

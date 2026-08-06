@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	"github.com/cockroachdb/errors"
-	"github.com/google/go-github/v89/github"
+	"github.com/google/go-github/v90/github"
 
 	"github.com/smykla-skalski/.github/internal/configtypes"
 	"github.com/smykla-skalski/.github/pkg/config"
@@ -1053,10 +1053,10 @@ func upsertPullRequestWithURL(
 	// Create new PR
 	log.Info("creating new PR")
 
-	pr := &github.NewPullRequest{
+	pr := github.CreatePullRequest{
 		Title: &prTitle,
-		Head:  new(branchName),
-		Base:  new(defaultBranch),
+		Head:  branchName,
+		Base:  defaultBranch,
 		Body:  &prBody,
 	}
 
