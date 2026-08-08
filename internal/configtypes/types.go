@@ -1,30 +1,28 @@
 // Package configtypes provides minimal type definitions for sync configuration.
 package configtypes
 
-// Configuration for controlling organization-wide synchronization of labels, files, smyklot
-// versions, and repository settings across all repositories
+// Configuration for controlling organization-wide synchronization of labels, files,
+// and repository settings across all repositories
 //
 //nolint:staticcheck // ST1021: Descriptive comment preferred over struct name prefix
 type SyncConfig struct {
-	// Top-level sync configuration controlling label, file, and smyklot version synchronization
+	// Top-level sync configuration controlling label, file, and settings synchronization
 	// behavior
 	Sync SyncSettings `json:"sync" yaml:"sync"`
 }
 
-// Centralized control for all synchronization operations including labels, files, smyklot
-// versions, and repository settings
+// Centralized control for all synchronization operations including labels, files,
+// and repository settings
 //
 //nolint:staticcheck // ST1021: Descriptive comment preferred over struct name prefix
 type SyncSettings struct {
 	// Skip ALL syncs for this repository. Equivalent to setting labels.skip, files.skip,
-	// smyklot.skip, and settings.skip to true
+	// and settings.skip to true
 	Skip bool `json:"skip" jsonschema:"default=false" yaml:"skip"`
 	// Label synchronization configuration
 	Labels LabelsConfig `json:"labels" yaml:"labels"`
 	// File synchronization configuration
 	Files FilesConfig `json:"files" yaml:"files"`
-	// Smyklot version synchronization configuration
-	Smyklot SmyklotConfig `json:"smyklot" yaml:"smyklot"`
 	// Repository settings synchronization configuration
 	Settings SettingsConfig `json:"settings" yaml:"settings"`
 }
@@ -164,41 +162,6 @@ type MarkdownSection struct {
 	// Text substitutions within the matched section (required for patch action).
 	// Applied sequentially
 	Patches []MarkdownPatch `json:"patches,omitempty" yaml:"patches,omitempty"`
-}
-
-// Controls automatic updates of smyklot version references in workflow files when new versions
-// are released, and which workflows to install/sync
-//
-//nolint:staticcheck // ST1021: Descriptive comment preferred over struct name prefix
-type SmyklotConfig struct {
-	// Skip ALL smyklot synchronization (both workflows and version updates). Label and file sync
-	// still run unless their respective skip flags are set. Use this for repos that don't use
-	// smyklot at all
-	Skip bool `json:"skip" jsonschema:"default=false" yaml:"skip"`
-	// Version synchronization configuration
-	Version SmyklotVersionConfig `json:"version" yaml:"version"`
-	// Which smyklot workflows to sync to this repository. Allows per-repo control over workflow
-	// installation
-	Workflows SmyklotWorkflowsConfig `json:"workflows" yaml:"workflows"`
-}
-
-// Controls version-only updates in non-managed workflow files
-//
-//nolint:staticcheck // ST1021: Descriptive comment preferred over struct name prefix
-type SmyklotVersionConfig struct {
-	// Skip version-only updates in workflow files. Managed workflows (smyklot-pr-commands,
-	// smyklot-poll) are still synced unless their respective workflow flags are disabled
-	Skip bool `json:"skip" jsonschema:"default=false" yaml:"skip"`
-}
-
-// Controls which smyklot workflows are synced to a repository
-//
-//nolint:staticcheck // ST1021: Descriptive comment preferred over struct name prefix
-type SmyklotWorkflowsConfig struct {
-	// Sync smyklot-pr-commands workflow. Default: true
-	PrCommands *bool `json:"pr_commands" jsonschema:"default=true" yaml:"pr_commands"`
-	// Sync smyklot-poll workflow. Default: true
-	Poll *bool `json:"poll" jsonschema:"default=true" yaml:"poll"`
 }
 
 // Controls synchronization of GitHub repository settings like merge strategies, branch
@@ -493,33 +456,4 @@ type CodeScanningToolConfig struct {
 	AlertsThreshold string `json:"alerts_threshold" jsonschema:"enum=none,enum=errors,enum=errors_and_warnings,enum=all,required" yaml:"alerts_threshold"`
 	// Security alert threshold level (none, critical, high_or_higher, medium_or_higher, all)
 	SecurityAlertsThreshold string `json:"security_alerts_threshold" jsonschema:"enum=none,enum=critical,enum=high_or_higher,enum=medium_or_higher,enum=all,required" yaml:"security_alerts_threshold"`
-}
-
-// Organization-wide smyklot configuration file controlling version sync and workflow
-// installation across all repositories
-//
-//nolint:staticcheck // ST1021: Descriptive comment preferred over struct name prefix
-type SmyklotFile struct {
-	// Whether to sync version references in existing workflows. Default: true
-	SyncVersion *bool `json:"sync_version" jsonschema:"default=true" yaml:"sync_version"`
-	// Which workflows to sync to all repositories by default
-	Workflows SmyklotWorkflowsConfig `json:"workflows" yaml:"workflows"`
-}
-
-// SetDefaults sets default values for SmyklotFile fields if they are nil.
-func (sf *SmyklotFile) SetDefaults() {
-	if sf.SyncVersion == nil {
-		val := true
-		sf.SyncVersion = &val
-	}
-
-	if sf.Workflows.PrCommands == nil {
-		val := true
-		sf.Workflows.PrCommands = &val
-	}
-
-	if sf.Workflows.Poll == nil {
-		val := true
-		sf.Workflows.Poll = &val
-	}
 }

@@ -123,6 +123,9 @@ func SyncFiles(
 		changes = append(changes, fileChanges...)
 	}
 
+	// Remove workflows this tool used to install and no longer does
+	changes = append(changes, checkRetiredWorkflows(ctx, log, client, org, repo, stats)...)
+
 	// Log stats
 	log.Info("file sync summary",
 		"created", stats.Created,
@@ -665,6 +668,66 @@ func isNotFoundError(err error) bool {
 	}
 
 	return false
+}
+
+const (
+	workflowPRCommandsPath       = ".github/workflows/smyklot-pr-commands.yml"
+	workflowPollPath             = ".github/workflows/smyklot-poll.yml"
+	legacyWorkflowPRCommandsPath = ".github/workflows/pr-commands.yaml"
+	legacyWorkflowPollPath       = ".github/workflows/poll-reactions.yaml"
+)
+
+// retiredWorkflowPaths are workflows this tool installed in every repository and
+// no longer does.
+//
+// The organization runs one smyklot service, which handles every repository the
+// App is installed on. These files ran the Action for the same comments, so a
+// repository that still has one gets two of everything. They are deleted rather
+// than left in place, because a disabled workflow is one click from running
+// again and gives no hint of why it should not.
+var retiredWorkflowPaths = []string{
+	workflowPRCommandsPath,
+	workflowPollPath,
+	// The names these carried before they were renamed
+	legacyWorkflowPRCommandsPath,
+	legacyWorkflowPollPath,
+}
+
+// checkRetiredWorkflows schedules deletion of any retired workflow still present.
+func checkRetiredWorkflows(
+	ctx context.Context,
+	log *logger.Logger,
+	client *Client,
+	org string,
+	repo string,
+	stats *FileSyncStats,
+) []FileChange {
+	var changes []FileChange
+
+	for _, path := range retiredWorkflowPaths {
+		_, exists, err := fetchTargetFile(ctx, client, org, repo, path)
+		if err != nil {
+			log.Warn("failed to check retired workflow", "path", path, "error", err)
+
+			continue
+		}
+
+		if !exists {
+			continue
+		}
+
+		log.Info("scheduling deletion of retired workflow", "path", path)
+
+		stats.Deleted++
+		stats.DeletedFiles = append(stats.DeletedFiles, path)
+
+		changes = append(changes, FileChange{
+			Path:   path,
+			Action: fileActionDelete,
+		})
+	}
+
+	return changes
 }
 
 // checkNonStandardRenovateConfigs checks for non-standard renovate config files.

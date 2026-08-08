@@ -14,7 +14,7 @@ import (
 
 // SchemaOutput represents a generated schema with its metadata.
 type SchemaOutput struct {
-	// Name is the short identifier for this schema (e.g., "sync-config", "settings", "smyklot")
+	// Name is the short identifier for this schema (e.g., "sync-config", "settings")
 	Name string
 	// Filename is the output filename (e.g., "sync-config.schema.json")
 	Filename string
@@ -30,8 +30,6 @@ const (
 	SchemaSyncConfig SchemaType = "sync-config"
 	// SchemaSettings generates schema for .github/settings.yml
 	SchemaSettings SchemaType = "settings"
-	// SchemaSmyklot generates schema for .github/smyklot.yml
-	SchemaSmyklot SchemaType = "smyklot"
 )
 
 // commentPaths lists all source directories containing types used in schemas.
@@ -80,7 +78,7 @@ func GenerateSchemaForType(
 		schema = reflector.Reflect(&configtypes.SyncConfig{})
 		schema.ID = "https://raw.githubusercontent.com/smykla-skalski/.github/main/schemas/sync-config.schema.json"
 		schema.Title = "Sync Configuration"
-		schema.Description = "Configuration for organization-wide label, file, and smyklot version synchronization. Place at .github/sync-config.yml in your repository."
+		schema.Description = "Configuration for organization-wide label, file, and settings synchronization. Place at .github/sync-config.yml in your repository."
 
 		// Inject settings type definitions for SettingsMergeConfig.overrides
 		injectSettingsDefinitions(schema, &reflector)
@@ -96,15 +94,6 @@ func GenerateSchemaForType(
 
 		output.Name = "settings"
 		output.Filename = "settings.schema.json"
-
-	case SchemaSmyklot:
-		schema = reflector.Reflect(&configtypes.SmyklotFile{})
-		schema.ID = "https://raw.githubusercontent.com/smykla-skalski/.github/main/schemas/smyklot.schema.json"
-		schema.Title = "Smyklot Configuration"
-		schema.Description = "Organization-wide smyklot configuration controlling version sync and workflow installation. Place at .github/smyklot.yml in the .github repository."
-
-		output.Name = "smyklot"
-		output.Filename = "smyklot.schema.json"
 
 	default:
 		return nil, errors.Newf("unknown schema type: %s", schemaType)
@@ -124,7 +113,7 @@ func GenerateSchemaForType(
 
 // GenerateAllSchemas generates all available schemas.
 func GenerateAllSchemas(modulePath, configPkgPath string) ([]*SchemaOutput, error) {
-	schemaTypes := []SchemaType{SchemaSyncConfig, SchemaSettings, SchemaSmyklot}
+	schemaTypes := []SchemaType{SchemaSyncConfig, SchemaSettings}
 	outputs := make([]*SchemaOutput, 0, len(schemaTypes))
 
 	for _, schemaType := range schemaTypes {

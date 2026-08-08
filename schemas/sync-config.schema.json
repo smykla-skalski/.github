@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://raw.githubusercontent.com/smykla-skalski/.github/main/schemas/sync-config.schema.json",
   "title": "Sync Configuration",
-  "description": "Configuration for organization-wide label, file, and smyklot version synchronization. Place at .github/sync-config.yml in your repository.",
+  "description": "Configuration for organization-wide label, file, and settings synchronization. Place at .github/sync-config.yml in your repository.",
   "$ref": "#/$defs/SyncConfig",
   "$defs": {
     "BranchProtectionRuleConfig": {
@@ -854,55 +854,6 @@
       },
       "additionalProperties": false
     },
-    "SmyklotConfig": {
-      "description": "Controls automatic updates of smyklot version references in workflow files when new versions are released, and which workflows to install/sync",
-      "type": "object",
-      "properties": {
-        "skip": {
-          "description": "Skip ALL smyklot synchronization (both workflows and version updates). Label and file sync still run unless their respective skip flags are set. Use this for repos that don't use smyklot at all",
-          "default": false,
-          "type": "boolean"
-        },
-        "version": {
-          "description": "Version synchronization configuration",
-          "$ref": "#/$defs/SmyklotVersionConfig"
-        },
-        "workflows": {
-          "description": "Which smyklot workflows to sync to this repository. Allows per-repo control over workflow installation",
-          "$ref": "#/$defs/SmyklotWorkflowsConfig"
-        }
-      },
-      "additionalProperties": false
-    },
-    "SmyklotVersionConfig": {
-      "description": "Controls version-only updates in non-managed workflow files",
-      "type": "object",
-      "properties": {
-        "skip": {
-          "description": "Skip version-only updates in workflow files. Managed workflows (smyklot-pr-commands, smyklot-poll) are still synced unless their respective workflow flags are disabled",
-          "default": false,
-          "type": "boolean"
-        }
-      },
-      "additionalProperties": false
-    },
-    "SmyklotWorkflowsConfig": {
-      "description": "Controls which smyklot workflows are synced to a repository",
-      "type": "object",
-      "properties": {
-        "poll": {
-          "description": "Sync smyklot-poll workflow. Default: true",
-          "default": true,
-          "type": "boolean"
-        },
-        "pr_commands": {
-          "description": "Sync smyklot-pr-commands workflow. Default: true",
-          "default": true,
-          "type": "boolean"
-        }
-      },
-      "additionalProperties": false
-    },
     "StatusCheckConfig": {
       "description": "Defines a single required status check with context name and optional integration ID",
       "type": "object",
@@ -943,18 +894,18 @@
       "additionalProperties": false
     },
     "SyncConfig": {
-      "description": "Configuration for controlling organization-wide synchronization of labels, files, smyklot versions, and repository settings across all repositories",
+      "description": "Configuration for controlling organization-wide synchronization of labels, files, and repository settings across all repositories",
       "type": "object",
       "properties": {
         "sync": {
-          "description": "Top-level sync configuration controlling label, file, and smyklot version synchronization behavior",
+          "description": "Top-level sync configuration controlling label, file, and settings synchronization behavior",
           "$ref": "#/$defs/SyncSettings"
         }
       },
       "additionalProperties": false
     },
     "SyncSettings": {
-      "description": "Centralized control for all synchronization operations including labels, files, smyklot versions, and repository settings",
+      "description": "Centralized control for all synchronization operations including labels, files, and repository settings",
       "type": "object",
       "properties": {
         "files": {
@@ -970,13 +921,9 @@
           "$ref": "#/$defs/SettingsConfig"
         },
         "skip": {
-          "description": "Skip ALL syncs for this repository. Equivalent to setting labels.skip, files.skip, smyklot.skip, and settings.skip to true",
+          "description": "Skip ALL syncs for this repository. Equivalent to setting labels.skip, files.skip, and settings.skip to true",
           "default": false,
           "type": "boolean"
-        },
-        "smyklot": {
-          "description": "Smyklot version synchronization configuration",
-          "$ref": "#/$defs/SmyklotConfig"
         }
       },
       "additionalProperties": false

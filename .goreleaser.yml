@@ -70,7 +70,7 @@ dockers_v2:
       "org.opencontainers.image.revision": "{{.FullCommit}}"
       "org.opencontainers.image.version": "{{ trimprefix .Tag \"dotsync/v\" }}"
       "org.opencontainers.image.source": "https://github.com/smykla-skalski/.github"
-      "org.opencontainers.image.description": "Organization sync tool for labels, files, and smyklot versions"
+      "org.opencontainers.image.description": "Organization sync tool for labels, files, and settings"
       "org.opencontainers.image.licenses": "MIT"
     extra_files:
       - LICENSE

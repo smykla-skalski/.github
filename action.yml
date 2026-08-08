@@ -6,7 +6,7 @@ description: >-
 inputs:
   # Required: Command routing
   command:
-    description: Command to execute (labels, files, settings, smyklot, repos, config)
+    description: Command to execute (labels, files, settings, repos, config)
     required: true
   subcommand:
     description: Subcommand to execute (sync, discover, list, verify, verify-file)
@@ -63,26 +63,6 @@ inputs:
     description: Comma-separated labels for file sync PRs (files sync)
     required: false
     default: ""
-  version:
-    description: Smyklot version to sync (smyklot sync)
-    required: false
-    default: ""
-  tag:
-    description: Smyklot git tag to sync (smyklot sync)
-    required: false
-    default: ""
-  sha:
-    description: Smyklot commit SHA to sync (smyklot sync)
-    required: false
-    default: ""
-  smyklot_file:
-    description: Path to smyklot.yml config file (smyklot sync)
-    required: false
-    default: ""
-  smyklot_templates_dir:
-    description: Path to smyklot workflow templates directory (smyklot sync)
-    required: false
-    default: ""
   templates_dir:
     description: Path to templates directory (files discover)
     required: false
@@ -104,7 +84,7 @@ inputs:
     required: false
     default: ""
   type:
-    description: Sync type for summary generation (labels, files, settings, smyklot, all) - inferred from result files if not provided
+    description: Sync type for summary generation (labels, files, settings, all) - inferred from result files if not provided
     required: false
     default: ""
   results_dir:
