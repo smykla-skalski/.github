@@ -32,7 +32,7 @@ func main() {
 		&generateAll,
 		"all",
 		false,
-		"Generate all schemas (sync-config, settings, smyklot)",
+		"Generate all schemas (sync-config, settings)",
 	)
 	flag.StringVar(
 		&outputDir,
@@ -44,7 +44,7 @@ func main() {
 		&schemaType,
 		"type",
 		"sync-config",
-		"Schema type to generate: sync-config, settings, or smyklot",
+		"Schema type to generate: sync-config or settings",
 	)
 	flag.Parse()
 
@@ -89,9 +89,9 @@ func generateSingleSchema(schemaType string) error {
 	st := schema.SchemaType(schemaType)
 
 	// Validate schema type before calling generation function
-	if st != schema.SchemaSyncConfig && st != schema.SchemaSettings && st != schema.SchemaSmyklot {
+	if st != schema.SchemaSyncConfig && st != schema.SchemaSettings {
 		return errors.Newf("invalid schema type %q: must be %q, %q, or %q",
-			schemaType, schema.SchemaSyncConfig, schema.SchemaSettings, schema.SchemaSmyklot)
+			schemaType, schema.SchemaSyncConfig, schema.SchemaSettings)
 	}
 
 	output, err := schema.GenerateSchemaForType(modulePath, configPkgPath, st)

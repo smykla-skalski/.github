@@ -9,7 +9,7 @@ FROM scratch
 ARG TARGETPLATFORM
 
 LABEL org.opencontainers.image.source="https://github.com/smykla-skalski/.github"
-LABEL org.opencontainers.image.description="Organization sync tool for labels, files, and smyklot versions"
+LABEL org.opencontainers.image.description="Organization sync tool for labels, files, and settings"
 LABEL org.opencontainers.image.licenses="MIT"
 
 # Copy CA certificates from alpine

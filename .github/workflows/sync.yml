@@ -19,11 +19,6 @@ on:
         required: false
         type: boolean
         default: true
-      sync_smyklot:
-        description: "Sync smyklot"
-        required: false
-        type: boolean
-        default: true
       dry_run:
         description: "Dry run (no changes)"
         required: false
@@ -58,7 +53,6 @@ jobs:
           SYNC_LABELS: ${{ inputs.sync_labels }}
           SYNC_FILES: ${{ inputs.sync_files }}
           SYNC_SETTINGS: ${{ inputs.sync_settings }}
-          SYNC_SMYKLOT: ${{ inputs.sync_smyklot }}
           DRY_RUN: ${{ inputs.dry_run }}
         run: |
           triggered_runs=""
@@ -119,7 +113,6 @@ jobs:
           trigger_workflow "Sync Labels" "sync-labels.yml" "labels" "$SYNC_LABELS"
           trigger_workflow "Sync Files" "sync-files.yml" "files" "$SYNC_FILES"
           trigger_workflow "Sync Settings" "sync-settings.yml" "settings" "$SYNC_SETTINGS"
-          trigger_workflow "Sync Smyklot" "sync-smyklot.yml" "smyklot" "$SYNC_SMYKLOT" -f "use_latest=true"
 
           # Output results (no step summary - done in wait-and-summarize)
           echo "runs=${triggered_runs% }" >> "$GITHUB_OUTPUT"

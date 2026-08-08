@@ -21,7 +21,6 @@ const (
 	syncTypeLabels   = "labels"
 	syncTypeFiles    = "files"
 	syncTypeSettings = "settings"
-	syncTypeSmyklot  = "smyklot"
 
 	filterAll       = "all"
 	filterFailures  = "failures"
@@ -132,7 +131,7 @@ func generateSingleWorkflowSummary(
 // inferSyncType infers the sync type from result file names in the directory.
 func inferSyncType(log *logger.Logger, resultsDir string) (string, error) {
 	// Check for each type pattern
-	types := []string{syncTypeLabels, syncTypeFiles, syncTypeSettings, syncTypeSmyklot}
+	types := []string{syncTypeLabels, syncTypeFiles, syncTypeSettings}
 
 	for _, syncType := range types {
 		pattern := filepath.Join(resultsDir, syncType+"-result-*.json")
@@ -248,14 +247,6 @@ func parseResultByType(syncType string, data []byte) (any, error) {
 
 		return &result, nil
 
-	case syncTypeSmyklot:
-		var result github.SmyklotSyncResult
-		if err := json.Unmarshal(data, &result); err != nil {
-			return nil, err
-		}
-
-		return &result, nil
-
 	default:
 		return nil, errors.Newf("unknown sync type: %s", syncType)
 	}
@@ -338,8 +329,6 @@ func extractStatus(result any) github.SyncStatus {
 	case *github.FilesSyncResult:
 		return r.Status
 	case *github.SettingsSyncResult:
-		return r.Status
-	case *github.SmyklotSyncResult:
 		return r.Status
 	default:
 		return ""
@@ -569,8 +558,6 @@ func formatResultsTable(syncType string, results []any) string {
 		return formatFilesTable(results)
 	case syncTypeSettings:
 		return formatSettingsTable(results)
-	case syncTypeSmyklot:
-		return formatSmyklotTable(results)
 	default:
 		return ""
 	}
@@ -609,8 +596,6 @@ func formatLabelsTable(results []any) string {
 }
 
 // formatFilesTable formats files results as a markdown table.
-//
-//nolint:dupl // Similar table structure to formatSmyklotTable but different result types and fields
 func formatFilesTable(results []any) string {
 	var builder strings.Builder
 
@@ -730,58 +715,6 @@ func formatSettingsTable(results []any) string {
 	return builder.String()
 }
 
-// formatSmyklotTable formats smyklot results as a markdown table.
-//
-//nolint:dupl // Similar table structure to formatFilesTable but different result types and fields
-func formatSmyklotTable(results []any) string {
-	var builder strings.Builder
-
-	builder.WriteString("| Repository | Status | Workflows Changed | PR | Duration |\n")
-	builder.WriteString("|------------|--------|-------------------|----|---------|\n")
-
-	for _, result := range results {
-		r, ok := result.(*github.SmyklotSyncResult)
-		if !ok {
-			continue
-		}
-
-		status := formatStatusWithError(r.Status, r.SkippedReason, r.ErrorMessage)
-		workflowsChanged := buildWorkflowsChangedSummary(
-			r.InstalledFiles,
-			r.ReplacedFiles,
-			r.VersionOnlyFiles,
-		)
-		prLink := formatPRLink(r.PRURL, r.PRNumber)
-
-		fmt.Fprintf(&builder, "| %s | %s | %s | %s | %s |\n",
-			r.Repo, status, workflowsChanged, prLink,
-			formatDuration(time.Duration(r.Duration)))
-	}
-
-	builder.WriteString("\n")
-
-	return builder.String()
-}
-
-// buildWorkflowsChangedSummary builds a summary of workflow changes for display.
-func buildWorkflowsChangedSummary(
-	installed []string,
-	replaced []string,
-	versionOnly []string,
-) string {
-	var builder strings.Builder
-
-	appendFileList(&builder, "**Installed (%d):**<br/>", installed)
-	appendFileList(&builder, "**Replaced (%d):**<br/>", replaced)
-	appendFileList(&builder, "**Version-only (%d):**<br/>", versionOnly)
-
-	if builder.Len() == 0 {
-		return "No changes"
-	}
-
-	return builder.String()
-}
-
 // stats holds aggregated statistics.
 type stats struct {
 	total       int
@@ -818,8 +751,6 @@ func calculateStats(results []any) stats {
 		case *github.FilesSyncResult:
 			s.updateTiming(r.StartedAt, r.CompletedAt)
 		case *github.SettingsSyncResult:
-			s.updateTiming(r.StartedAt, r.CompletedAt)
-		case *github.SmyklotSyncResult:
 			s.updateTiming(r.StartedAt, r.CompletedAt)
 		}
 	}
@@ -909,8 +840,6 @@ func getSyncTypeEmoji(syncType string) string {
 		return "📄"
 	case syncTypeSettings:
 		return "⚙️"
-	case syncTypeSmyklot:
-		return "🤖"
 	default:
 		return "🔄"
 	}
@@ -975,7 +904,7 @@ func formatDuration(d time.Duration) string {
 
 func init() {
 	// Configure summary generate command flags
-	summaryGenerateCmd.Flags().String("type", "", "Sync type (labels|files|settings|smyklot|all)")
+	summaryGenerateCmd.Flags().String("type", "", "Sync type (labels|files|settings|all)")
 	summaryGenerateCmd.Flags().String("results-dir", "", "Directory containing result JSON files")
 	summaryGenerateCmd.Flags().String(
 		"output",

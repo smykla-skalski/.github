@@ -5,7 +5,7 @@
 Organization-wide defaults and synchronization for smykla-skalski repositories. This special `.github` repository provides:
 
 1. **Community Health Files** - Default templates (CODE_OF_CONDUCT, CONTRIBUTING, SECURITY, issue/PR templates)
-2. **Label/File/Settings/Smyklot Sync** - Automated synchronization across all repos via `dotsync` CLI
+2. **Label/File/Settings Sync** - Automated synchronization across all repos via `dotsync` CLI
 3. **Reusable Workflows** - Shared CI/CD workflows (`lib-lint.yml`, `lib-test.yml`, `lib-build.yml`, `lib-release.yml`)
 
 ## Structure
@@ -14,7 +14,7 @@ Organization-wide defaults and synchronization for smykla-skalski repositories. 
 .github/
 ├── labels.yml              # Label definitions synced to all repos
 ├── settings.yml            # Repository settings synced to all repos
-├── workflows/sync-*.yml    # Sync workflows (labels, files, settings, smyklot)
+├── workflows/sync-*.yml    # Sync workflows (labels, files, settings)
 ├── workflows/lib-*.yml     # Reusable workflows for Go projects
 └── actions/dotsync/        # Unified container-based sync action
 cmd/
@@ -22,7 +22,7 @@ cmd/
 └── schemagen/main.go       # Schema generator (go run, not released)
 internal/configtypes/       # Config types (zero imports for fast schemagen compile)
 pkg/
-├── github/                 # GitHub API operations (labels, files, settings, smyklot)
+├── github/                 # GitHub API operations (labels, files, settings)
 ├── config/sync.go          # Sync config parsing (returns configtypes)
 ├── schema/generator.go     # JSON Schema generation
 └── logger/                 # slog wrapper
@@ -38,7 +38,7 @@ templates/                  # Source files for file sync (auto-discovered)
 ```yaml
 - uses: ./
   with:
-    command: labels|files|settings|smyklot|repos|config
+    command: labels|files|settings|repos|config
     subcommand: sync|discover|list|verify
     token: ${{ steps.token.outputs.token }}
     repo: ${{ matrix.repo.name }}
@@ -51,7 +51,6 @@ templates/                  # Source files for file sync (auto-discovered)
 | Labels   | `labels.yml` change   | Direct API      | -                    |
 | Files    | `templates/**` change | PR              | `chore/org-sync`     |
 | Settings | `settings.yml` change | Direct API      | -                    |
-| Smyklot  | `repository_dispatch` | PR + auto-merge | `chore/sync-smyklot` |
 
 ### Per-Repo Config
 
@@ -87,8 +86,6 @@ sync:
   settings:
     skip: false
     exclude: ["branch_protection", "security.secret_scanning"]
-  smyklot:
-    skip: false
 ```
 
 ### Key Behaviors
@@ -139,7 +136,7 @@ All workflows use **smyklot** GitHub App:
 - `pkg/config/sync.go` imports configtypes and adds parsing functions
 - `pkg/github/*.go` imports configtypes for type references
 
-**GitHub operations** (`pkg/github/`): Labels, files, settings, smyklot sync implementations
+**GitHub operations** (`pkg/github/`): Labels, files, settings sync implementations
 
 ### Linter Rules (STRICT - will fail CI)
 

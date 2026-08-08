@@ -84,8 +84,6 @@ func getStringFlagWithEnvFallback(cmd *cobra.Command, flagName, githubEnvFallbac
 
 // getPersistentStringFlagWithEnvFallback retrieves a persistent flag value with environment variable fallback.
 // Priority: 1) explicit flag value, 2) INPUT_* env var, 3) GitHub standard env var.
-//
-//nolint:unparam // flagName parameter kept generic for potential future use with other persistent flags
 func getPersistentStringFlagWithEnvFallback(
 	cmd *cobra.Command,
 	flagName, githubEnvFallback string,
@@ -147,10 +145,10 @@ func getPersistentBoolFlagWithEnvFallback(cmd *cobra.Command, flagName string) b
 
 var rootCmd = &cobra.Command{
 	Use:   "dotsync",
-	Short: "Organization sync tool for labels, files, settings, and smyklot versions",
+	Short: "Organization sync tool for labels, files, and settings",
 	Long: `dotsync is a CLI tool for synchronizing organization-wide configurations
 across GitHub repositories. It supports syncing labels, files, repository
-settings, and smyklot version references.`,
+and settings.`,
 	Version: version,
 	PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
 		// Get log level from flag
@@ -197,12 +195,6 @@ var filesCmd = &cobra.Command{
 	Use:   "files",
 	Short: "File synchronization commands",
 	Long:  "Commands for synchronizing files across repositories",
-}
-
-var smyklotCmd = &cobra.Command{
-	Use:   "smyklot",
-	Short: "Smyklot version synchronization commands",
-	Long:  "Commands for synchronizing smyklot version references across repositories",
 }
 
 var settingsCmd = &cobra.Command{
@@ -625,121 +617,6 @@ var filesDiscoverCmd = &cobra.Command{
 	},
 }
 
-var smyklotSyncCmd = &cobra.Command{
-	Use:   "sync",
-	Short: "Sync smyklot version to a repository",
-	Long:  "Update smyklot version references in workflow files via pull request",
-	RunE: func(cmd *cobra.Command, _ []string) error {
-		ctx := cmd.Context()
-		log := logger.FromContext(ctx)
-
-		// Get flags with env fallback
-		org := getPersistentStringFlagWithEnvFallback(cmd, "org", "GITHUB_REPOSITORY_OWNER")
-		dryRun := getPersistentBoolFlagWithEnvFallback(cmd, "dry-run")
-		useGHAuth, _ := cmd.Root().PersistentFlags().GetBool("use-gh-auth")
-
-		// Repo has special handling: flag → INPUT_REPO → extract from GITHUB_REPOSITORY
-		repo := getStringFlagWithEnvFallback(cmd, "repo", "")
-		if repo == "" {
-			repo = getRepoFromEnv()
-		}
-
-		smyklotVersion := getStringFlagWithEnvFallback(cmd, "version", "")
-		tag := getStringFlagWithEnvFallback(cmd, "tag", "")
-		sha := getStringFlagWithEnvFallback(cmd, "sha", "")
-		configJSON := getStringFlagWithEnvFallback(cmd, "config", "")
-		resultFile := getStringFlagWithEnvFallback(cmd, "result-file", "")
-		templatesDir := getStringFlagWithEnvFallback(cmd, "templates-dir", "smyklot-templates")
-		smyklotFilePath := getStringFlagWithEnvFallback(cmd, "smyklot-file", "")
-
-		// Validate required fields
-		if org == "" {
-			return errors.New(
-				"org is required (set via --org flag, INPUT_ORG, or GITHUB_REPOSITORY_OWNER)",
-			)
-		}
-
-		if repo == "" {
-			return errors.New(
-				"repo is required (set via --repo flag, INPUT_REPO, or GITHUB_REPOSITORY)",
-			)
-		}
-
-		if smyklotVersion == "" {
-			return errors.New("version is required (set via --version flag or INPUT_VERSION)")
-		}
-
-		if tag == "" {
-			return errors.New("tag is required (set via --tag flag or INPUT_TAG)")
-		}
-
-		if sha == "" {
-			return errors.New("sha is required (set via --sha flag or INPUT_SHA)")
-		}
-
-		log.Info("starting smyklot sync",
-			"org", org,
-			"repo", repo,
-			"version", smyklotVersion,
-			"tag", tag,
-			"sha", sha,
-			"templates_dir", templatesDir,
-			"dry_run", dryRun,
-		)
-
-		// Get GitHub token
-		token, err := github.GetToken(ctx, log, useGHAuth)
-		if err != nil {
-			return err
-		}
-
-		// Create GitHub client
-		client, err := github.NewClient(ctx, log, token)
-		if err != nil {
-			return err
-		}
-
-		// Fetch sync config (auto-fetch from target repo if not provided)
-		syncConfig, err := fetchSyncConfig(ctx, log, client, org, repo, configJSON)
-		if err != nil {
-			return err
-		}
-
-		// Sync smyklot version
-		result, err := github.SyncSmyklot(
-			ctx,
-			log,
-			client,
-			org,
-			repo,
-			smyklotVersion,
-			tag,
-			sha,
-			syncConfig,
-			templatesDir,
-			smyklotFilePath,
-			dryRun,
-		)
-		if err != nil {
-			// Write result file even on error (with failure status)
-			if writeErr := writeResultFile(log, resultFile, result); writeErr != nil {
-				log.Warn("failed to write result file", "error", writeErr)
-			}
-
-			return err
-		}
-
-		// Write result file on success
-		if err := writeResultFile(log, resultFile, result); err != nil {
-			return err
-		}
-
-		log.Info("smyklot sync completed successfully")
-
-		return nil
-	},
-}
-
 var settingsSyncCmd = createSyncCommand(
 	"sync",
 	"Sync settings to a repository",
@@ -959,20 +836,6 @@ func init() {
 	// Configure files discover command flags
 	filesDiscoverCmd.Flags().String("templates-dir", "templates", "Path to templates directory")
 
-	// Configure smyklot sync command flags
-	smyklotSyncCmd.Flags().String("repo", "", "Target repository (e.g., 'myrepo')")
-	smyklotSyncCmd.Flags().String("version", "", "Smyklot version (e.g., '1.9.2')")
-	smyklotSyncCmd.Flags().String("tag", "", "Smyklot tag (e.g., 'v1.9.2')")
-	smyklotSyncCmd.Flags().String("sha", "", "Smyklot commit SHA")
-	smyklotSyncCmd.Flags().String("config", "", "JSON sync config (optional)")
-	smyklotSyncCmd.Flags().String(
-		"templates-dir",
-		"smyklot-templates",
-		"Path to smyklot workflow templates directory",
-	)
-	smyklotSyncCmd.Flags().String("smyklot-file", "", "Path to smyklot.yml config file")
-	smyklotSyncCmd.Flags().String("result-file", "", "Path to write result JSON (optional)")
-
 	// Configure settings sync command flags
 	settingsSyncCmd.Flags().String("repo", "", "Target repository (e.g., 'myrepo')")
 	settingsSyncCmd.Flags().String("settings-file", "", "Path to settings YAML file")
@@ -993,7 +856,6 @@ func init() {
 	// Build command tree
 	labelsCmd.AddCommand(labelsSyncCmd)
 	filesCmd.AddCommand(filesSyncCmd, filesDiscoverCmd)
-	smyklotCmd.AddCommand(smyklotSyncCmd)
 	settingsCmd.AddCommand(settingsSyncCmd)
 	reposCmd.AddCommand(reposListCmd)
 	configCmd.AddCommand(configVerifyFileCmd)
@@ -1002,7 +864,6 @@ func init() {
 	rootCmd.AddCommand(versionCmd)
 	rootCmd.AddCommand(labelsCmd)
 	rootCmd.AddCommand(filesCmd)
-	rootCmd.AddCommand(smyklotCmd)
 	rootCmd.AddCommand(settingsCmd)
 	rootCmd.AddCommand(reposCmd)
 	rootCmd.AddCommand(configCmd)

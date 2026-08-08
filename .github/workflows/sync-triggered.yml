@@ -19,7 +19,6 @@ jobs:
       sync_labels: ${{ steps.validate.outputs.sync_labels }}
       sync_files: ${{ steps.validate.outputs.sync_files }}
       sync_settings: ${{ steps.validate.outputs.sync_settings }}
-      sync_smyklot: ${{ steps.validate.outputs.sync_smyklot }}
     steps:
       - name: Validate payload
         id: validate
@@ -30,7 +29,6 @@ jobs:
           PAYLOAD_SYNC_LABELS: ${{ github.event.client_payload.sync_labels }}
           PAYLOAD_SYNC_FILES: ${{ github.event.client_payload.sync_files }}
           PAYLOAD_SYNC_SETTINGS: ${{ github.event.client_payload.sync_settings }}
-          PAYLOAD_SYNC_SMYKLOT: ${{ github.event.client_payload.sync_smyklot }}
         run: |
           echo "Received dispatch from: $PAYLOAD_FULL_NAME"
           echo "Trigger type: $PAYLOAD_TRIGGER"
@@ -59,7 +57,6 @@ jobs:
             echo "sync_labels=$PAYLOAD_SYNC_LABELS"
             echo "sync_files=$PAYLOAD_SYNC_FILES"
             echo "sync_settings=$PAYLOAD_SYNC_SETTINGS"
-            echo "sync_smyklot=$PAYLOAD_SYNC_SMYKLOT"
           } >> "$GITHUB_OUTPUT"
 
           {
@@ -72,7 +69,6 @@ jobs:
             echo "| Sync Labels | $PAYLOAD_SYNC_LABELS |"
             echo "| Sync Files | $PAYLOAD_SYNC_FILES |"
             echo "| Sync Settings | $PAYLOAD_SYNC_SETTINGS |"
-            echo "| Sync Smyklot | $PAYLOAD_SYNC_SMYKLOT |"
           } >> "$GITHUB_STEP_SUMMARY"
 
   sync-labels:
@@ -102,17 +98,8 @@ jobs:
     secrets:
       SMYKLOT_APP_PRIVATE_KEY: ${{ secrets.SMYKLOT_APP_PRIVATE_KEY }}
 
-  sync-smyklot:
-    needs: validate
-    if: needs.validate.outputs.sync_smyklot == 'true'
-    uses: ./.github/workflows/sync-smyklot.yml
-    with:
-      repo: ${{ needs.validate.outputs.repo }}
-    secrets:
-      SMYKLOT_APP_PRIVATE_KEY: ${{ secrets.SMYKLOT_APP_PRIVATE_KEY }}
-
   summary:
-    needs: [validate, sync-labels, sync-files, sync-settings, sync-smyklot]
+    needs: [validate, sync-labels, sync-files, sync-settings]
     if: always() && needs.validate.result == 'success'
     runs-on: ${{ fromJSON(vars.RUNNER_LABEL || '["ubuntu-24.04"]') }}
     steps:
@@ -122,7 +109,6 @@ jobs:
           LABELS_RESULT: ${{ needs.sync-labels.result }}
           FILES_RESULT: ${{ needs.sync-files.result }}
           SETTINGS_RESULT: ${{ needs.sync-settings.result }}
-          SMYKLOT_RESULT: ${{ needs.sync-smyklot.result }}
         run: |
           status_icon() {
             case "$1" in
@@ -142,5 +128,4 @@ jobs:
             echo "| Labels | $(status_icon "$LABELS_RESULT") $LABELS_RESULT |"
             echo "| Files | $(status_icon "$FILES_RESULT") $FILES_RESULT |"
             echo "| Settings | $(status_icon "$SETTINGS_RESULT") $SETTINGS_RESULT |"
-            echo "| Smyklot | $(status_icon "$SMYKLOT_RESULT") $SMYKLOT_RESULT |"
           } >> "$GITHUB_STEP_SUMMARY"

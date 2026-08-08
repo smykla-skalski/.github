@@ -5,7 +5,7 @@
 # Place this file at: .github/sync-config.yml in your repository
 #
 # This configuration controls how the organization's sync system
-# synchronizes labels, files, settings, and smyklot to your repository.
+# synchronizes labels, files, and settings to your repository.
 #
 # All fields are optional - omit any field to use its default value.
 # An empty or missing config file enables all syncs with default behavior.
@@ -37,14 +37,6 @@
 #             patches:           # Text substitutions (required for patch action)
 #               - find: string   # Literal text to find (all occurrences replaced)
 #                 replace: string  # Replacement text (empty string deletes matched text)
-#
-#   smyklot:                     # Smyklot synchronization configuration
-#     skip: bool                 # Skip ALL smyklot sync (default: false)
-#     version:                   # Version-only sync configuration
-#       skip: bool               # Skip version updates in workflows (default: false)
-#     workflows:                 # Workflow installation configuration
-#       pr_commands: bool        # Sync smyklot-pr-commands workflow (default: true)
-#       poll: bool               # Sync smyklot-poll workflow (default: true)
 #
 #   settings:                    # Settings sync configuration
 #     skip: bool                 # Skip settings sync (default: false)
@@ -144,23 +136,6 @@
 #   Each patch has a find string (literal, all occurrences) and a replace string.
 #   Empty replace deletes matched text. Patches are applied sequentially.
 #
-# sync.smyklot.skip (boolean, default: false)
-#   When true, skips ALL smyklot synchronization (both workflows and version updates).
-#   Label and file sync still run unless their respective skip flags are set.
-#   Use this for repos that don't use smyklot at all.
-#
-# sync.smyklot.version.skip (boolean, default: false)
-#   When true, skips version-only updates in workflow files.
-#   Managed workflows (smyklot-pr-commands, smyklot-poll) are still synced
-#   unless their respective workflow flags are disabled.
-#   Use this for repos that manage their own smyklot version references.
-#
-# sync.smyklot.workflows.pr_commands (boolean, default: true)
-#   When true, syncs the smyklot-pr-commands.yml workflow to this repository.
-#
-# sync.smyklot.workflows.poll (boolean, default: true)
-#   When true, syncs the smyklot-poll.yml workflow to this repository.
-#
 # sync.settings.skip (boolean, default: false)
 #   When true, skips settings synchronization only.
 #   Use this for repos that require custom settings management.
@@ -236,26 +211,6 @@ sync: {}
 #   files:
 #     skip: true
 
-# Example 6: Skip all smyklot sync (for repos that don't use smyklot at all)
-# sync:
-#   smyklot:
-#     skip: true
-
-# Example 6a: Skip version updates only (keep workflow sync)
-# Use when you manage smyklot versions manually but want workflow templates synced
-# sync:
-#   smyklot:
-#     version:
-#       skip: true
-
-# Example 6b: Skip specific workflows (keep version sync)
-# Use when you only want certain smyklot workflows
-# sync:
-#   smyklot:
-#     workflows:
-#       pr_commands: true
-#       poll: false  # Don't sync smyklot-poll workflow
-
 # Example 7: Skip settings sync only (for repos requiring custom settings)
 # sync:
 #   settings:
@@ -286,8 +241,6 @@ sync: {}
 #       - "SECURITY.md"
 #       - ".github/PULL_REQUEST_TEMPLATE.md"
 #     allow_removal: false
-#   smyklot:
-#     skip: false
 #   settings:
 #     skip: false
 #     exclude:
