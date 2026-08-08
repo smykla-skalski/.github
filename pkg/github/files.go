@@ -693,7 +693,16 @@ var retiredWorkflowPaths = []string{
 	legacyWorkflowPollPath,
 }
 
+// workflowsDir is where every workflow lives, and the one listing that answers
+// which retired ones a repository still has.
+const workflowsDir = ".github/workflows"
+
 // checkRetiredWorkflows schedules deletion of any retired workflow still present.
+//
+// One listing of the workflows directory rather than a fetch per retired path.
+// This runs for every repository on every file sync, and it keeps running long
+// after the last repository is clean, so the common answer - nothing to delete -
+// should cost one request rather than one per name ever retired.
 func checkRetiredWorkflows(
 	ctx context.Context,
 	log *logger.Logger,
@@ -702,17 +711,25 @@ func checkRetiredWorkflows(
 	repo string,
 	stats *FileSyncStats,
 ) []FileChange {
+	_, dir, _, err := client.Repositories.GetContents(ctx, org, repo, workflowsDir, nil)
+	if err != nil {
+		// A repository with no workflows at all has nothing to clean up
+		if !isNotFoundError(err) {
+			log.Warn("failed to list workflows", "path", workflowsDir, "error", err)
+		}
+
+		return nil
+	}
+
+	present := make(map[string]struct{}, len(dir))
+	for _, entry := range dir {
+		present[entry.GetPath()] = struct{}{}
+	}
+
 	var changes []FileChange
 
 	for _, path := range retiredWorkflowPaths {
-		_, exists, err := fetchTargetFile(ctx, client, org, repo, path)
-		if err != nil {
-			log.Warn("failed to check retired workflow", "path", path, "error", err)
-
-			continue
-		}
-
-		if !exists {
+		if _, ok := present[path]; !ok {
 			continue
 		}
 
