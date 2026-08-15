@@ -110,6 +110,10 @@
   color: "#fef2c0"
   description: "Pending CI - merge commit"
 
+- name: "smyklot:pending:ci:service"
+  color: "#fef2c0"
+  description: "Pending CI owned by the Smyklot service"
+
 - name: "smyklot:pending:ci:squash"
   color: "#fef2c0"
   description: "Pending CI - squash merge"
