@@ -6,6 +6,7 @@ on:
     branches: [main]
     paths:
       - ".github/labels.yml"
+      - ".github/scripts/migrate-smyklot-pending-ci-labels.sh"
       - ".github/workflows/sync-labels.yml"
       - "action.yml"
   workflow_dispatch:
@@ -80,6 +81,14 @@ jobs:
           private-key: ${{ secrets.SMYKLOT_APP_PRIVATE_KEY }}
           owner: ${{ github.repository_owner }}
           repositories: ${{ matrix.repo.name }}
+
+      - name: Migrate Smyklot pending CI labels
+        env:
+          GH_TOKEN: ${{ steps.token.outputs.token }}
+        run: >-
+          .github/scripts/migrate-smyklot-pending-ci-labels.sh
+          "${{ github.repository_owner }}/${{ matrix.repo.name }}"
+          "${{ inputs.dry_run || 'false' }}"
 
       - name: Sync labels to repository
         uses: ./
