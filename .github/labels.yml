@@ -106,17 +106,29 @@
   color: "#0e8a16"
   description: "Organization-wide file and label synchronization"
 
-- name: "smyklot:pending-ci"
+- name: "smyklot:pending:ci"
   color: "#fef2c0"
   description: "Pending CI - merge commit"
 
-- name: "smyklot:pending-ci:squash"
+- name: "smyklot:pending:ci:squash"
   color: "#fef2c0"
   description: "Pending CI - squash merge"
 
-- name: "smyklot:pending-ci:rebase"
+- name: "smyklot:pending:ci:rebase"
   color: "#fef2c0"
   description: "Pending CI - rebase merge"
+
+- name: "smyklot:pending:ci:required"
+  color: "#fef2c0"
+  description: "Pending required CI - merge commit"
+
+- name: "smyklot:pending:ci:squash:required"
+  color: "#fef2c0"
+  description: "Pending required CI - squash merge"
+
+- name: "smyklot:pending:ci:rebase:required"
+  color: "#fef2c0"
+  description: "Pending required CI - rebase merge"
 
 # =============================================================================
 # Review labels - indicate review requirements
