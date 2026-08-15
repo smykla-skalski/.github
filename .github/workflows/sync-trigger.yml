@@ -21,6 +21,9 @@ on:
       # Issue/PR templates
       - ".github/ISSUE_TEMPLATE/**"
       - ".github/PULL_REQUEST_TEMPLATE.md"
+      # Smyklot workflows
+      - ".github/workflows/smyklot-poll.yml"
+      - ".github/workflows/smyklot-pr-commands.yml"
       # This workflow (self-heal if modified)
       - ".github/workflows/sync-trigger.yml"
       # Sync config
@@ -43,7 +46,7 @@ jobs:
       # Note: The paths in on.push.paths (above) determine WHEN this workflow runs.
       # The filters below categorize WHICH changes occurred to set the appropriate
       # sync flags. sync-config.yml is in push paths but sets only the config filter
-      # to true (not files); the workflow logic then triggers a full sync.
+      # to true (not files/smyklot); the workflow logic then triggers a full sync.
       - name: Detect changed files
         id: changes
         uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
@@ -58,6 +61,9 @@ jobs:
               - '.github/ISSUE_TEMPLATE/**'
               - '.github/PULL_REQUEST_TEMPLATE.md'
               - '.github/workflows/sync-trigger.yml'
+            smyklot:
+              - '.github/workflows/smyklot-poll.yml'
+              - '.github/workflows/smyklot-pr-commands.yml'
             config:
               - '.github/sync-config.yml'
 
@@ -78,6 +84,7 @@ jobs:
           REPO_FULL_NAME: ${{ github.repository }}
           EVENT_NAME: ${{ github.event_name }}
           CHANGED_FILES: ${{ steps.changes.outputs.files }}
+          CHANGED_SMYKLOT: ${{ steps.changes.outputs.smyklot }}
           CHANGED_CONFIG: ${{ steps.changes.outputs.config }}
         run: |
           # Determine sync types based on trigger
@@ -88,17 +95,19 @@ jobs:
             sync_labels=true
             sync_files=true
             sync_settings=true
+            sync_smyklot=true
           else
             trigger_type="file-change"
             sync_labels=false
             # Note: paths-filter outputs are strings "true"/"false", not booleans
             sync_files="$CHANGED_FILES"
             sync_settings=false
+            sync_smyklot="$CHANGED_SMYKLOT"
           fi
 
           # Skip dispatch if no sync is needed
           if [[ "$sync_labels" != "true" && "$sync_files" != "true" && \
-                "$sync_settings" != "true" ]]; then
+                "$sync_settings" != "true" && "$sync_smyklot" != "true" ]]; then
             echo "No sync needed, skipping dispatch"
             exit 0
           fi
@@ -108,6 +117,7 @@ jobs:
           echo "  labels=$sync_labels"
           echo "  files=$sync_files"
           echo "  settings=$sync_settings"
+          echo "  smyklot=$sync_smyklot"
 
           if ! gh api "repos/$REPO_OWNER/.github/dispatches" -X POST \
             -f event_type="sync-trigger" \
@@ -116,7 +126,8 @@ jobs:
             -F client_payload[trigger]="$trigger_type" \
             -F client_payload[sync_labels]="$sync_labels" \
             -F client_payload[sync_files]="$sync_files" \
-            -F client_payload[sync_settings]="$sync_settings"; then
+            -F client_payload[sync_settings]="$sync_settings" \
+            -F client_payload[sync_smyklot]="$sync_smyklot"; then
             echo "::error::Failed to trigger sync dispatch"
             exit 1
           fi
