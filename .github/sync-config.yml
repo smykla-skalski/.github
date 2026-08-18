@@ -1,4 +1,0 @@
-# Sync configuration for .github repository (source AND target)
-#
-# This repo is both the source of org-wide templates AND a target for syncing.
-sync: {}

@@ -1,0 +1,32 @@
+---
+# This repository's own checks, which are now the reusable workflow library run
+# against the repository that publishes it. A local `uses:` rather than a pinned
+# SHA on purpose: what a pull request changes is what gets exercised, so a
+# workflow that no longer runs fails here rather than in whichever repository
+# pins the next tag.
+#
+# Everything dotsync brought is gone, including its Go toolchain, so
+# golangci-lint is off and the three text linters carry the whole of it.
+
+name: Lint
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    uses: ./.github/workflows/lib-lint.yml
+    with:
+      enable-golangci-lint: false
+      enable-yamllint: true
+      enable-shellcheck: true
+      enable-markdownlint: true

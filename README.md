@@ -1,19 +1,13 @@
 # smykla-skalski/.github
 
-Organization-wide defaults and synchronization for smykla-skalski repositories.
+Organization-wide defaults for smykla-skalski repositories: the community health
+files GitHub falls back to, and the reusable CI workflows other repositories call.
 
-## What This Repository Does
+## Community health files
 
-1. **Community Health Files** - Default templates for all repos (CODE_OF_CONDUCT, CONTRIBUTING, SECURITY, issue/PR templates)
-2. **Label Sync** - Automated synchronization of GitHub labels across all repositories
-3. **File Sync** - Automated synchronization of specified files across repositories
-4. **Reusable Workflows** - Shared CI/CD workflows for Go projects (lint, test, build, release)
-
-## How It Works
-
-### Community Health Files (Native GitHub Feature)
-
-Files in this repository automatically apply to all smykla-skalski repositories that don't have their own versions:
+GitHub applies these to every repository in the organization that does not carry
+its own copy. Nothing has to run for that to happen; it is a feature of a
+repository named `.github`.
 
 - `CODE_OF_CONDUCT.md`
 - `CONTRIBUTING.md`
@@ -22,208 +16,56 @@ Files in this repository automatically apply to all smykla-skalski repositories 
 - `.github/ISSUE_TEMPLATE/*`
 - `.github/PULL_REQUEST_TEMPLATE.md`
 
-### Label Synchronization
+A repository that wants its own writes its own, and that copy wins.
 
-The `sync-labels.yml` workflow synchronizes labels from `.github/labels.yml` to all repositories in the organization.
+## Reusable workflows
 
-**Features:**
+Shared CI for Go projects, called from any repository with `workflow_call`.
 
-- Direct API updates (no PRs)
-- Efficient map-based diff algorithm
-- Per-repo exclusions and skip flags
-- Optional label removal (delete non-central labels)
+| Workflow | What it runs |
+| --- | --- |
+| `lib-lint.yml` | golangci-lint, yamllint, shellcheck, markdownlint |
+| `lib-test.yml` | the Go test suite, with coverage reporting |
+| `lib-build.yml` | cross-platform Go binaries |
+| `lib-release.yml` | semantic versioning and GitHub releases |
 
-**Per-repo configuration**: Create `.github/sync-config.yml` in any repo to customize:
-
-```yaml
-sync:
-  labels:
-    skip: false                       # Skip label sync
-    exclude: ["ci/skip-tests"]       # Don't sync these labels
-    allow_removal: true              # Delete non-central labels
-```
-
-### File Synchronization
-
-The `sync-files.yml` workflow synchronizes files from `templates/` to all repositories.
-
-**Features:**
-
-- Creates PRs with file changes
-- Per-file commits
-- Per-repo exclusions and skip flags
-- Custom file sync action (no external dependencies)
-
-**Per-repo configuration**: Create `.github/sync-config.yml` to customize:
+Pin by commit SHA, with the tag in a comment beside it, so an update is a change
+somebody reviews rather than one that arrives on its own:
 
 ```yaml
-sync:
-  files:
-    skip: false                       # Skip file sync
-    exclude: ["CONTRIBUTING.md"]     # Don't sync these files
-    allow_removal: false             # Don't delete non-central files
-```
-
-### Reusable Workflows
-
-Shared CI/CD workflows for Go projects. These provide standardized, version-controlled workflows that can be called from any repository.
-
-**Available Workflows:**
-
-- **lib-lint.yml** - Multi-linter (golangci-lint, yamllint, shellcheck, markdownlint)
-- **lib-test.yml** - Go test runner with coverage reporting
-- **lib-build.yml** - Cross-platform Go binary builder
-- **lib-release.yml** - Semantic versioning and GitHub releases
-
-**Usage Example:**
-
-```yaml
-name: CI
-on: [push, pull_request]
-
 jobs:
   lint:
     uses: smykla-skalski/.github/.github/workflows/lib-lint.yml@abc1234 # v1.0.0
     with:
       go-version: "1.25.x"
       enable-golangci-lint: true
-
-  test:
-    uses: smykla-skalski/.github/.github/workflows/lib-test.yml@abc1234 # v1.0.0
-    with:
-      go-version: "1.25.x"
-      coverage-threshold: 80
 ```
 
-**Benefits:**
+`git rev-parse v1.0.0` in this repository gives the SHA for a tag.
 
-- Instant updates when pinning to tags/SHAs
-- No PRs needed across repos
-- Consistent CI/CD across organization
-- Easy version management
+See [.github/workflows/lib-README.md](.github/workflows/lib-README.md) for every
+input each one takes.
 
-See [docs/MIGRATION.md](docs/MIGRATION.md) for migration guide.
+## Synchronization
 
-## Configuration
+Labels, repository settings, rulesets and shared files are synchronized by
+[Smyklot](https://github.com/smykla-skalski/smyklot), which runs as a service and
+is configured in its panel rather than in this repository.
 
-### sync-config.yml Reference
+The `dotsync` CLI that used to do it lived here and has been removed. What it
+held moved into Smyklot: the label set, `settings.yml`, the `main-branch-protection`
+ruleset, and the templates that were under `templates/`. Two differences are worth
+knowing, because they are not oversights:
 
-Each repository can have a `.github/sync-config.yml` file to customize sync behavior:
+- A repository no longer customises the org's templates through its own
+  `.github/sync-config.yml`. Those adjustments are kept against the repository in
+  the panel, so a rename cannot orphan one and a repository cannot grant itself
+  something the organization did not offer. Any `sync-config.yml` still in a
+  repository is read by nothing.
+- A file change arrives as a pull request, and a plan is shown and approved before
+  anything is written. dotsync computed and applied in one pass and reported the
+  plan as though it were the outcome.
 
-```yaml
-sync:
-  skip: false               # Skip ALL syncs for this repo
-
-  labels:
-    skip: false             # Skip label sync only
-    exclude: []             # Label names to exclude from sync
-    allow_removal: false    # Delete labels not in central config
-
-  files:
-    skip: false             # Skip file sync only
-    exclude: []             # File paths to exclude from sync
-    allow_removal: false    # Delete files not in central config (DANGEROUS)
-```
-
-**Key Fields:**
-
-- `sync.skip` - Completely disable all syncs for this repo
-- `exclude` - List of labels/files to NOT sync (they're preserved but not managed)
-- `allow_removal` - Delete items in repo that aren't in central config (defaults to `false` for safety)
-
-See [examples/sync-config.yml](examples/sync-config.yml) for full schema documentation with examples.
-
-### Adding New Labels
-
-1. Edit `.github/labels.yml` in this repository
-2. Commit and push to `main`
-3. The workflow will automatically sync to all repositories
-
-### Adding New Sync Files
-
-1. Add the file to `templates/` directory (preserving the desired path structure)
-2. Commit and push to `main` - syncs automatically to all repos
-
-## Setup
-
-### Authentication
-
-Workflows use the **smyklot** GitHub App for authentication. The app must be installed on the organization with access to all repositories.
-
-Required org-level configuration:
-
-- `secrets.SMYKLOT_APP_PRIVATE_KEY` - GitHub App private key
-
-Optional org-level configuration:
-
-- `vars.SMYKLOT_CLIENT_ID` - GitHub App client ID. Workflows default to the public Smyklot client ID when unset.
-
-## Manual Sync
-
-You can manually trigger syncs via GitHub Actions:
-
-1. Go to Actions tab
-2. Select "Sync Labels" or "Sync Files"
-3. Click "Run workflow"
-4. Optionally enable "Dry run" to preview changes
-
-## Troubleshooting
-
-### Sync not running for a repo
-
-**Check:**
-
-- Does the repo have `.github/sync-config.yml` with `skip: true`?
-- Is the repo excluded by the `get-org-repos` action?
-- Check workflow logs in Actions tab for errors
-
-### Labels not updating
-
-**Possible causes:**
-
-- Label excluded in repo's `.github/sync-config.yml` (check `labels.exclude`)
-- Repo has `labels.skip: true` in sync config
-- API rate limits (check workflow logs)
-
-**Debug:**
-
-- Run workflow with "Dry run" enabled to see what would change
-- Check workflow summary for repo-specific results
-
-### File sync PR not created
-
-**Possible causes:**
-
-- No changes detected (files already up-to-date)
-- File excluded in repo's `.github/sync-config.yml` (check `files.exclude`)
-- Repo has `files.skip: true` in sync config
-- Existing PR already open (check for `chore/org-sync` branch)
-
-**Debug:**
-
-- Run workflow with "Dry run" to see planned changes
-- Check if PR already exists: `gh pr list --label org-sync`
-
-### Reusable workflow not found
-
-**Error**: `error: workflows/lib-lint.yml not found`
-
-**Fix**: Ensure the path includes `.github/` prefix:
-
-```yaml
-uses: smykla-skalski/.github/.github/workflows/lib-lint.yml@abc1234
-```
-
-### Version pinning
-
-**Best practice**: Pin to commit SHA with semver comment:
-
-```bash
-# Get SHA for a tag
-git rev-parse v1.0.0
-
-# Use in workflow
-uses: smykla-skalski/.github/.github/workflows/lib-lint.yml@abc1234 # v1.0.0
-```
-
-**Why**: Commit SHAs are immutable; tags can be moved (security risk)
+`.github/scripts/migrate-smyklot-pending-ci-labels.sh` stays: it renames the
+hyphenated `smyklot:pending-ci` labels to the colon-separated names Smyklot uses,
+on one repository at a time.
