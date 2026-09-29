@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "profiles": {
+    "base": {
+      "files": [
+        {
+          "source": "sync/files/base/.markdownlint-cli2.jsonc",
+          "path": ".markdownlint-cli2.jsonc"
+        }
+      ]
+    },
+    "typescript": {
+      "files": [
+        {
+          "source": "sync/files/typescript/.oxlintrc.json",
+          "path": ".oxlintrc.json"
+        }
+      ]
+    },
+    "opencode-plugin": {
+      "files": [
+        {
+          "source": "sync/files/opencode-plugin/ci.yml",
+          "path": ".github/workflows/ci.yml"
+        },
+        {
+          "source": "sync/files/opencode-plugin/publish.yml",
+          "path": ".github/workflows/publish.yml"
+        },
+        {
+          "source": "sync/files/opencode-plugin/mise.toml",
+          "path": "mise.toml"
+        }
+      ]
+    }
+  }
+}
