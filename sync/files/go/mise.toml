@@ -1,0 +1,20 @@
+[tools]
+go = "1.27.1"
+golangci-lint = "2.13.2"
+markdownlint-cli2 = "0.23.3"
+
+[tasks."lint:go"]
+description = "Lint Go code"
+run = "golangci-lint run ./..."
+
+[tasks."lint:md"]
+description = "Lint markdown"
+run = "markdownlint-cli2"
+
+[tasks.test]
+description = "Run Go tests"
+run = "go test ./..."
+
+[tasks.check]
+description = "Run the shared Go checks"
+depends = ["lint:go", "lint:md", "test"]

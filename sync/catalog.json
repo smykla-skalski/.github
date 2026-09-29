@@ -17,6 +17,18 @@
         }
       ]
     },
+    "go": {
+      "files": [
+        {
+          "source": "sync/files/go/.golangci.yml",
+          "path": ".golangci.yml"
+        },
+        {
+          "source": "sync/files/go/mise.toml",
+          "path": "mise.toml"
+        }
+      ]
+    },
     "opencode-plugin": {
       "files": [
         {
