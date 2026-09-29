@@ -18,7 +18,8 @@ when the repository defines `test:e2e`.
 
 Select `base` and `go` for a new Go repository. Existing Go repositories have
 different lint rules and build tasks; migrate them individually. The `go` and
-`opencode-plugin` profiles both own `mise.toml` and cannot be selected together.
+`opencode-plugin` profiles both own `mise.toml`: keep both available to a
+workspace, but select only one for each repository.
 
 The npm publish workflow defaults to a dry run. After the repository's
 `publish.yml` and `npm` environment are registered as an npm trusted
