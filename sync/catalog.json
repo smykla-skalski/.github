@@ -24,8 +24,8 @@
           "path": ".golangci.yml"
         },
         {
-          "source": "sync/files/go/mise.toml",
-          "path": "mise.toml"
+          "source": "sync/files/go/00-shared.toml",
+          "path": "mise/conf.d/00-shared.toml"
         }
       ]
     },
@@ -40,8 +40,8 @@
           "path": ".github/workflows/publish.yml"
         },
         {
-          "source": "sync/files/opencode-plugin/mise.toml",
-          "path": "mise.toml"
+          "source": "sync/files/opencode-plugin/00-shared.toml",
+          "path": "mise/conf.d/00-shared.toml"
         }
       ]
     }
