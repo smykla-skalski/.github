@@ -6,6 +6,38 @@
         {
           "source": "sync/files/base/.markdownlint-cli2.jsonc",
           "path": ".markdownlint-cli2.jsonc"
+        },
+        {
+          "source": "CODE_OF_CONDUCT.md",
+          "path": "CODE_OF_CONDUCT.md"
+        },
+        {
+          "source": "CONTRIBUTING.md",
+          "path": "CONTRIBUTING.md"
+        },
+        {
+          "source": "LICENSE",
+          "path": "LICENSE"
+        },
+        {
+          "source": "SECURITY.md",
+          "path": "SECURITY.md"
+        },
+        {
+          "source": "sync/files/base/renovate.json",
+          "path": "renovate.json"
+        },
+        {
+          "source": ".github/PULL_REQUEST_TEMPLATE.md",
+          "path": ".github/PULL_REQUEST_TEMPLATE.md"
+        },
+        {
+          "source": ".github/ISSUE_TEMPLATE/bug_report.yml",
+          "path": ".github/ISSUE_TEMPLATE/bug_report.yml"
+        },
+        {
+          "source": ".github/ISSUE_TEMPLATE/config.yml",
+          "path": ".github/ISSUE_TEMPLATE/config.yml"
         }
       ]
     },
