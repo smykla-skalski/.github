@@ -6,7 +6,7 @@ repository, and proposes the resulting files by pull request.
 
 | Profile | Files |
 | --- | --- |
-| `base` | Markdown lint configuration |
+| `base` | Community files, Renovate, and Markdown lint configuration |
 | `typescript` | oxlint configuration |
 | `go` | golangci-lint and common Go mise tools/tasks |
 | `opencode-plugin` | CI, npm publishing, and common mise tools/tasks |
@@ -28,5 +28,12 @@ publisher, set `NPM_PUBLISH_ENABLED=true`. A repository migrating from a
 different workflow filename or environment must update npm's trusted
 publisher before enabling publication.
 
-The catalog becomes active only after Smyklot supports Git-backed profiles.
-Until then, the panel's existing file templates remain authoritative.
+The `base` profile holds the eight files previously entered in Smyklot's panel.
+Most use this repository's root files as their source. Renovate uses
+`sync/files/base/renovate.json` because this repository's own `renovate.json`
+has an extra rule for its workflow templates.
+
+When connecting this catalog, remove the eight matching inline templates in
+the same settings change. Smyklot rejects a path owned by both sources. Keep
+repository-specific file adjustments: they are keyed by destination path.
+Review the first sync plan before applying file pull requests.
