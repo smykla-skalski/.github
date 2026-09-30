@@ -1,0 +1,8 @@
+{
+  "name": "renovate-automerge-e2e",
+  "private": true,
+  "version": "0.0.0",
+  "devDependencies": {
+    "is-number": "6.0.0"
+  }
+}
