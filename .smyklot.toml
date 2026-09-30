@@ -1,0 +1,10 @@
+#:schema https://smyklot.com/schema/repository-v1.json
+
+[panel]
+version = 1
+scope = "repository"
+
+# Keep .github's Renovate PR-only bypass in its local ruleset.
+[panel.sync.rulesets]
+enabled = false
+document = "{}"
