@@ -61,6 +61,15 @@
       "rangeStrategy": "bump"
     },
     {
+      "description": "Smyklot release workflow owns the Action image",
+      "matchRepositories": ["smykla-skalski/smyklot"],
+      "matchFileNames": ["action.yml"],
+      "matchManagers": ["github-actions"],
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["ghcr.io/smykla-skalski/smyklot"],
+      "enabled": false
+    },
+    {
       "description": "Smyklot action managed by sync-smyklot workflow",
       "enabled": false,
       "matchManagers": ["github-actions"],
