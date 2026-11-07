@@ -32,6 +32,12 @@
       "automerge": true
     },
     {
+      "description": "Docker digests of a pinned tag are rebuilds that arrive more often than every seven days, so a release age never passes",
+      "matchDatasources": ["docker"],
+      "matchUpdateTypes": ["digest"],
+      "minimumReleaseAge": null
+    },
+    {
       "addLabels": ["area/ci"],
       "commitMessageTopic": "{{depName}} action",
       "description": "GitHub Actions dependencies",
@@ -68,6 +74,18 @@
       "matchDatasources": ["docker"],
       "matchPackageNames": ["ghcr.io/smykla-skalski/smyklot"],
       "enabled": false
+    },
+    {
+      "description": "Exclude Bits UI 2.19.5 because its focus scope truncates edits in the Smyklot panel's shadow-root editor",
+      "matchRepositories": ["smykla-skalski/smyklot"],
+      "matchPackageNames": ["bits-ui"],
+      "allowedVersions": "!/^2\\.19\\.5$/"
+    },
+    {
+      "description": "Keep Storybook packages and their addon peer dependencies compatible",
+      "matchRepositories": ["smykla-skalski/smyklot"],
+      "matchPackageNames": ["storybook", "@storybook/*"],
+      "groupName": "Storybook"
     },
     {
       "description": "Smyklot action managed by sync-smyklot workflow",
