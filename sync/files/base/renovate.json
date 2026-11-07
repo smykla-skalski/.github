@@ -24,6 +24,7 @@
   "automergeStrategy": "squash",
   "platformAutomerge": false,
   "minimumReleaseAgeBehaviour": "timestamp-required",
+  "postUpdateOptions": ["gomodTidy"],
   "packageRules": [
     {
       "description": "Automerge updates with a verified release age of at least seven days",
